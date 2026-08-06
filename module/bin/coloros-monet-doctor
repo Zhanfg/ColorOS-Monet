@@ -148,7 +148,7 @@ capture "$WORK/activity_exit_info.txt" dumpsys activity exit-info "$TARGET_PACKA
 {
     logcat -b crash -d -v threadtime 2>/dev/null
     logcat -b all -d -v threadtime 2>/dev/null | grep -Ei \
-        'AndroidRuntime|FATAL EXCEPTION|com\.twitter\.android|OverlayManager|idmap|ResourcesNotFoundException|Resources\$NotFoundException|Piko|twitter' | tail -n 12000
+        'AndroidRuntime|FATAL EXCEPTION|com\.twitter\.android|OverlayManager|idmap|ResourcesNotFoundException|Resources.NotFoundException|Piko|twitter' | tail -n 12000
 } > "$WORK/logcat_relevant.txt"
 
 say "[6/7] 生成判定摘要"
