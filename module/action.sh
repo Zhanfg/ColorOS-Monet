@@ -32,6 +32,10 @@ set_flag() {
     ' "$STATE_FILE" > "$tmp" && mv -f "$tmp" "$STATE_FILE"
 }
 
+package_present() {
+    pm path "$1" 2>/dev/null | grep -q '^package:'
+}
+
 overlay_enabled() {
     package="$1"
     cmd overlay list --user 0 2>/dev/null | grep -F "$package" | \
@@ -65,13 +69,13 @@ while IFS="$TAB" read -r key target overlay _apk; do
     echo "[$key] $target"
     echo "音量+：启用　音量-：禁用"
     if wait_key; then
-        if ! pm path "$target" >/dev/null 2>&1; then
+        if ! package_present "$target"; then
             set_flag "$key" 0
             echo "[失败] 目标应用未安装：$target"
             [ "$key" = x ] && run_doctor
             continue
         fi
-        if ! pm path "$overlay" >/dev/null 2>&1; then
+        if ! package_present "$overlay"; then
             set_flag "$key" 0
             echo "[失败] 覆盖包未被系统识别：$overlay"
             [ "$key" = x ] && run_doctor
