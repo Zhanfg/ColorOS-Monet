@@ -1,0 +1,31 @@
+name: Bootstrap Runtime V2
+
+on:
+  push:
+    branches: [feat/rust-component-runtime]
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: feat/rust-component-runtime
+          fetch-depth: 0
+      - name: Replace the legacy base with the audited v2 source tree
+        run: |
+          set -euo pipefail
+          test -f bootstrap/runtime-v2-source.tar.gz
+          rm -rf module docs tools runtime components
+          tar -xzf bootstrap/runtime-v2-source.tar.gz
+          rm -rf bootstrap
+          rm -f .github/workflows/bootstrap-runtime-v2.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'feat: materialize Rust component runtime v2'
+          git push origin HEAD:feat/rust-component-runtime
