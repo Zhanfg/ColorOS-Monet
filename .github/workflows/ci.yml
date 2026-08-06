@@ -33,6 +33,7 @@ jobs:
         with:
           gradle-version: "8.10.2"
       - run: gradle assembleDebug --stacktrace
+      - run: python tools/audit_apks.py overlays/*/build/outputs/apk/debug/*.apk
       - run: >-
           python tools/package_module.py
           --variant debug
