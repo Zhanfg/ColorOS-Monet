@@ -8,6 +8,7 @@ STATE_FILE="$STATE_DIR/config.conf"
 TARGETS="$MODPATH/payload/targets.tsv"
 OVERLAY_SRC="$MODPATH/payload/overlays"
 OVERLAY_DST="$MODPATH/system/product/overlay"
+DOCTOR="$MODPATH/bin/coloros-monet-doctor"
 
 ui_print "- ColorOS Monet clean-room installer"
 
@@ -22,6 +23,7 @@ if [ ! -f "$STATE_FILE" ]; then
     cp -f "$MODPATH/config/default.conf" "$STATE_FILE" || abort "! 无法初始化配置"
 fi
 chmod 0600 "$STATE_FILE" 2>/dev/null
+[ -f "$DOCTOR" ] && chmod 0755 "$DOCTOR" 2>/dev/null
 
 read_flag() {
     key="$1"
@@ -30,7 +32,8 @@ read_flag() {
 }
 
 install_one() {
-    key="$1" apk="$2"
+    key="$1"
+    apk="$2"
     src="$OVERLAY_SRC/$apk"
     dst="$OVERLAY_DST/$apk"
 
@@ -55,4 +58,5 @@ while IFS="$TAB" read -r key _target _overlay apk; do
 done < "$TARGETS"
 
 rm -rf "$MODPATH/payload/overlays"
-ui_print "- 安装完成。重启后由 service.sh 启用并检查覆盖状态。"
+ui_print "- 已安装 X 只读诊断器，可从模块操作菜单导出报告。"
+ui_print "- 安装完成。重启后由 service.sh 启用并验证覆盖状态。"
