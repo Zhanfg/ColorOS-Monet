@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="dev.zhanfg.colorosmonet.overlay.settings"
+    android:versionCode="1"
+    android:versionName="1.0.0">
+    <uses-sdk android:minSdkVersion="31" android:targetSdkVersion="35" />
+    <overlay
+        android:targetPackage="com.android.settings"
+        android:isStatic="false"
+        android:priority="710" />
+    <application
+        android:allowBackup="false"
+        android:hasCode="false"
+        android:label="ColorOS Monet: Settings" />
+</manifest>
