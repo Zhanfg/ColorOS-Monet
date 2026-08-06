@@ -1,5 +1,7 @@
 #!/system/bin/sh
 # SPDX-License-Identifier: Apache-2.0
+# shellcheck disable=SC2154
+# MODPATH is provided by the module installer.
 
 STATE_DIR=/data/adb/coloros-monet
 STATE_FILE="$STATE_DIR/config.conf"
@@ -28,7 +30,7 @@ read_flag() {
 }
 
 install_one() {
-    key="$1" target="$2" apk="$3"
+    key="$1" apk="$2"
     src="$OVERLAY_SRC/$apk"
     dst="$OVERLAY_DST/$apk"
 
@@ -47,9 +49,9 @@ install_one() {
 }
 
 TAB=$(printf '\t')
-while IFS="$TAB" read -r key target overlay apk; do
+while IFS="$TAB" read -r key _target _overlay apk; do
     case "$key" in ''|'#'*) continue ;; esac
-    install_one "$key" "$target" "$apk" || abort "! 安装 $key 覆盖失败"
+    install_one "$key" "$apk" || abort "! 安装 $key 覆盖失败"
 done < "$TARGETS"
 
 rm -rf "$MODPATH/payload/overlays"

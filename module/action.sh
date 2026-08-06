@@ -34,7 +34,7 @@ echo "ColorOS Monet 覆盖开关"
 echo "对每一项：音量+启用，音量-禁用"
 
 TAB=$(printf '\t')
-while IFS="$TAB" read -r key target overlay apk; do
+while IFS="$TAB" read -r key target overlay _apk; do
     case "$key" in ''|'#'*) continue ;; esac
     echo ""
     echo "[$key] $target"

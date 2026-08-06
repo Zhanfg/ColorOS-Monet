@@ -10,7 +10,7 @@ LOCK="$STATE_DIR/service.lock"
 
 mkdir -p "$STATE_DIR" || exit 0
 mkdir "$LOCK" 2>/dev/null || exit 0
-trap 'rmdir "$LOCK" 2>/dev/null' EXIT
+trap 'rmdir "$LOCK" 2>/dev/null' 0
 
 count=0
 while [ "$(getprop sys.boot_completed 2>/dev/null)" != 1 ] && [ "$count" -lt 180 ]; do
@@ -28,14 +28,16 @@ read_flag() {
     echo "sdk=$(getprop ro.build.version.sdk 2>/dev/null)"
     echo "--- overlays ---"
     TAB=$(printf '\t')
-    while IFS="$TAB" read -r key target overlay apk; do
+    while IFS="$TAB" read -r key target overlay _apk; do
         case "$key" in ''|'#'*) continue ;; esac
         if read_flag "$key"; then
+            requested=1
             cmd overlay enable --user 0 "$overlay" 2>&1
         else
+            requested=0
             cmd overlay disable --user 0 "$overlay" 2>&1
         fi
-        echo "[$key] target=$target overlay=$overlay requested=$(read_flag "$key" && echo 1 || echo 0)"
+        echo "[$key] target=$target overlay=$overlay requested=$requested"
         pm path "$target" 2>&1
         pm path "$overlay" 2>&1
         cmd overlay list --user 0 2>&1 | grep -F "$overlay" || echo "overlay_state=not_listed"
