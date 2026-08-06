@@ -18,7 +18,8 @@ jobs:
           python-version: "3.12"
       - run: python tools/audit_repository.py
       - run: python tools/validate_mappings.py
-      - run: shellcheck module/customize.sh module/service.sh module/action.sh module/uninstall.sh
+      - run: python tools/test_runtime_safety.py
+      - run: shellcheck module/customize.sh module/service.sh module/action.sh module/uninstall.sh module/bin/coloros-monet-doctor
 
   build-debug:
     runs-on: ubuntu-latest
