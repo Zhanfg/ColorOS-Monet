@@ -24,12 +24,14 @@ Resource names in `mapping/colors.tsv` are compatibility identifiers. Their sema
 Requirements:
 
 - JDK 17
-- Gradle 8.10.2
-- Android SDK 35
+- Android SDK platform 35 and build-tools 35.0.0
 - Python 3.10+
 
 ```bash
-gradle assembleDebug
+python tools/build_overlays.py \
+  --variant debug \
+  --version-name dev \
+  --version-code 1
 python tools/package_module.py \
   --variant debug \
   --version dev \
@@ -37,7 +39,7 @@ python tools/package_module.py \
   --output dist/ColorOS-Monet-dev.zip
 ```
 
-Debug builds use the local Android debug signing identity. Public releases require a stable signing key supplied through encrypted CI secrets; no key is stored in this repository.
+The command-line builder uses `aapt2`, `zipalign`, and `apksigner` directly so every overlay APK is resource-only and contains no DEX. Debug builds use a locally generated Android debug signing identity. Public releases require a stable signing key supplied through encrypted CI secrets; no key is stored in this repository.
 
 ## Installation
 

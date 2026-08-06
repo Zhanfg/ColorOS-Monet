@@ -2,9 +2,9 @@
 
 ## Build layer
 
-Each target is an independent code-free RRO APK. Application mappings are stored as TSV metadata and converted into `values/colors.xml` plus `values-night/colors.xml` during the Gradle build.
+Each target is an independent code-free RRO APK. Application mappings are stored as TSV metadata and converted into `values/colors.xml` plus `values-night/colors.xml` by the project build tool before `aapt2` compiles and links a resource-only APK.
 
-The generated values reference Android's public dynamic palette resources (`system_accent*` and `system_neutral*`). No wallpaper color is baked into an APK.
+The builder signs the APK only after resource compilation and verifies that no DEX or native code is present. The generated values reference Android's public dynamic palette resources (`system_accent*` and `system_neutral*`). No wallpaper color is baked into an APK.
 
 ## Module layer
 

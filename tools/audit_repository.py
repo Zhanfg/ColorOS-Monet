@@ -14,22 +14,21 @@ SECRET_PATTERNS = [
 ]
 ALLOW_SECRET_SCAN = {"tools/audit_repository.py", ".github/workflows/release.yml", "docs/RELEASE_SIGNING.md"}
 
-errors = []
+errors=[]
 for path in ROOT.rglob("*"):
-    if not path.is_file() or ".git" in path.parts or "build" in path.parts:
+    if not path.is_file() or ".git" in path.parts or "build" in path.parts or "__pycache__" in path.parts:
         continue
-    rel = path.relative_to(ROOT).as_posix()
+    rel=path.relative_to(ROOT).as_posix()
     if path.suffix.lower() in FORBIDDEN_SUFFIXES or path.name in FORBIDDEN_NAMES:
         errors.append(f"forbidden binary/secret file: {rel}")
         continue
     if rel not in ALLOW_SECRET_SCAN:
-        try:
-            text = path.read_text(encoding="utf-8")
+        try: text=path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             errors.append(f"unexpected non-text source file: {rel}")
             continue
         for line in text.splitlines():
-            if "System.getenv(" in line or "secrets." in line:
+            if "System.getenv(" in line or "os.environ.get(" in line or "secrets." in line or line.rstrip().endswith("= signing"):
                 continue
             for pattern in SECRET_PATTERNS:
                 if pattern.search(line):

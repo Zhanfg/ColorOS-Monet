@@ -25,15 +25,20 @@ jobs:
     needs: validate
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
-      - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.10.2"
-      - run: gradle assembleDebug --stacktrace
-      - run: python tools/audit_apks.py overlays/*/build/outputs/apk/debug/*.apk
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - run: >-
+          python tools/build_overlays.py
+          --variant debug
+          --version-name dev-${{ github.run_number }}
+          --version-code ${{ github.run_number }}
       - run: >-
           python tools/package_module.py
           --variant debug
