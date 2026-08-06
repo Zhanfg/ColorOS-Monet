@@ -1,0 +1,5 @@
+# key	target_package	overlay_package	apk_name
+settings	com.android.settings	dev.zhanfg.colorosmonet.overlay.settings	ColorOSSettingsMonet.apk
+x	com.twitter.android	dev.zhanfg.colorosmonet.overlay.x	XMonet.apk
+tim	com.tencent.tim	dev.zhanfg.colorosmonet.overlay.tim	TIMMonet.apk
+coolapk	com.coolapk.market	dev.zhanfg.colorosmonet.overlay.coolapk	CoolapkMonet.apk

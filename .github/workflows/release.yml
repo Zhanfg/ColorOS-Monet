@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+      - name: Restore release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.MONET_KEYSTORE_B64 }}
+        run: |
+          test -n "$KEYSTORE_B64" || { echo "Missing release signing secret"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/signing"
+          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/signing/release.jks"
+      - name: Build signed release overlays
+        env:
+          MONET_KEYSTORE_FILE: ${{ runner.temp }}/signing/release.jks
+          MONET_KEYSTORE_PASSWORD: ${{ secrets.MONET_KEYSTORE_PASSWORD }}
+          MONET_KEY_ALIAS: ${{ secrets.MONET_KEY_ALIAS }}
+          MONET_KEY_PASSWORD: ${{ secrets.MONET_KEY_PASSWORD }}
+        run: gradle assembleRelease --stacktrace
+      - name: Package module
+        run: >-
+          python tools/package_module.py
+          --variant release
+          --version "${GITHUB_REF_NAME}"
+          --version-code "${GITHUB_RUN_NUMBER}"
+          --output "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip"
+      - run: sha256sum dist/* > dist/SHA256SUMS
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+            overlays/*/build/outputs/apk/release/*.apk

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <overlay
+        android:targetPackage="com.twitter.android"
+        android:isStatic="false"
+        android:priority="700" />
+    <application
+        android:allowBackup="false"
+        android:hasCode="false"
+        android:label="ColorOS Monet: x" />
+</manifest>

@@ -1,0 +1,6 @@
+id=coloros_monet_cleanroom
+name=ColorOS Monet Clean-room
+version=@VERSION@
+versionCode=@VERSION_CODE@
+author=ColorOS-Monet contributors
+description=Clean-room Android Monet overlays for ColorOS and selected applications. No third-party APKs or copied module payloads are included.
