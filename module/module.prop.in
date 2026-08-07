@@ -1,7 +1,7 @@
 id=coloros_monet
-name=ColorOS Monet Component Runtime
+name=ColorOS Monet + COE Frontend
 version=@VERSION@
 versionCode=@VERSION_CODE@
 author=Axymorrsen / ColorOS-Monet contributors
-description=Rust-powered APK-free Monet component runtime for ColorOS and selected applications.
+description=COE frontend with Rust CMONET01 resource backend for ColorOS and selected applications.
 updateJson=
