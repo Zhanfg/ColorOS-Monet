@@ -1,0 +1,130 @@
+name: Fix Android Dimension Encoding V2
+
+on:
+  push:
+    branches: [feat/rust-component-runtime]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/rust-component-runtime
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Patch encoder and regression tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('runtime/src/main.rs')
+          text = path.read_text(encoding='utf-8')
+          function = r'''fn encode_dimension(raw: &str) -> Result<u32> {
+              let raw = raw.trim();
+              let units = [
+                  ("dip", 1u32),
+                  ("dp", 1u32),
+                  ("sp", 2u32),
+                  ("px", 0u32),
+                  ("pt", 3u32),
+                  ("in", 4u32),
+                  ("mm", 5u32),
+              ];
+              let mut number = raw;
+              let mut unit = 0u32;
+              for (suffix, code) in units {
+                  if let Some(prefix) = raw.strip_suffix(suffix) {
+                      number = prefix;
+                      unit = code;
+                      break;
+                  }
+              }
+              let value: f64 = number
+                  .trim()
+                  .parse()
+                  .with_context(|| format!("invalid dimension {raw}"))?;
+              if !value.is_finite() {
+                  bail!("dimension is not finite: {raw}");
+              }
+              if !(-8_388_608.5..8_388_607.5).contains(&value) {
+                  bail!("dimension is outside Android complex-value range: {raw}");
+              }
+
+              let (radix, scale) = if value.fract() == 0.0 {
+                  (0u32, 1.0f64)
+              } else {
+                  let magnitude = value.abs();
+                  if magnitude < 1.0 {
+                      (3u32, 8_388_608.0f64)
+                  } else if magnitude < 256.0 {
+                      (2u32, 32_768.0f64)
+                  } else if magnitude < 65_536.0 {
+                      (1u32, 128.0f64)
+                  } else {
+                      (0u32, 1.0f64)
+                  }
+              };
+
+              // java.lang.Math.round(double) is floor(value + 0.5), including for negatives.
+              let mantissa = (value * scale + 0.5).floor() as i64;
+              if !(-8_388_608..=8_388_607).contains(&mantissa) {
+                  bail!("dimension is outside Android complex-value range: {raw}");
+              }
+              let encoded = ((mantissa as i32 as u32) & 0x00ff_ffff) << 8;
+              Ok(encoded | (radix << 4) | unit)
+          }
+
+          '''
+          text, count = re.subn(
+              r'fn encode_dimension\(raw: &str\) -> Result<u32> \{.*?\n\}\n\n(?=fn encode_color)',
+              function,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'encode_dimension replacement count={count}')
+
+          test = r'''    #[test]
+              fn dimension_encoding_is_stable() {
+                  assert_eq!(encode_dimension("0dp").unwrap(), 0x00000001);
+                  assert_eq!(encode_dimension("16dp").unwrap(), 0x00001001);
+                  assert_eq!(encode_dimension("12.5sp").unwrap(), 0x06400022);
+                  assert_eq!(encode_dimension("0.5dp").unwrap(), 0x40000031);
+                  assert_eq!(encode_dimension("-1.5dp").unwrap(), 0xff400021);
+              }
+
+          '''
+          text, count = re.subn(
+              r'    #\[test\]\n    fn dimension_encoding_is_stable\(\) \{.*?\n    \}\n\n(?=    #\[test\])',
+              test,
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'dimension test replacement count={count}')
+          path.write_text(text, encoding='utf-8')
+          PY
+          cargo fmt --manifest-path runtime/Cargo.toml
+          cargo test --manifest-path runtime/Cargo.toml dimension_encoding_is_stable
+      - name: Commit corrected encoder
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add runtime/src/main.rs
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: match AOSP complex dimension encoding'
+          git push origin HEAD:feat/rust-component-runtime
