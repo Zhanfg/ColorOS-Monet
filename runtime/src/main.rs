@@ -30,7 +30,11 @@ const TYPE_DIMENSION: &str = "0x05";
 const TYPE_FILE: &str = "4294967295";
 
 #[derive(Parser, Debug)]
-#[command(name = "monetctl", version, about = "APK-free ColorOS Monet component manager")]
+#[command(
+    name = "monetctl",
+    version,
+    about = "APK-free ColorOS Monet component manager"
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -222,8 +226,8 @@ fn run() -> Result<()> {
 
 fn pack_component(source: &Path, output: &Path) -> Result<()> {
     let manifest_path = source.join("component.json");
-    let manifest_bytes = fs::read(&manifest_path)
-        .with_context(|| format!("read {}", manifest_path.display()))?;
+    let manifest_bytes =
+        fs::read(&manifest_path).with_context(|| format!("read {}", manifest_path.display()))?;
     let manifest: ComponentManifest = serde_json::from_slice(&manifest_bytes)
         .with_context(|| format!("parse {}", manifest_path.display()))?;
     validate_manifest(&manifest)?;
@@ -246,7 +250,10 @@ fn pack_component(source: &Path, output: &Path) -> Result<()> {
         let relative = path.strip_prefix(source)?;
         validate_relative_path(relative)?;
         if entry.file_type().is_symlink() {
-            bail!("component source must not contain symlinks: {}", path.display());
+            bail!(
+                "component source must not contain symlinks: {}",
+                path.display()
+            );
         }
         if entry.file_type().is_dir() {
             tar.append_dir(relative, path)?;
@@ -302,7 +309,10 @@ fn install_component(package: &Path, store: &Path) -> Result<ComponentManifest> 
         validate_relative_path(&path)?;
         let kind = item.header().entry_type();
         if kind != EntryType::Regular && kind != EntryType::Directory {
-            bail!("component archive contains unsupported entry type at {}", path.display());
+            bail!(
+                "component archive contains unsupported entry type at {}",
+                path.display()
+            );
         }
         item.unpack_in(&stage_dir)?;
     }
@@ -330,7 +340,10 @@ fn install_component(package: &Path, store: &Path) -> Result<ComponentManifest> 
 
 fn sync_components(directory: &Path, store: &Path, enable_defaults: bool) -> Result<()> {
     if !directory.is_dir() {
-        bail!("component package directory does not exist: {}", directory.display());
+        bail!(
+            "component package directory does not exist: {}",
+            directory.display()
+        );
     }
     fs::create_dir_all(store)?;
     let mut state = read_state(store)?;
@@ -384,7 +397,10 @@ fn enable_component(store: &Path, id: &str) -> Result<()> {
     validate_component_id(id)?;
     let (manifest, _) = load_installed(store, id)?;
     if !package_installed(&manifest.target_package) {
-        bail!("target package {} is not installed", manifest.target_package);
+        bail!(
+            "target package {} is not installed",
+            manifest.target_package
+        );
     }
 
     let mut state = read_state(store)?;
@@ -455,7 +471,10 @@ fn apply_all(store: &Path) -> Result<()> {
 fn apply_component(store: &Path, id: &str) -> Result<()> {
     let (manifest, version_dir) = load_installed(store, id)?;
     if !package_installed(&manifest.target_package) {
-        println!("skipped {}: target {} is not installed", manifest.id, manifest.target_package);
+        println!(
+            "skipped {}: target {} is not installed",
+            manifest.id, manifest.target_package
+        );
         return Ok(());
     }
     if let Some(min_sdk) = manifest.min_sdk {
@@ -645,10 +664,11 @@ fn encode_scalar_row(row: &ResourceRow) -> Result<(&'static str, String)> {
             let value = parse_u32(&row.value)?;
             Ok((TYPE_INT_DEC, value.to_string()))
         }
-        "dimen" => Ok((TYPE_DIMENSION, format!("0x{:08x}", encode_dimension(&row.value)?))),
-        other => bail!(
-            "resource type {other} is not supported by the fabricated-overlay backend"
-        ),
+        "dimen" => Ok((
+            TYPE_DIMENSION,
+            format!("0x{:08x}", encode_dimension(&row.value)?),
+        )),
+        other => bail!("resource type {other} is not supported by the fabricated-overlay backend"),
     }
 }
 
@@ -715,7 +735,10 @@ fn stage_file_value(row: &ResourceRow, version_dir: &Path, scratch_dir: &Path) -
     validate_relative_path(relative)?;
     let absolute = version_dir.join(relative);
     if !absolute.is_file() {
-        bail!("component file resource does not exist: {}", absolute.display());
+        bail!(
+            "component file resource does not exist: {}",
+            absolute.display()
+        );
     }
     let identity = format!(
         "{}\0{}\0{}",
@@ -724,7 +747,10 @@ fn stage_file_value(row: &ResourceRow, version_dir: &Path, scratch_dir: &Path) -
         row.config.as_deref().unwrap_or("")
     );
     let digest = hex::encode(Sha256::digest(identity.as_bytes()));
-    let extension = absolute.extension().and_then(OsStr::to_str).unwrap_or("bin");
+    let extension = absolute
+        .extension()
+        .and_then(OsStr::to_str)
+        .unwrap_or("bin");
     let staged = scratch_dir.join(format!("asset-{}.{}", &digest[..16], extension));
     fs::copy(&absolute, &staged)?;
     fs::set_permissions(&staged, fs::Permissions::from_mode(0o644))?;
@@ -832,7 +858,11 @@ fn lookup_android_color(name: &str) -> Result<String> {
         if let Some(hex) = token.strip_prefix("0x") {
             if (6..=8).contains(&hex.len()) && hex.bytes().all(|byte| byte.is_ascii_hexdigit()) {
                 let value = u32::from_str_radix(hex, 16)?;
-                let value = if hex.len() == 6 { value | 0xff00_0000 } else { value };
+                let value = if hex.len() == 6 {
+                    value | 0xff00_0000
+                } else {
+                    value
+                };
                 return Ok(format!("0x{value:08x}"));
             }
         }
@@ -923,7 +953,11 @@ fn read_resource_rows(path: &Path) -> Result<Vec<ResourceRow>> {
             );
         }
         validate_resource_identifier(fields[0], fields[1]).with_context(|| {
-            format!("{}:{} invalid resource identifier", path.display(), index + 1)
+            format!(
+                "{}:{} invalid resource identifier",
+                path.display(),
+                index + 1
+            )
         })?;
         rows.push(ResourceRow {
             resource_type: fields[0].to_string(),
@@ -992,7 +1026,9 @@ fn validate_manifest(manifest: &ComponentManifest) -> Result<()> {
             .bytes()
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
     {
-        bail!("overlay_name must use at most 100 lowercase ASCII characters, digits, and underscores");
+        bail!(
+            "overlay_name must use at most 100 lowercase ASCII characters, digits, and underscores"
+        );
     }
     if let Some(group) = &manifest.exclusive_group {
         validate_component_id(group)?;
@@ -1017,9 +1053,9 @@ fn validate_component_id(id: &str) -> Result<()> {
 fn validate_version(version: &str) -> Result<()> {
     if version.is_empty()
         || version.len() > 64
-        || !version.bytes().all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+')
-        })
+        || !version
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_' | b'+'))
     {
         bail!("version contains unsupported characters");
     }
@@ -1051,9 +1087,9 @@ fn validate_resource_identifier(resource_type: &str, name: &str) -> Result<()> {
         bail!("resource type must use lowercase ASCII, digits, and underscores");
     }
     if name.is_empty()
-        || !name.bytes().all(|byte| {
-            byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$' | b'.')
-        })
+        || !name
+            .bytes()
+            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'$' | b'.'))
     {
         bail!("resource name contains unsupported characters");
     }
@@ -1218,7 +1254,11 @@ where
             "{command} failed (status {}): {}{}{}",
             output.status,
             stderr,
-            if !stderr.is_empty() && !stdout.is_empty() { " | " } else { "" },
+            if !stderr.is_empty() && !stdout.is_empty() {
+                " | "
+            } else {
+                ""
+            },
             stdout
         ));
     }
