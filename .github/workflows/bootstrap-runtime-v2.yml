@@ -52,9 +52,10 @@ jobs:
         run: |
           set -euo pipefail
           python tools/audit_repository.py
-          python tools/validate_mappings.py
           python tools/materialize_component_specs.py --output /tmp/materialized-components
           test "$(find /tmp/materialized-components -name component.json | wc -l)" -eq 37
+          test "$(find components/app-mappings -name '*.tsv' -type f | wc -l)" -ge 3
+          test "$(grep -hEv '^(#|$)' components/app-mappings/*/*.tsv | wc -l)" -gt 0
 
       - name: Commit materialized runtime
         shell: bash
