@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    tags: ['v*']
 
 permissions:
   contents: write
@@ -10,45 +10,49 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - uses: actions/setup-java@v4
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          distribution: temurin
-          java-version: "17"
+          targets: aarch64-linux-android
       - uses: android-actions/setup-android@v3
-      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
-      - name: Restore release keystore
-        env:
-          KEYSTORE_B64: ${{ secrets.MONET_KEYSTORE_B64 }}
+      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+      - run: python tools/validate_mappings.py
+      - run: python tools/build_component_sources.py
+      - run: |
+          python tools/compile_component_assets.py \
+            --sources build/component-src --output build/component-compiled \
+            --aapt2 "$ANDROID_SDK_ROOT/build-tools/35.0.0/aapt2" \
+            --android-jar "$ANDROID_SDK_ROOT/platforms/android-35/android.jar"
+      - run: cargo build --manifest-path runtime/Cargo.toml --release
+      - run: |
+          python tools/build_components.py --monetctl runtime/target/release/monetctl \
+            --sources build/component-compiled --output build/components
+          python tools/audit_components.py build/components
+      - name: Cross-compile runtime
         run: |
-          test -n "$KEYSTORE_B64" || { echo "Missing release signing secret"; exit 1; }
-          mkdir -p "$RUNNER_TEMP/signing"
-          printf '%s' "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/signing/release.jks"
-      - name: Build signed resource-only overlays
-        env:
-          MONET_KEYSTORE_FILE: ${{ runner.temp }}/signing/release.jks
-          MONET_KEYSTORE_PASSWORD: ${{ secrets.MONET_KEYSTORE_PASSWORD }}
-          MONET_KEY_ALIAS: ${{ secrets.MONET_KEY_ALIAS }}
-          MONET_KEY_PASSWORD: ${{ secrets.MONET_KEY_PASSWORD }}
-        run: >-
-          python tools/build_overlays.py
-          --variant release
-          --version-name "${GITHUB_REF_NAME}"
-          --version-code "${GITHUB_RUN_NUMBER}"
-      - name: Package module
-        run: >-
-          python tools/package_module.py
-          --variant release
-          --version "${GITHUB_REF_NAME}"
-          --version-code "${GITHUB_RUN_NUMBER}"
-          --output "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip"
-      - run: sha256sum dist/* overlays/*/build/outputs/apk/release/*.apk > dist/SHA256SUMS
+          NDK="$ANDROID_SDK_ROOT/ndk/27.2.12479018"
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+          export CC_aarch64_linux_android="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang"
+          export AR_aarch64_linux_android="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar"
+          cargo build --manifest-path runtime/Cargo.toml --release --target aarch64-linux-android
+      - name: Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          mkdir -p dist
+          python tools/package_module.py \
+            --runtime runtime/target/aarch64-linux-android/release/monetctl \
+            --components build/components --version "$VERSION" --version-code "$VERSION_CODE" \
+            --output "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip"
+          python tools/audit_module.py "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip"
+          sha256sum "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip" > "dist/ColorOS-Monet-${GITHUB_REF_NAME}.zip.sha256"
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*
-            overlays/*/build/outputs/apk/release/*.apk
+            build/components/*.cmonet
