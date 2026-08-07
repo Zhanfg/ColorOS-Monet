@@ -1,6 +1,8 @@
 #!/system/bin/sh
 # SPDX-License-Identifier: Apache-2.0
 
+# Read by Magisk / KernelSU / APatch installer framework.
+# shellcheck disable=SC2034
 SKIPMOUNT=true
 
 ui_print "*******************************"
