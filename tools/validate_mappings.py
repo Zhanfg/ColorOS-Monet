@@ -41,11 +41,14 @@ def main() -> int:
     component_count = 0
     component_ids: set[str] = set()
     for spec in iter_specs(ROOT / "components" / "bundles"):
-        if spec.get("format") != 1:
-            raise ValueError("unsupported component spec format")
         manifest = spec.get("component")
         if not isinstance(manifest, dict) or not manifest.get("id"):
             raise ValueError("component spec missing component.id")
+
+        schema = manifest.get("schema", spec.get("format", spec.get("schema")))
+        if schema not in (None, 1, "1"):
+            raise ValueError(f"unsupported component schema: {schema!r}")
+
         component_id = str(manifest["id"])
         if component_id in component_ids:
             raise ValueError(f"duplicate component id: {component_id}")
