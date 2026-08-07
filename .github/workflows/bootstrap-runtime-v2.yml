@@ -39,13 +39,12 @@ jobs:
         run: |
           set -euo pipefail
           rm -rf module docs tools runtime components overlays
-          tar -xJf /tmp/runtime-v2-source.tar.xz
+          tar --exclude='./.github' -xJf /tmp/runtime-v2-source.tar.xz
           mkdir -p components/app-mappings/x components/app-mappings/tim components/app-mappings/coolapk
           cp -a /tmp/coloros-monet-mappings/x/. components/app-mappings/x/
           cp -a /tmp/coloros-monet-mappings/tim/. components/app-mappings/tim/
           cp -a /tmp/coloros-monet-mappings/coolapk/. components/app-mappings/coolapk/
           rm -rf bootstrap
-          rm -f .github/workflows/bootstrap-runtime-v2.yml
 
       - name: Validate materialized source tree
         shell: bash
