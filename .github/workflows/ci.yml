@@ -28,12 +28,6 @@ jobs:
           targets: aarch64-linux-android
           components: rustfmt, clippy
 
-      - uses: android-actions/setup-android@v3
-
-      - name: Install Android build tools and NDK
-        run: |
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
-
       - name: Static validation
         run: |
           python -m py_compile tools/*.py
@@ -47,6 +41,16 @@ jobs:
           cargo clippy --manifest-path runtime/Cargo.toml --all-targets -- -D warnings
           cargo test --manifest-path runtime/Cargo.toml
           cargo build --manifest-path runtime/Cargo.toml --release
+
+      - name: Install Android build tools and NDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
 
       - name: Materialize component sources
         run: python tools/build_component_sources.py
