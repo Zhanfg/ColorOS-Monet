@@ -11,5 +11,7 @@ if [ -f "$PIDFILE" ]; then
   case "$PID" in ''|*[!0-9]*) ;; *) kill "$PID" 2>/dev/null || true ;; esac
 fi
 
-[ -x "$MODDIR/bin/monetctl" ] && "$MODDIR/bin/monetctl" disable-all --store "$STORE" >/dev/null 2>&1 || true
+if [ -x "$MODDIR/bin/monetctl" ]; then
+  "$MODDIR/bin/monetctl" disable-all --store "$STORE" >/dev/null 2>&1 || true
+fi
 rm -rf "$BASE"
