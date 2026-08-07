@@ -14,4 +14,7 @@ fi
 if [ -x "$MODDIR/bin/monetctl" ]; then
   "$MODDIR/bin/monetctl" disable-all --store "$STORE" >/dev/null 2>&1 || true
 fi
+
+# Do not uninstall one.dot.couiexpressive automatically. The user may have
+# installed, configured, or updated that package independently from this module.
 rm -rf "$BASE"
