@@ -32,15 +32,19 @@ esac
 # APKs remain forbidden except for the one explicitly designated user-facing
 # COE frontend. The public repository does not contain that binary; local/private
 # builds may inject it with tools/package_module.py --frontend-apk.
-APK_COUNT=0
+APK_LIST="$MODPATH/.frontend-apk-list"
+find "$MODPATH" -type f -name '*.apk' 2>/dev/null >"$APK_LIST"
+APK_COUNT="$(wc -l <"$APK_LIST" | tr -d ' ')"
 BAD_APK=0
-for APK in $(find "$MODPATH" -type f -name '*.apk' 2>/dev/null); do
-  APK_COUNT=$((APK_COUNT + 1))
-  [ "$APK" = "$FRONTEND_APK" ] || {
-    ui_print "! Unexpected APK payload: ${APK#$MODPATH/}"
+while IFS= read -r APK; do
+  [ -n "$APK" ] || continue
+  if [ "$APK" != "$FRONTEND_APK" ]; then
+    ui_print "! Unexpected APK payload: ${APK#"$MODPATH"/}"
     BAD_APK=1
-  }
-done
+  fi
+done <"$APK_LIST"
+rm -f "$APK_LIST"
+
 [ "$BAD_APK" = "0" ] || abort "Unexpected APK payload detected"
 [ "$APK_COUNT" -le 1 ] || abort "Only the COE frontend APK may be bundled"
 
@@ -48,7 +52,9 @@ if [ -f "$FRONTEND_APK" ]; then
   if command -v sha256sum >/dev/null 2>&1 && [ -f "$FRONTEND_HASH_FILE" ]; then
     EXPECTED_HASH="$(awk 'NR==1{print $1}' "$FRONTEND_HASH_FILE" 2>/dev/null)"
     ACTUAL_HASH="$(sha256sum "$FRONTEND_APK" 2>/dev/null | awk '{print $1}')"
-    [ -n "$EXPECTED_HASH" ] && [ "$EXPECTED_HASH" = "$ACTUAL_HASH" ] || abort "COE frontend APK hash mismatch"
+    if [ -z "$EXPECTED_HASH" ] || [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+      abort "COE frontend APK hash mismatch"
+    fi
   fi
   ui_print "- COE frontend bundled"
 else
