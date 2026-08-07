@@ -699,22 +699,32 @@ fn encode_dimension(raw: &str) -> Result<u32> {
     if !value.is_finite() {
         bail!("dimension is not finite: {raw}");
     }
-
-    let candidates = [
-        (3u32, 8_388_608.0f64),
-        (2u32, 32_768.0f64),
-        (1u32, 128.0f64),
-        (0u32, 1.0f64),
-    ];
-    for (radix, scale) in candidates {
-        let mantissa = (value * scale).round();
-        if (-8_388_608.0..=8_388_607.0).contains(&mantissa) {
-            let mantissa = mantissa as i32;
-            let encoded = ((mantissa as u32) & 0x00ff_ffff) << 8;
-            return Ok(encoded | (radix << 4) | unit);
-        }
+    if !(-8_388_608.5..8_388_607.5).contains(&value) {
+        bail!("dimension is outside Android complex-value range: {raw}");
     }
-    bail!("dimension is outside Android complex-value range: {raw}")
+
+    let (radix, scale) = if value.fract() == 0.0 {
+        (0u32, 1.0f64)
+    } else {
+        let magnitude = value.abs();
+        if magnitude < 1.0 {
+            (3u32, 8_388_608.0f64)
+        } else if magnitude < 256.0 {
+            (2u32, 32_768.0f64)
+        } else if magnitude < 65_536.0 {
+            (1u32, 128.0f64)
+        } else {
+            (0u32, 1.0f64)
+        }
+    };
+
+    // java.lang.Math.round(double) is floor(value + 0.5), including negatives.
+    let mantissa = (value * scale + 0.5).floor() as i64;
+    if !(-8_388_608..=8_388_607).contains(&mantissa) {
+        bail!("dimension is outside Android complex-value range: {raw}");
+    }
+    let encoded = ((mantissa as i32 as u32) & 0x00ff_ffff) << 8;
+    Ok(encoded | (radix << 4) | unit)
 }
 
 fn create_scratch_dir() -> Result<TempDir> {
@@ -1319,10 +1329,11 @@ mod tests {
 
     #[test]
     fn dimension_encoding_is_stable() {
-        assert_eq!(encode_dimension("0dp").unwrap(), 1);
-        assert_eq!(encode_dimension("16dp").unwrap(), 0x08000021);
-        let value = encode_dimension("12.5sp").unwrap();
-        assert_eq!(value & 0x0f, 2);
+        assert_eq!(encode_dimension("0dp").unwrap(), 0x00000001);
+        assert_eq!(encode_dimension("16dp").unwrap(), 0x00001001);
+        assert_eq!(encode_dimension("12.5sp").unwrap(), 0x06400022);
+        assert_eq!(encode_dimension("0.5dp").unwrap(), 0x40000031);
+        assert_eq!(encode_dimension("-1.5dp").unwrap(), 0xff400021);
     }
 
     #[test]
