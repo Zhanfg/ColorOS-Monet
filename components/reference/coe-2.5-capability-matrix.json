@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "reference": {
+    "name": "COE 2.5",
+    "sha256": "afe7d36bac69127d6962158d04792c48020bf6dd082fad6ca2a2495c5e43b0f7",
+    "package": "one.dot.couiexpressive",
+    "version_name": "2.5.0.260802",
+    "version_code": 25,
+    "min_sdk": 35,
+    "target_sdk": 36,
+    "redistributed": false
+  },
+  "declared_scopes": [
+    "android",
+    "com.android.settings",
+    "com.android.systemui",
+    "com.oplus.wirelesssettings",
+    "com.oplus.notificationmanager",
+    "com.android.launcher"
+  ],
+  "capability_groups": {
+    "widgets": [
+      "segmented-cards",
+      "material-switches",
+      "large-toolbar",
+      "popup-and-ripple",
+      "stretch-overscroll"
+    ],
+    "settings": [
+      "homepage-search",
+      "account-card",
+      "list-spacing-and-shape",
+      "secondary-text-layout"
+    ],
+    "launcher": [
+      "dock-search-pill",
+      "themed-icons",
+      "folder-blur",
+      "recents-restyle",
+      "gesture-transitions"
+    ],
+    "systemui": [
+      "notification-restyle",
+      "quick-settings-restyle",
+      "slider-restyle",
+      "volume-dialog",
+      "lockscreen-and-aod",
+      "udfps-feedback",
+      "global-actions",
+      "edge-back-indicator",
+      "dynamic-palette-refresh"
+    ]
+  },
+  "required_backends": {
+    "fabricated-overlay": [
+      "colors",
+      "dimensions",
+      "strings",
+      "independent-drawables"
+    ],
+    "runtime-behavior": [
+      "layout-restructuring",
+      "gesture-interception",
+      "view-animation",
+      "state-machine-changes",
+      "media-integration"
+    ]
+  },
+  "clean_room_boundary": "Capability categories only; no APK payload, code, assets, vectors, preference keys, or implementation signatures are copied."
+}

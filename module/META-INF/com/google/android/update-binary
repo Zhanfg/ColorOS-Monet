@@ -1,0 +1,24 @@
+#!/sbin/sh
+# SPDX-License-Identifier: Apache-2.0
+umask 022
+ui_print() { echo "$1"; }
+require_new_magisk() {
+  ui_print "*******************************"
+  ui_print " Magisk 20.4+ or a compatible"
+  ui_print " KernelSU/APatch installer is required"
+  ui_print "*******************************"
+  exit 1
+}
+# Consumed by Magisk's sourced installer functions.
+# shellcheck disable=SC2034
+OUTFD=$2
+# shellcheck disable=SC2034
+ZIPFILE=$3
+mount /data 2>/dev/null
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+# Runtime-provided file is unavailable to repository-local ShellCheck.
+# shellcheck disable=SC1091
+. /data/adb/magisk/util_functions.sh
+[ "${MAGISK_VER_CODE:-0}" -lt 20400 ] && require_new_magisk
+install_module
+exit 0

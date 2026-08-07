@@ -1,5 +1,6 @@
 .gradle/
 **/build/
+runtime/target/
 dist/
 local.properties
 *.jks
@@ -7,6 +8,7 @@ local.properties
 *.apk
 *.apks
 *.xapk
+*.cmonet
 *.p12
 *.pk8
 *.pem

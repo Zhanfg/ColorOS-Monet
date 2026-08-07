@@ -1,0 +1,372 @@
+[
+  {
+    "id": "coloros-assistive-ball",
+    "name": "ColorOS Assistive Ball",
+    "target_package": "com.coloros.floatassistant",
+    "spec": "coloros-assistive-ball.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-battery",
+    "name": "ColorOS Battery",
+    "target_package": "com.oplus.battery",
+    "spec": "coloros-battery.json",
+    "files": 26,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-breeno",
+    "name": "ColorOS Breeno",
+    "target_package": "com.heytap.speechassist",
+    "spec": "coloros-breeno.json",
+    "files": 6,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-browser",
+    "name": "ColorOS Browser",
+    "target_package": "com.heytap.browser",
+    "spec": "coloros-browser.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-camera",
+    "name": "ColorOS Camera",
+    "target_package": "com.oplus.camera",
+    "spec": "coloros-camera.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-car-connect",
+    "name": "ColorOS Car Connect",
+    "target_package": "com.oplus.ocar",
+    "spec": "coloros-car-connect.json",
+    "files": 6,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-children-space",
+    "name": "ColorOS Children Space",
+    "target_package": "com.coloros.childrenspace",
+    "spec": "coloros-children-space.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-clock",
+    "name": "ColorOS Clock",
+    "target_package": "com.coloros.alarmclock",
+    "spec": "coloros-clock.json",
+    "files": 122,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-contacts",
+    "name": "ColorOS Contacts",
+    "target_package": "com.android.contacts",
+    "spec": "coloros-contacts.json",
+    "files": 45,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-digital-wellbeing",
+    "name": "ColorOS Digital Wellbeing",
+    "target_package": "com.coloros.digitalwellbeing",
+    "spec": "coloros-digital-wellbeing.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-eye-protect",
+    "name": "ColorOS Eye Protect",
+    "target_package": "com.oplus.eyeprotect",
+    "spec": "coloros-eye-protect.json",
+    "files": 26,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-launcher",
+    "name": "ColorOS Launcher",
+    "target_package": "com.android.launcher",
+    "spec": "coloros-launcher.json",
+    "files": 76,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-linker",
+    "name": "ColorOS Linker",
+    "target_package": "com.oplus.linker",
+    "spec": "coloros-linker.json",
+    "files": 24,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-live-caption",
+    "name": "ColorOS Live Caption",
+    "target_package": "com.coloros.accessibilityassistant",
+    "spec": "coloros-live-caption.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-notification-manager",
+    "name": "ColorOS Notification Manager",
+    "target_package": "com.oplus.notificationmanager",
+    "spec": "coloros-notification-manager.json",
+    "files": 33,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-oplus-framework",
+    "name": "OPlus Framework",
+    "target_package": "oplus",
+    "spec": "coloros-oplus-framework.json",
+    "files": 8,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-oshare",
+    "name": "ColorOS OShare",
+    "target_package": "com.coloros.oshare",
+    "spec": "coloros-oshare.json",
+    "files": 7,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-permission",
+    "name": "ColorOS Permission",
+    "target_package": "com.oplus.securitypermission",
+    "spec": "coloros-permission.json",
+    "files": 93,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-phone",
+    "name": "ColorOS Phone",
+    "target_package": "com.android.phone",
+    "spec": "coloros-phone.json",
+    "files": 26,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-phone-manager",
+    "name": "ColorOS Phone Manager",
+    "target_package": "com.coloros.phonemanager",
+    "spec": "coloros-phone-manager.json",
+    "files": 27,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-pscanvas",
+    "name": "ColorOS Parallel Space Canvas",
+    "target_package": "com.oplus.pscanvas",
+    "spec": "coloros-pscanvas.json",
+    "files": 18,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-security-center",
+    "name": "ColorOS Security Center",
+    "target_package": "com.oplus.safecenter",
+    "spec": "coloros-security-center.json",
+    "files": 7,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-settings-full",
+    "name": "ColorOS Settings Full Theme",
+    "target_package": "com.android.settings",
+    "spec": "coloros-settings-full.json",
+    "files": 172,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-share-screen",
+    "name": "ColorOS Share Screen",
+    "target_package": "com.coloros.sharescreen",
+    "spec": "coloros-share-screen.json",
+    "files": 6,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-systemui-dual-blur",
+    "name": "ColorOS SystemUI Dual Blur",
+    "target_package": "com.android.systemui",
+    "spec": "coloros-systemui-dual-blur.json",
+    "files": 335,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-systemui-dual-monet",
+    "name": "ColorOS SystemUI Dual Monet",
+    "target_package": "com.android.systemui",
+    "spec": "coloros-systemui-dual-monet.json",
+    "files": 377,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-systemui-single-blur",
+    "name": "ColorOS SystemUI Single Blur",
+    "target_package": "com.android.systemui",
+    "spec": "coloros-systemui-single-blur.json",
+    "files": 333,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-systemui-single-monet",
+    "name": "ColorOS SystemUI Single Monet",
+    "target_package": "com.android.systemui",
+    "spec": "coloros-systemui-single-monet.json",
+    "files": 377,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "coloros-wireless-settings",
+    "name": "ColorOS Wireless Settings",
+    "target_package": "com.oplus.wirelesssettings",
+    "spec": "coloros-wireless-settings.json",
+    "files": 69,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "microsoft-appmanager",
+    "name": "Microsoft App Manager",
+    "target_package": "com.microsoft.appmanager",
+    "spec": "microsoft-appmanager.json",
+    "files": 5,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "oneplus-oshare",
+    "name": "OnePlus OShare",
+    "target_package": "com.oneplus.oshare",
+    "spec": "oneplus-oshare.json",
+    "files": 7,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "scene-monet",
+    "name": "Scene Monet",
+    "target_package": "com.omarea.vtools",
+    "spec": "scene-monet.json",
+    "files": 8,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "wechat-bubble-pro",
+    "name": "WeChat Bubble Pro",
+    "target_package": "com.tencent.mm",
+    "spec": "wechat-bubble-pro.json",
+    "files": 32,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "wechat-classic-bubble",
+    "name": "WeChat Classic Bubble",
+    "target_package": "com.tencent.mm",
+    "spec": "wechat-classic-bubble.json",
+    "files": 28,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "wechat-monet",
+    "name": "WeChat Monet Base",
+    "target_package": "com.tencent.mm",
+    "spec": "wechat-monet.json",
+    "files": 40,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "wechat-multiscene-corners",
+    "name": "WeChat Multi-scene Corners",
+    "target_package": "com.tencent.mm",
+    "spec": "wechat-multiscene-corners.json",
+    "files": 7,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  },
+  {
+    "id": "wechat-solid-tab",
+    "name": "WeChat Solid Tab",
+    "target_package": "com.tencent.mm",
+    "spec": "wechat-solid-tab.json",
+    "files": 4,
+    "resource_rows": null,
+    "rebuilt_assets": null,
+    "source_status": "clean-room-reimplemented; device-validation-required"
+  }
+]
