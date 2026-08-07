@@ -3,36 +3,37 @@
 
 MODDIR="${0%/*}"
 BASE=/data/adb/coloros-monet
-STORE="$BASE/components"
 RUNTIME="$BASE/runtime"
-PIDFILE="$RUNTIME/watcher.pid"
-DISABLED="$BASE/global-disabled"
+FRONTEND_APK="$MODDIR/frontend/COE-2.5.apk"
+FRONTEND_PACKAGE="one.dot.couiexpressive"
+FRONTEND_ACTIVITY="one.dot.couiexpressive.ui.SettingsActivity"
+FRONTEND_ALIAS="one.dot.couiexpressive.LauncherActivityAlias"
 
-stop_watcher() {
-  [ -f "$PIDFILE" ] || return 0
-  PID="$(cat "$PIDFILE" 2>/dev/null)"
-  case "$PID" in ''|*[!0-9]*) rm -f "$PIDFILE"; return 0 ;; esac
-  kill "$PID" 2>/dev/null || true
-  rm -f "$PIDFILE"
-}
+mkdir -p "$RUNTIME"
 
-mkdir -p "$STORE" "$RUNTIME"
-"$MODDIR/bin/monetctl" sync "$MODDIR/components" --store "$STORE" --enable-defaults || exit 1
+echo "[ColorOS Monet] Opening COE frontend"
 
-if [ -f "$DISABLED" ]; then
-  echo "[ColorOS Monet] Enabling default components"
-  rm -f "$DISABLED"
-  "$MODDIR/bin/monetctl" apply-all --store "$STORE" || true
-  stop_watcher
-  "$MODDIR/bin/monetctl" watch --store "$STORE" --runtime-dir "$RUNTIME" --interval-seconds 20 >>"$BASE/watcher.log" 2>&1 &
-  echo "$!" >"$PIDFILE"
-else
-  echo "[ColorOS Monet] Disabling all components"
-  touch "$DISABLED"
-  stop_watcher
-  "$MODDIR/bin/monetctl" disable-all --store "$STORE" || true
+if ! pm path "$FRONTEND_PACKAGE" >/dev/null 2>&1 && [ -f "$FRONTEND_APK" ]; then
+  echo "- Frontend not installed; installing bundled COE"
+  pm install -r --user 0 "$FRONTEND_APK" >"$RUNTIME/frontend-action-install.log" 2>&1 || true
 fi
 
-echo
-echo "Component state:"
-"$MODDIR/bin/monetctl" list --store "$STORE" 2>/dev/null || true
+if pm path "$FRONTEND_PACKAGE" >/dev/null 2>&1; then
+  if am start --user 0 -n "$FRONTEND_PACKAGE/$FRONTEND_ALIAS" >/dev/null 2>&1; then
+    echo "- COE frontend opened through launcher alias"
+    exit 0
+  fi
+  if am start --user 0 -n "$FRONTEND_PACKAGE/$FRONTEND_ACTIVITY" >/dev/null 2>&1; then
+    echo "- COE frontend opened through SettingsActivity"
+    exit 0
+  fi
+  if command -v monkey >/dev/null 2>&1 && monkey -p "$FRONTEND_PACKAGE" -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1; then
+    echo "- COE frontend opened through launcher intent"
+    exit 0
+  fi
+  echo "! COE is installed but Android refused to launch its settings activity"
+  exit 1
+fi
+
+echo "! COE frontend is not installed and no installable frontend was found"
+exit 1
