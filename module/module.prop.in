@@ -1,6 +1,7 @@
-id=coloros_monet_cleanroom
-name=ColorOS Monet Clean-room
+id=coloros_monet
+name=ColorOS Monet Component Runtime
 version=@VERSION@
 versionCode=@VERSION_CODE@
-author=ColorOS-Monet contributors
-description=Clean-room Android Monet overlays for ColorOS and selected applications. No third-party APKs or copied module payloads are included.
+author=Axymorrsen / ColorOS-Monet contributors
+description=Rust-powered APK-free Monet component runtime for ColorOS and selected applications.
+updateJson=

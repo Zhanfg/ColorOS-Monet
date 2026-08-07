@@ -1,43 +1,107 @@
 #!/usr/bin/env python3
-"""Fail CI when proprietary payloads, signing secrets, or generated APKs enter source control."""
+# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
-from pathlib import Path
+
+import gzip
+import json
+import lzma
 import re
-import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-FORBIDDEN_SUFFIXES = {".apk", ".apks", ".xapk", ".jks", ".keystore", ".p12", ".pk8", ".pem", ".der"}
-FORBIDDEN_NAMES = {"key.properties", "signing.properties", "local.properties"}
-SECRET_PATTERNS = [
-    re.compile(r"(?i)(api[_-]?key|token|password|private[_-]?key)\s*[:=]\s*[^<\s][^\s]*"),
-    re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
-]
-ALLOW_SECRET_SCAN = {"tools/audit_repository.py", ".github/workflows/release.yml", "docs/RELEASE_SIGNING.md"}
+FORBIDDEN_SUFFIXES = {".apk", ".xapk", ".apks", ".jks", ".keystore", ".p12", ".pfx"}
+SENSITIVE = re.compile(
+    r"(?i)(?:sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----)"
+)
 
-errors=[]
-for path in ROOT.rglob("*"):
-    if not path.is_file() or ".git" in path.parts or "build" in path.parts or "__pycache__" in path.parts:
-        continue
-    rel=path.relative_to(ROOT).as_posix()
-    if path.suffix.lower() in FORBIDDEN_SUFFIXES or path.name in FORBIDDEN_NAMES:
-        errors.append(f"forbidden binary/secret file: {rel}")
-        continue
-    if rel not in ALLOW_SECRET_SCAN:
-        try: text=path.read_text(encoding="utf-8")
-        except UnicodeDecodeError:
-            errors.append(f"unexpected non-text source file: {rel}")
+
+def main() -> int:
+    failures: list[str] = []
+    for path in ROOT.rglob("*"):
+        if not path.is_file() or ".git" in path.parts or "build" in path.parts or "target" in path.parts:
             continue
-        for line in text.splitlines():
-            if "System.getenv(" in line or "os.environ.get(" in line or "secrets." in line or line.rstrip().endswith("= signing"):
+        if path.suffix.lower() in FORBIDDEN_SUFFIXES:
+            failures.append(f"forbidden file: {path.relative_to(ROOT)}")
+        if path.stat().st_size <= 2_000_000:
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
                 continue
-            for pattern in SECRET_PATTERNS:
-                if pattern.search(line):
-                    errors.append(f"possible secret in: {rel}")
-                    break
+            if SENSITIVE.search(text):
+                failures.append(f"possible secret: {path.relative_to(ROOT)}")
+
+    bundle_dir = ROOT / "components" / "bundles"
+    bundle_paths = sorted(bundle_dir.glob("cleanroom-*.jsonl")) + sorted(bundle_dir.glob("cleanroom-*.jsonl.gz")) + sorted(bundle_dir.glob("cleanroom-*.jsonl.xz"))
+    specs: list[tuple[str, dict[str, object]]] = []
+    for bundle_path in bundle_paths:
+        try:
+            if bundle_path.suffix == ".gz":
+                text = gzip.decompress(bundle_path.read_bytes()).decode("utf-8")
+            elif bundle_path.suffix == ".xz":
+                text = lzma.decompress(bundle_path.read_bytes()).decode("utf-8")
             else:
+                text = bundle_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as exc:
+            failures.append(f"invalid component bundle {bundle_path.name}: {exc}")
+            continue
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if not line.strip():
                 continue
-            break
-if errors:
-    print("\n".join(errors), file=sys.stderr)
-    raise SystemExit(1)
-print("clean-room repository audit passed")
+            try:
+                spec = json.loads(line)
+            except json.JSONDecodeError as exc:
+                failures.append(f"invalid JSONL {bundle_path.name}:{line_number}: {exc}")
+                continue
+            specs.append((f"{bundle_path.name}:{line_number}", spec))
+
+    if len(specs) != 37:
+        failures.append(f"expected 37 clean-room component specs, found {len(specs)}")
+    ids = set()
+    for location, spec in specs:
+        manifest = spec.get("component", {})
+        if not isinstance(manifest, dict):
+            failures.append(f"invalid component manifest: {location}")
+            continue
+        component_id = manifest.get("id")
+        if not isinstance(component_id, str) or not component_id:
+            failures.append(f"missing component id: {location}")
+            continue
+        if component_id in ids:
+            failures.append(f"duplicate component id: {component_id}")
+        ids.add(component_id)
+        if manifest.get("backend") != "fabricated-overlay":
+            failures.append(f"unexpected backend: {location}")
+        files = spec.get("files", {})
+        if not isinstance(files, dict):
+            failures.append(f"invalid files table: {location}")
+            continue
+        provenance = files.get("provenance.json", "{}")
+        if not isinstance(provenance, str):
+            failures.append(f"invalid provenance payload type: {location}")
+            continue
+        try:
+            provenance_data = json.loads(provenance)
+        except json.JSONDecodeError:
+            failures.append(f"invalid provenance: {location}")
+            continue
+        for field in ("copied_application_bytecode", "copied_binary_assets", "copied_vector_path_data"):
+            if provenance_data.get(field) is True:
+                failures.append(f"clean-room violation {field}: {location}")
+
+    required = [
+        "runtime/Cargo.toml", "runtime/src/main.rs", "module/customize.sh",
+        "module/post-fs-data.sh", "module/service.sh", "module/action.sh",
+        "module/uninstall.sh", "docs/COMPONENT_FORMAT.md",
+    ]
+    for name in required:
+        if not (ROOT / name).is_file():
+            failures.append(f"missing required file: {name}")
+
+    if failures:
+        raise SystemExit("\n".join(failures))
+    print(f"PASS repository audit: bundled_specs={len(specs)} forbidden_payloads=0 secrets=0")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

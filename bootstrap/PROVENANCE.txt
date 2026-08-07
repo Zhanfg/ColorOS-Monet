@@ -1,1 +1,0 @@
-Source archive generated from an independent clean-room rebuild. It contains project-authored Rust runtime, module scripts, component metadata, build tooling, and documentation. It does not contain target application APKs, signing credentials, copied module binaries, or vendor artwork.
