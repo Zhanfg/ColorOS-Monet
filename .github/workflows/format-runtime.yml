@@ -1,0 +1,36 @@
+name: Format Rust Runtime
+
+on:
+  push:
+    branches: [feat/rust-component-runtime]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coloros-monet-format-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/rust-component-runtime
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - name: Format and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo fmt --manifest-path runtime/Cargo.toml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add runtime
+          git diff --cached --quiet && exit 0
+          git commit -m 'style: format Rust component runtime'
+          git push origin HEAD:feat/rust-component-runtime
