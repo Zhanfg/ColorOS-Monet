@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SDK_DIR = "37.0"
 BUILD_TOOLS = "37.0.0"
-TABLE = ROOT / "compat/coloros17/native_restore.tsv"
+TABLES = [\n    ROOT / "compat/coloros17/native_restore.tsv",\n    ROOT / "compat/coloros17/native_surface_restore.tsv",\n]
 
 @dataclass(frozen=True)
 class Entry:
@@ -59,16 +59,17 @@ def signing_key() -> Path:
 
 def read_table() -> list[Entry]:
     out: list[Entry] = []
-    with TABLE.open(encoding="utf-8", newline="") as f:
-        for raw in f:
-            if not raw.strip() or raw.lstrip().startswith("#"):
-                continue
-            row = next(csv.reader([raw], delimiter="\t"))
-            while len(row) < 7:
-                row.append("")
-            out.append(Entry(*row[:7]))
+    for table in TABLES:
+        with table.open(encoding="utf-8", newline="") as f:
+            for raw in f:
+                if not raw.strip() or raw.lstrip().startswith("#"):
+                    continue
+                row = next(csv.reader([raw], delimiter="\t"))
+                while len(row) < 7:
+                    row.append("")
+                out.append(Entry(*row[:7]))
     if not out:
-        raise RuntimeError("native restore table is empty")
+        raise RuntimeError("native restore tables are empty")
     return out
 
 def value_xml(entries: list[Entry], night: bool) -> str:

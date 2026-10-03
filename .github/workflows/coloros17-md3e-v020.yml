@@ -1,11 +1,11 @@
-name: ColorOS 17 MD3E v0.2.0 P0
+name: ColorOS 17 MD3E v0.2.0 native foundation
 
 on:
   push:
     branches:
       - "coloros17-md3e-v0.2.0"
     paths:
-      - "compat/coloros17/native_restore.tsv"
+      - "compat/coloros17/native_restore.tsv"\n      - "compat/coloros17/native_surface_restore.tsv"
       - "tools/build_coloros17_native_restore.py"
       - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
@@ -31,16 +31,16 @@ jobs:
           SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
-      - name: Build P0 native restore layer
+      - name: Build native geometry + surface foundation
         run: >-
           python tools/build_coloros17_native_restore.py
           --version 0.2.0-alpha1
           --version-code 26100320
-          --output dist/ColorOS17-NativeRestore-P0.zip
+          --output dist/ColorOS17-NativeFoundation-P0P1.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: ColorOS17-NativeRestore-P0
+          name: ColorOS17-NativeFoundation-P0P1
           path: |
-            dist/ColorOS17-NativeRestore-P0.zip
+            dist/ColorOS17-NativeFoundation-P0P1.zip
             dist/native-restore/*.apk
             dist/native-restore/native-restore-manifest.tsv
