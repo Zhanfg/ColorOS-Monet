@@ -34,19 +34,25 @@ jobs:
           python tools/build_overlays.py
           --variant debug
           --version-name 0.2.0-alpha1
-          --version-code 26100320
+          --version-code 26100330
       - name: Build ColorOS 17 native foundation
         run: >-
           python tools/build_coloros17_native_restore.py
           --version 0.2.0-alpha1
-          --version-code 26100320
+          --version-code 26100330
           --output dist/ColorOS17-NativeFoundation-P0P1.zip
+      - name: Build conservative MD3E semantic accent layer
+        run: >-
+          python tools/build_coloros17_semantic_accent.py
+          --version 0.2.0-alpha2
+          --version-code 26100330
+          --output dist/ColorOS17-MD3E-SemanticAccent.zip
       - name: Package flashable v0.2.0 alpha module
         run: >-
           python tools/package_module.py
           --variant debug
           --version 0.2.0-alpha1
-          --version-code 26100320
+          --version-code 26100330
           --native-foundation-dir dist/native-foundation
           --output dist/ColorOS-Monet-v0.2.0-alpha1-COS17.zip
       - name: Hash artifacts
@@ -61,3 +67,5 @@ jobs:
             dist/SHA256SUMS
             dist/native-foundation/*.apk
             dist/native-foundation/native-foundation-manifest.tsv
+            dist/semantic-accent/*.apk
+            dist/semantic-accent/semantic-accent-manifest.tsv

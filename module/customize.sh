@@ -10,6 +10,8 @@ OVERLAY_SRC="$MODPATH/payload/overlays"
 OVERLAY_DST="$MODPATH/system/product/overlay"
 NATIVE_SRC="$MODPATH/payload/native-foundation"
 NATIVE_MANIFEST="$NATIVE_SRC/native-foundation-manifest.tsv"
+SEMANTIC_SRC="$MODPATH/payload/semantic-accent"
+SEMANTIC_MANIFEST="$SEMANTIC_SRC/semantic-accent-manifest.tsv"
 DOCTOR="$MODPATH/bin/coloros-monet-doctor"
 
 ui_print "- ColorOS Monet / MD3E native-first installer"
@@ -26,6 +28,9 @@ if [ ! -f "$STATE_FILE" ]; then
 fi
 if ! grep -q '^native_expressive=' "$STATE_FILE" 2>/dev/null; then
     printf '\nnative_expressive=0\n' >> "$STATE_FILE"
+fi
+if ! grep -q '^md3e_semantic=' "$STATE_FILE" 2>/dev/null; then
+    printf 'md3e_semantic=1\n' >> "$STATE_FILE"
 fi
 chmod 0600 "$STATE_FILE" 2>/dev/null
 [ -f "$DOCTOR" ] && chmod 0755 "$DOCTOR" 2>/dev/null
@@ -44,6 +49,33 @@ is_coloros17() {
         *17.*|*17_*) return 0 ;;
     esac
     return 1
+}
+
+install_semantic_accent() {
+    [ -d "$SEMANTIC_SRC" ] || return 0
+    [ -f "$SEMANTIC_MANIFEST" ] || {
+        ui_print "! 缺少 ColorOS 17 semantic accent 清单"
+        return 1
+    }
+
+    if ! is_coloros17; then
+        return 0
+    fi
+
+    ui_print "- 安装 ColorOS 17 MD3E semantic accent 层"
+    TAB=$(printf '\t')
+    while IFS="$TAB" read -r _key _target _overlay apk _count; do
+        case "$_key" in ''|'#'*) continue ;; esac
+        [ "$_key" = key ] && continue
+        src="$SEMANTIC_SRC/$apk"
+        [ -f "$src" ] || {
+            ui_print "! semantic accent 缺少：$apk"
+            return 1
+        }
+        cp -f "$src" "$OVERLAY_DST/$apk" || return 1
+        chmod 0644 "$OVERLAY_DST/$apk" 2>/dev/null
+    done < "$SEMANTIC_MANIFEST"
+    return 0
 }
 
 install_native_foundation() {
@@ -101,7 +133,8 @@ while IFS="$TAB" read -r key _target _overlay apk; do
 done < "$TARGETS"
 
 install_native_foundation || abort "! 安装 ColorOS 17 native-first 基础层失败"
+install_semantic_accent || abort "! 安装 ColorOS 17 MD3E semantic accent 层失败"
 
-rm -rf "$MODPATH/payload/overlays" "$MODPATH/payload/native-foundation"
+rm -rf "$MODPATH/payload/overlays" "$MODPATH/payload/native-foundation" "$MODPATH/payload/semantic-accent"
 ui_print "- 已安装 X 只读诊断器，可从模块操作菜单导出报告。"
 ui_print "- 安装完成。重启后由 service.sh 验证动态覆盖与 ColorOS 17 native-first 基础层状态。"

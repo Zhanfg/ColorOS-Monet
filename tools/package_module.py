@@ -29,6 +29,7 @@ def main() -> int:
     p.add_argument("--version-code", required=True, type=int)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--native-foundation-dir", type=Path)
+    p.add_argument("--semantic-accent-dir", type=Path)
     args = p.parse_args()
     root = args.root.resolve()
 
@@ -56,6 +57,18 @@ def main() -> int:
             shutil.copy2(manifest, stage / "payload" / "native-foundation-manifest.tsv")
             for apk in sorted(native_src.glob("*.apk")):
                 shutil.copy2(apk, native_dest / apk.name)
+
+        if args.semantic_accent_dir:
+            semantic_src = args.semantic_accent_dir.resolve()
+            manifest = semantic_src / "semantic-accent-manifest.tsv"
+            if not manifest.is_file():
+                raise RuntimeError(f"missing semantic accent manifest: {manifest}")
+            semantic_dest = stage / "payload" / "semantic-accent"
+            semantic_dest.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(manifest, semantic_dest / manifest.name)
+            shutil.copy2(manifest, stage / "payload" / "semantic-accent-manifest.tsv")
+            for apk in sorted(semantic_src.glob("*.apk")):
+                shutil.copy2(apk, semantic_dest / apk.name)
 
         args.output.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(args.output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:

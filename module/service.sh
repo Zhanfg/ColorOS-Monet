@@ -6,6 +6,7 @@ STATE_DIR=/data/adb/coloros-monet
 STATE_FILE="$STATE_DIR/config.conf"
 TARGETS="$MODDIR/payload/targets.tsv"
 NATIVE_MANIFEST="$MODDIR/payload/native-foundation-manifest.tsv"
+SEMANTIC_MANIFEST="$MODDIR/payload/semantic-accent-manifest.tsv"
 LOG="$STATE_DIR/overlay-status.log"
 LOCK="$STATE_DIR/service.lock"
 EXPRESSIVE_HELPER="$MODDIR/bin/coloros17-expressive-style"
@@ -88,12 +89,13 @@ apply_disabled_overlay() {
     echo "guard=disabled_by_configuration"
 }
 
-apply_native_foundation_overlay() {
-    key="$1"
-    target="$2"
-    overlay="$3"
+apply_ordered_overlay() {
+    role="$1"
+    key="$2"
+    target="$3"
+    overlay="$4"
 
-    echo "[$key] target=$target overlay=$overlay role=native_foundation"
+    echo "[$key] target=$target overlay=$overlay role=$role"
 
     if ! package_present "$target"; then
         echo "guard=target_missing"
@@ -159,12 +161,32 @@ apply_native_foundation_overlay() {
             case "$key" in ''|'#'*) continue ;; esac
             [ "$key" = key ] && continue
             echo "apk=$apk entries=$count"
-            apply_native_foundation_overlay "$key" "$target" "$overlay" || true
+            apply_ordered_overlay native_foundation "$key" "$target" "$overlay" || true
             echo
         done < "$NATIVE_MANIFEST"
     else
         echo "native_foundation_manifest=absent"
     fi
+
+    echo "--- md3e-semantic-accent ---"
+    if [ -f "$SEMANTIC_MANIFEST" ]; then
+        TAB=$(printf '\t')
+        while IFS="$TAB" read -r key target overlay apk count; do
+            case "$key" in ''|'#'*) continue ;; esac
+            [ "$key" = key ] && continue
+            echo "apk=$apk entries=$count"
+            if read_flag md3e_semantic; then
+                apply_ordered_overlay md3e_semantic "$key" "$target" "$overlay" || true
+            else
+                cmd overlay disable --user 0 "$overlay" 2>&1
+                echo "guard=disabled_by_configuration"
+            fi
+            echo
+        done < "$SEMANTIC_MANIFEST"
+    else
+        echo "semantic_accent_manifest=absent"
+    fi
+
     echo "--- native-expressive-color-pipeline ---"
     SDK="$(getprop ro.build.version.sdk 2>/dev/null)"
     if [ "$SDK" = 37 ] && read_flag native_expressive && [ -f "$EXPRESSIVE_HELPER" ]; then
