@@ -6,7 +6,14 @@
 STAMP="$(date +%Y%m%d_%H%M%S 2>/dev/null)"
 [ -n "$STAMP" ] || STAMP=unknown
 OUT="/sdcard/Download/ColorOS17_MD3E_PostBootAudit_v1_$STAMP.txt"
-MOD="/data/adb/modules/material_you_for_coloros"
+MOD=""
+for candidate in /data/adb/modules/material_you_for_coloros /data/adb/modules/coloros_monet_cleanroom; do
+    if [ -d "$candidate" ]; then
+        MOD="$candidate"
+        break
+    fi
+done
+[ -n "$MOD" ] || MOD="/data/adb/modules/material_you_for_coloros"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
@@ -52,6 +59,10 @@ have() { command -v "$1" >/dev/null 2>&1; }
         dev.zhanfg.colorosmonet.native.launcher \
         dev.zhanfg.colorosmonet.native.wirelesssettings \
         dev.zhanfg.colorosmonet.native.notificationmanager \
+        dev.zhanfg.colorosmonet.semantic.settings \
+        dev.zhanfg.colorosmonet.semantic.systemui \
+        dev.zhanfg.colorosmonet.semantic.launcher \
+        dev.zhanfg.colorosmonet.semantic.wirelesssettings \
         dev.zhanfg.coloros17.exact.settings.extra \
         com.android.settings.overlay \
         com.android.systemui.overlay \
@@ -107,7 +118,8 @@ have() { command -v "$1" >/dev/null 2>&1; }
 
     echo "--- verdict hints ---"
     style="$(printf '%s' "$THEME" | sed -n 's/.*"android.theme.customization.theme_style":"\([^"]*\)".*/\1/p')"
-    [ "$style" = EXPRESSIVE ] && echo "theme_style_ok=1" || echo "theme_style_ok=0 current=$style"
+    echo "theme_style_current=${style:-unknown}"
+    echo "theme_style_note=EXPRESSIVE is optional; non-EXPRESSIVE is not a failure"
     [ "$(getprop persist.sys.oplus.material_blur_switch 2>/dev/null)" = true ] && echo "material_blur_ok=1" || echo "material_blur_ok=0"
     echo "note=OverlayManager lookup failure alone is not treated as a failed module; inspect pm/idmap evidence too."
 } > "$OUT" 2>&1
