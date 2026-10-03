@@ -5,7 +5,8 @@ on:
     branches:
       - "coloros17-md3e-v0.2.0"
     paths:
-      - "compat/coloros17/native_restore.tsv"\n      - "compat/coloros17/native_surface_restore.tsv"
+      - "compat/coloros17/native_restore.tsv"
+      - "compat/coloros17/native_surface_restore.tsv"
       - "tools/build_coloros17_native_restore.py"
       - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
