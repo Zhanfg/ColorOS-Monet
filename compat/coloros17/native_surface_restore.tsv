@@ -116,3 +116,14 @@ wirelesssettings	com.oplus.wirelesssettings	color	coui_color_label_primary	#e600
 wirelesssettings	com.oplus.wirelesssettings	color	coui_color_press	#1f000000	#33ffffff	
 wirelesssettings	com.oplus.wirelesssettings	color	coui_color_secondary_neutral	#8a000000	#8affffff	
 wirelesssettings	com.oplus.wirelesssettings	color	coui_color_surface_top	#ffffffff	#ff333333	
+settings	com.android.settings	color	numberic_keyboard_setting_background_color	#ffffffff	#8c3d3d3d	
+settings	com.android.settings	color	coui_search_view_selector_color_pressed	#1e000000	#33ffffff	
+settings	com.android.settings	color	about_phone_text_color	#ffffffff		
+settings	com.android.settings	color	about_phone_text_color_10	#e6ffffff		
+systemui	com.android.systemui	color	coui_color_press_background_dark	#26ffffff		
+systemui	com.android.systemui	color	qs_hl_tile_indicator_inactive_bg_color	#0f000000	#26ffffff	
+systemui	com.android.systemui	color	qs_hl_tile_indicator_unavailable_bg_color	#1a000000	#26ffffff	
+systemui	com.android.systemui	color	oplus_toast_text_color	#ff000000	#e6ffffff	
+systemui	com.android.systemui	color	battery_charge_icon_color	#ffffffff		
+systemui	com.android.systemui	bool	flag_charging_ripple	false		
+systemui	com.android.systemui	integer	blur_radius_platform_config	250
