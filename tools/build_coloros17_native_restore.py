@@ -15,7 +15,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SDK_DIR = "37.0"
 BUILD_TOOLS = "37.0.0"
-TABLES = [\n    ROOT / "compat/coloros17/native_restore.tsv",\n    ROOT / "compat/coloros17/native_surface_restore.tsv",\n]
+TABLES = [
+    ROOT / "compat/coloros17/native_restore.tsv",
+    ROOT / "compat/coloros17/native_surface_restore.tsv",
+]
 
 @dataclass(frozen=True)
 class Entry:
@@ -87,7 +90,9 @@ def value_xml(entries: list[Entry], night: bool) -> str:
         else:
             raise RuntimeError(f"unsupported type {e.typ}/{e.name}")
     lines.append("</resources>")
-    return "\n".join(lines) + "\n"
+    return "
+".join(lines) + "
+"
 
 def build_one(
     key: str,
@@ -185,7 +190,9 @@ def main() -> int:
             f"{key}\t{target}\tdev.zhanfg.colorosmonet.restore.{key}\t{apk.name}\t{len(vals)}"
         )
 
-    (out_dir / "native-restore-manifest.tsv").write_text("\n".join(manifest_rows) + "\n", encoding="utf-8")
+    (out_dir / "native-restore-manifest.tsv").write_text("
+".join(manifest_rows) + "
+", encoding="utf-8")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for f in sorted(out_dir.iterdir()):
