@@ -1,0 +1,36 @@
+name: Android 17 compatibility
+
+on:
+  push:
+    branches:
+      - "android17-compat-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-settings-hotfix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "platforms;android-37" "build-tools;37.0.0"
+      - run: >-
+          python tools/build_coloros17_hotfix.py
+          --version 0.1.5-beta
+          --version-code 26100301
+          --output dist/ColorOS-Monet-COS17-hotfix.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ColorOS-Monet-COS17-hotfix
+          path: |
+            dist/ColorOS-Monet-COS17-hotfix.zip
+            overlays/coloros-settings17/build/outputs/ColorOSSettings17Compat.apk
