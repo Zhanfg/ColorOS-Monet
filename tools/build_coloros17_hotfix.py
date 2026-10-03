@@ -11,7 +11,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "overlays" / "coloros-settings17"
-COMPILE_SDK = 37
+COMPILE_SDK_DIR = "37.0"
 
 
 def run(*args: str | Path) -> None:
@@ -25,7 +25,7 @@ def sdk_tools() -> tuple[Path, Path, Path, Path]:
     if not raw:
         raise RuntimeError("ANDROID_SDK_ROOT or ANDROID_HOME is required")
     sdk = Path(raw).expanduser().resolve()
-    android_jar = sdk / "platforms" / f"android-{COMPILE_SDK}" / "android.jar"
+    android_jar = sdk / "platforms" / f"android-{COMPILE_SDK_DIR}" / "android.jar"
     candidates = sorted(
         (path for path in (sdk / "build-tools").glob("37.*") if path.is_dir()),
         reverse=True,
