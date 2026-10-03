@@ -32,12 +32,16 @@ jobs:
           --version 0.1.5-beta
           --version-code 26100301
           --output dist/ColorOS-Monet-COS17-hotfix.zip
-      - name: Stage aapt2
+      - name: Stage Android build tools
         shell: bash
         run: |
-          mkdir -p dist/sdk-tools
-          cp /usr/local/lib/android/sdk/build-tools/37.0.0/aapt2 dist/sdk-tools/aapt2
-          chmod +x dist/sdk-tools/aapt2
+          mkdir -p dist/sdk-tools/lib
+          BT=/usr/local/lib/android/sdk/build-tools/37.0.0
+          cp "$BT/aapt2" dist/sdk-tools/aapt2
+          cp "$BT/zipalign" dist/sdk-tools/zipalign
+          cp "$BT/apksigner" dist/sdk-tools/apksigner
+          cp "$BT/lib/apksigner.jar" dist/sdk-tools/lib/apksigner.jar
+          chmod +x dist/sdk-tools/aapt2 dist/sdk-tools/zipalign dist/sdk-tools/apksigner
       - uses: actions/upload-artifact@v4
         with:
           name: ColorOS-Monet-COS17-hotfix
@@ -46,5 +50,5 @@ jobs:
             overlays/coloros-settings17/build/outputs/ColorOSSettings17Compat.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: android37-aapt2-linux
-          path: dist/sdk-tools/aapt2
+          name: android37-build-tools-linux
+          path: dist/sdk-tools/
