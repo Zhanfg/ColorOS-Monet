@@ -55,13 +55,14 @@ def signing_key() -> Path:
         "-keystore", key,
         "-storepass", "android", "-keypass", "android",
         "-alias", "androiddebugkey",
-        "-dname", "CN=ColorOS17 Native Restore,O=ColorOS-Monet,C=US",
+        "-dname", "CN=ColorOS17 Native Foundation,O=ColorOS-Monet,C=US",
         "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
     )
     return key
 
-def read_table() -> list[Entry]:
+def read_tables() -> list[Entry]:
     out: list[Entry] = []
+    seen: set[tuple[str, str, str, str]] = set()
     for table in TABLES:
         with table.open(encoding="utf-8", newline="") as f:
             for raw in f:
@@ -70,12 +71,17 @@ def read_table() -> list[Entry]:
                 row = next(csv.reader([raw], delimiter="\t"))
                 while len(row) < 7:
                     row.append("")
-                out.append(Entry(*row[:7]))
+                e = Entry(*row[:7])
+                ident = (e.key, e.target, e.typ, e.name)
+                if ident in seen:
+                    raise RuntimeError(f"duplicate native token: {ident}")
+                seen.add(ident)
+                out.append(e)
     if not out:
         raise RuntimeError("native restore tables are empty")
     return out
 
-def value_xml(entries: list[Entry], night: bool) -> str:
+def values_xml(entries: list[Entry], night: bool) -> str:
     lines = ['<?xml version="1.0" encoding="utf-8"?>', "<resources>"]
     for e in entries:
         value = e.night if night and e.night else e.default
@@ -90,7 +96,7 @@ def value_xml(entries: list[Entry], night: bool) -> str:
         else:
             raise RuntimeError(f"unsupported type {e.typ}/{e.name}")
     lines.append("</resources>")
-    return "\\n".join(lines) + "\\n"
+    return "\n".join(lines) + "\n"
 
 def build_one(
     key: str,
@@ -109,13 +115,18 @@ def build_one(
         t = Path(td)
         res = t / "res"
         (res / "values").mkdir(parents=True)
-        (res / "values-night").mkdir(parents=True)
+        default_entries = [e for e in entries if e.default]
+        night_entries = [e for e in entries if e.night]
+        (res / "values" / "native_foundation.xml").write_text(
+            values_xml(default_entries, False), encoding="utf-8"
+        )
+        if night_entries:
+            (res / "values-night").mkdir(parents=True)
+            (res / "values-night" / "native_foundation.xml").write_text(
+                values_xml(night_entries, True), encoding="utf-8"
+            )
 
-        (res / "values" / "native_restore.xml").write_text(value_xml(entries, False), encoding="utf-8")
-        night_xml = value_xml([e for e in entries if e.night], True)
-        (res / "values-night" / "native_restore.xml").write_text(night_xml, encoding="utf-8")
-
-        pkg = f"dev.zhanfg.colorosmonet.restore.{key}"
+        pkg = f"dev.zhanfg.colorosmonet.native.{key}"
         manifest = t / "AndroidManifest.xml"
         manifest.write_text(
             f'''<?xml version="1.0" encoding="utf-8"?>
@@ -161,10 +172,10 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--version", default="0.2.0-alpha1")
     p.add_argument("--version-code", type=int, default=26100320)
-    p.add_argument("--output", type=Path, default=ROOT / "dist/ColorOS17-NativeRestore-P0.zip")
+    p.add_argument("--output", type=Path, default=ROOT / "dist/ColorOS17-NativeFoundation-P0P1.zip")
     args = p.parse_args()
 
-    entries = read_table()
+    entries = read_tables()
     groups: dict[tuple[str, str], list[Entry]] = defaultdict(list)
     for e in entries:
         groups[(e.key, e.target)].append(e)
@@ -172,28 +183,30 @@ def main() -> int:
     android_jar, aapt2, zipalign, apksigner = sdk_tools()
     keystore = signing_key()
 
-    out_dir = ROOT / "dist/native-restore"
+    out_dir = ROOT / "dist/native-foundation"
     shutil.rmtree(out_dir, ignore_errors=True)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     manifest_rows = ["key\ttarget_package\toverlay_package\tapk\tentry_count"]
     for i, ((key, target), vals) in enumerate(sorted(groups.items()), 1):
-        apk = out_dir / f"COS17_NativeRestore_{key}.apk"
+        apk = out_dir / f"COS17_NativeFoundation_{key}.apk"
         build_one(
             key, target, vals, apk,
             args.version, args.version_code + i,
             android_jar, aapt2, zipalign, apksigner, keystore,
         )
         manifest_rows.append(
-            f"{key}\t{target}\tdev.zhanfg.colorosmonet.restore.{key}\t{apk.name}\t{len(vals)}"
+            f"{key}\t{target}\tdev.zhanfg.colorosmonet.native.{key}\t{apk.name}\t{len(vals)}"
         )
 
-    (out_dir / "native-restore-manifest.tsv").write_text("\\n".join(manifest_rows) + "\\n", encoding="utf-8")
+    (out_dir / "native-foundation-manifest.tsv").write_text(
+        "\n".join(manifest_rows) + "\n", encoding="utf-8"
+    )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for f in sorted(out_dir.iterdir()):
             zf.write(f, f.name)
-    print(f"built {len(groups)} native-restore overlays -> {args.output}")
+    print(f"built {len(groups)} native foundation overlays -> {args.output}")
     return 0
 
 if __name__ == "__main__":
