@@ -5,6 +5,7 @@ MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros-monet
 STATE_FILE="$STATE_DIR/config.conf"
 TARGETS="$MODDIR/payload/targets.tsv"
+NATIVE_MANIFEST="$MODDIR/payload/native-foundation-manifest.tsv"
 LOG="$STATE_DIR/overlay-status.log"
 LOCK="$STATE_DIR/service.lock"
 
@@ -105,6 +106,22 @@ apply_disabled_overlay() {
         pm path "$overlay" 2>&1
         echo
     done < "$TARGETS"
+
+    echo "--- coloros17-native-foundation ---"
+    if [ -f "$NATIVE_MANIFEST" ]; then
+        TAB=$(printf '\t')
+        while IFS="$TAB" read -r key target overlay apk count; do
+            case "$key" in ''|'#'*) continue ;; esac
+            [ "$key" = key ] && continue
+            echo "[$key] target=$target overlay=$overlay apk=$apk entries=$count"
+            pm path "$target" 2>&1
+            pm path "$overlay" 2>&1
+            cmd overlay list --user 0 2>/dev/null | grep -F "$overlay" || true
+            echo
+        done < "$NATIVE_MANIFEST"
+    else
+        echo "native_foundation_manifest=absent"
+    fi
 } > "$LOG" 2>&1
 
 chmod 0644 "$LOG" 2>/dev/null

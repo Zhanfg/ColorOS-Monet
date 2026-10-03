@@ -1,21 +1,16 @@
-name: ColorOS 17 MD3E v0.2.0 native foundation
+name: ColorOS 17 MD3E v0.2.0 build
 
 on:
   push:
     branches:
       - "coloros17-md3e-v0.2.0"
-    paths:
-      - "compat/coloros17/native_restore.tsv"
-      - "compat/coloros17/native_surface_restore.tsv"
-      - "tools/build_coloros17_native_restore.py"
-      - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  native-restore:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,22 +21,43 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Install Android 17 SDK
+      - name: Install Android SDKs
         shell: bash
         run: |
           SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
-      - name: Build native geometry + surface foundation
+          "$SDKMANAGER" --channel=3 \
+            "platforms;android-35" "build-tools;35.0.0" \
+            "platforms;android-37.0" "build-tools;37.0.0"
+      - name: Build clean-room overlays
+        run: >-
+          python tools/build_overlays.py
+          --variant debug
+          --version-name 0.2.0-alpha1
+          --version-code 26100320
+      - name: Build ColorOS 17 native foundation
         run: >-
           python tools/build_coloros17_native_restore.py
           --version 0.2.0-alpha1
           --version-code 26100320
           --output dist/ColorOS17-NativeFoundation-P0P1.zip
+      - name: Package flashable v0.2.0 alpha module
+        run: >-
+          python tools/package_module.py
+          --variant debug
+          --version 0.2.0-alpha1
+          --version-code 26100320
+          --native-foundation-dir dist/native-foundation
+          --output dist/ColorOS-Monet-v0.2.0-alpha1-COS17.zip
+      - name: Hash artifacts
+        run: |
+          sha256sum             dist/ColorOS17-NativeFoundation-P0P1.zip             dist/ColorOS-Monet-v0.2.0-alpha1-COS17.zip             > dist/SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
-          name: ColorOS17-NativeFoundation-P0P1
+          name: ColorOS17-MD3E-v0.2.0-alpha1
           path: |
             dist/ColorOS17-NativeFoundation-P0P1.zip
-            dist/native-restore/*.apk
-            dist/native-restore/native-restore-manifest.tsv
+            dist/ColorOS-Monet-v0.2.0-alpha1-COS17.zip
+            dist/SHA256SUMS
+            dist/native-foundation/*.apk
+            dist/native-foundation/native-foundation-manifest.tsv

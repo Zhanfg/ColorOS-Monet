@@ -1,6 +1,6 @@
 id=coloros_monet_cleanroom
-name=ColorOS Monet Clean-room
+name=ColorOS Monet / MD3E Native-First
 version=@VERSION@
 versionCode=@VERSION_CODE@
 author=ColorOS-Monet contributors
-description=Clean-room Android Monet overlays for ColorOS and selected applications. No third-party APKs or copied module payloads are included.
+description=ColorOS 17 native-first Monet/MD3E augmentation: preserves OEM geometry, blur and surface semantics while adding scoped expressive color and interaction layers.

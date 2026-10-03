@@ -28,6 +28,7 @@ def main() -> int:
     p.add_argument("--version", required=True)
     p.add_argument("--version-code", required=True, type=int)
     p.add_argument("--output", type=Path, required=True)
+    p.add_argument("--native-foundation-dir", type=Path)
     args = p.parse_args()
     root = args.root.resolve()
 
@@ -43,6 +44,19 @@ def main() -> int:
         for project_name, out_name in OVERLAYS.items():
             src = find_apk(root / "overlays" / project_name, args.variant)
             shutil.copy2(src, dest / out_name)
+
+        if args.native_foundation_dir:
+            native_src = args.native_foundation_dir.resolve()
+            manifest = native_src / "native-foundation-manifest.tsv"
+            if not manifest.is_file():
+                raise RuntimeError(f"missing native foundation manifest: {manifest}")
+            native_dest = stage / "payload" / "native-foundation"
+            native_dest.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(manifest, native_dest / manifest.name)
+            shutil.copy2(manifest, stage / "payload" / "native-foundation-manifest.tsv")
+            for apk in sorted(native_src.glob("*.apk")):
+                shutil.copy2(apk, native_dest / apk.name)
+
         args.output.parent.mkdir(parents=True, exist_ok=True)
         with zipfile.ZipFile(args.output, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
             for path in sorted(stage.rglob("*")):
