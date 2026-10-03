@@ -1,4 +1,1 @@
-# key	target_package	overlay_package	apk_name
-x	com.twitter.android	dev.zhanfg.colorosmonet.overlay.x	XMonet.apk
-tim	com.tencent.tim	dev.zhanfg.colorosmonet.overlay.tim	TIMMonet.apk
-coolapk	com.coolapk.market	dev.zhanfg.colorosmonet.overlay.coolapk	CoolapkMonet.apk
+# key\ttarget_package\toverlay_package\tapk_name\n# v0.2.0 ColorOS system build intentionally ships no third-party app overlays.\n

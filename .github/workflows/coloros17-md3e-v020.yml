@@ -35,13 +35,6 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" --channel=3             "platforms;android-35" "build-tools;35.0.0"             "platforms;android-37.0" "build-tools;37.0.0"
 
-      - name: Build clean-room overlays
-        run: >-
-          python tools/build_overlays.py
-          --variant debug
-          --version-name 0.2.0-alpha2
-          --version-code 26100330
-
       - name: Build migration-only native foundation
         run: >-
           python tools/build_coloros17_native_restore.py

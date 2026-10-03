@@ -6,11 +6,7 @@ import shutil
 import tempfile
 import zipfile
 
-OVERLAYS = {
-    "x": "XMonet.apk",
-    "tim": "TIMMonet.apk",
-    "coolapk": "CoolapkMonet.apk",
-}
+OVERLAYS: dict[str, str] = {}
 
 
 def find_apk(project: Path, variant: str) -> Path:
