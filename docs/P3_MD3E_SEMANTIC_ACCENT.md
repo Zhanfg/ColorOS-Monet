@@ -2,13 +2,16 @@
 
 The resource classifier reduced the legacy v0.1.4 color overrides to a small set of high-confidence accent roles that still exist on the current ColorOS 17 targets.
 
-The first conservative layer contains **40 unique target color resources across 13 packages**.
+The first conservative layer contains **67 unique high-confidence target color resources across 14 packages**.
 
 The retained resource family is intentionally narrow:
 
 - `coui_color_blue`
 - `coui_color_primary_blue`
+- `coui_color_primary_on_popup_blue`
+- `coui_color_primary_text_blue`
 - `coui_color_additional_blue`
+- `coui_color_blue`
 - `colorPrimary` where it exists and was already part of the legacy semantic mapping
 
 All map to Android/ColorOS' active `system_primary_light/dark` role.
