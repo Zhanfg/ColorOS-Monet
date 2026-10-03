@@ -6,6 +6,8 @@ STATE_DIR=/data/adb/coloros-monet
 STATE_FILE="$STATE_DIR/config.conf"
 TARGETS="$MODDIR/payload/targets.tsv"
 DOCTOR="$MODDIR/bin/coloros-monet-doctor"
+SEMANTIC_MANIFEST="$MODDIR/payload/semantic-accent-manifest.tsv"
+EXPRESSIVE_HELPER="$MODDIR/bin/coloros17-expressive-style"
 
 mkdir -p "$STATE_DIR"
 [ -f "$STATE_FILE" ] || cp -f "$MODDIR/config/default.conf" "$STATE_FILE"
@@ -40,6 +42,55 @@ overlay_enabled() {
     package="$1"
     cmd overlay list --user 0 2>/dev/null | grep -F "$package" | \
         grep -Eq '\[x\]|STATE_ENABLED|STATE_ENABLED_IMMUTABLE'
+}
+
+
+apply_semantic_now() {
+    enabled="$1"
+    [ -f "$SEMANTIC_MANIFEST" ] || return 0
+    TAB=$(printf '\t')
+    while IFS="$TAB" read -r key target overlay apk count; do
+        case "$key" in ''|'#'*) continue ;; esac
+        [ "$key" = key ] && continue
+        if [ "$enabled" = 1 ]; then
+            cmd overlay enable --user 0 "$overlay" >/dev/null 2>&1 || true
+            cmd overlay set-priority --user 0 "$overlay" highest >/dev/null 2>&1 || true
+        else
+            cmd overlay disable --user 0 "$overlay" >/dev/null 2>&1 || true
+        fi
+    done < "$SEMANTIC_MANIFEST"
+}
+
+configure_md3e() {
+    echo ""
+    echo "MD3E 系统层："
+    echo "音量+：启用语义动态色　音量-：关闭"
+    if wait_key; then
+        set_flag md3e_semantic 1
+        apply_semantic_now 1
+        echo "[已启用] MD3E 语义动态色"
+    else
+        set_flag md3e_semantic 0
+        apply_semantic_now 0
+        echo "[已关闭] MD3E 语义动态色"
+    fi
+
+    echo ""
+    echo "ColorOS 原生 EXPRESSIVE 色板："
+    echo "音量+：启用　音量-：保留/恢复当前系统色板"
+    if wait_key; then
+        set_flag native_expressive 1
+        if [ -f "$EXPRESSIVE_HELPER" ]; then
+            /system/bin/sh "$EXPRESSIVE_HELPER" apply
+        fi
+        echo "[已启用] 原生 EXPRESSIVE 色板"
+    else
+        set_flag native_expressive 0
+        if [ -f "$EXPRESSIVE_HELPER" ]; then
+            /system/bin/sh "$EXPRESSIVE_HELPER" restore
+        fi
+        echo "[已关闭] 原生 EXPRESSIVE 色板"
+    fi
 }
 
 run_doctor() {
@@ -107,6 +158,8 @@ while IFS="$TAB" read -r key target overlay _apk; do
         fi
     fi
 done < "$TARGETS"
+
+configure_md3e
 
 chmod 0600 "$STATE_FILE" 2>/dev/null
 echo ""
