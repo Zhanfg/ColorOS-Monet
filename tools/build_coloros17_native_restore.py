@@ -90,9 +90,7 @@ def value_xml(entries: list[Entry], night: bool) -> str:
         else:
             raise RuntimeError(f"unsupported type {e.typ}/{e.name}")
     lines.append("</resources>")
-    return "
-".join(lines) + "
-"
+    return "\\n".join(lines) + "\\n"
 
 def build_one(
     key: str,
@@ -190,9 +188,7 @@ def main() -> int:
             f"{key}\t{target}\tdev.zhanfg.colorosmonet.restore.{key}\t{apk.name}\t{len(vals)}"
         )
 
-    (out_dir / "native-restore-manifest.tsv").write_text("
-".join(manifest_rows) + "
-", encoding="utf-8")
+    (out_dir / "native-restore-manifest.tsv").write_text("\\n".join(manifest_rows) + "\\n", encoding="utf-8")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(args.output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as zf:
         for f in sorted(out_dir.iterdir()):
