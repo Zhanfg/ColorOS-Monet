@@ -88,6 +88,50 @@ apply_disabled_overlay() {
     echo "guard=disabled_by_configuration"
 }
 
+apply_native_foundation_overlay() {
+    key="$1"
+    target="$2"
+    overlay="$3"
+
+    echo "[$key] target=$target overlay=$overlay role=native_foundation"
+
+    if ! package_present "$target"; then
+        echo "guard=target_missing"
+        return 1
+    fi
+    if ! package_present "$overlay"; then
+        echo "guard=overlay_missing"
+        return 1
+    fi
+
+    echo "enable_output_begin"
+    cmd overlay enable --user 0 "$overlay" 2>&1
+    enable_rc=$?
+    echo "enable_output_end"
+    echo "enable_exit_code=$enable_rc"
+
+    echo "priority_output_begin"
+    cmd overlay set-priority --user 0 "$overlay" highest 2>&1
+    priority_rc=$?
+    echo "priority_output_end"
+    echo "priority_exit_code=$priority_rc"
+
+    sleep 1
+    if [ "$enable_rc" -ne 0 ] || ! overlay_enabled "$overlay"; then
+        echo "guard=enable_rejected"
+        return 1
+    fi
+
+    if [ "$priority_rc" -ne 0 ]; then
+        echo "priority_warning=set_priority_rejected"
+    fi
+
+    echo "guard=accepted"
+    cmd overlay list --user 0 2>&1 | grep -F "$overlay" || true
+    cmd overlay dump "$overlay" 2>&1 | head -n 120 || true
+    return 0
+}
+
 {
     echo "time=$(date '+%Y-%m-%d %H:%M:%S %z' 2>/dev/null)"
     echo "sdk=$(getprop ro.build.version.sdk 2>/dev/null)"
@@ -114,10 +158,8 @@ apply_disabled_overlay() {
         while IFS="$TAB" read -r key target overlay apk count; do
             case "$key" in ''|'#'*) continue ;; esac
             [ "$key" = key ] && continue
-            echo "[$key] target=$target overlay=$overlay apk=$apk entries=$count"
-            pm path "$target" 2>&1
-            pm path "$overlay" 2>&1
-            cmd overlay list --user 0 2>/dev/null | grep -F "$overlay" || true
+            echo "apk=$apk entries=$count"
+            apply_native_foundation_overlay "$key" "$target" "$overlay" || true
             echo
         done < "$NATIVE_MANIFEST"
     else

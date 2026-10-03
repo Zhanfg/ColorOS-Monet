@@ -22,13 +22,13 @@ UXDesign also contains the user-facing wallpaper color labels for the variants; 
 
 v0.2.0 should not synthesize a second independent Monet palette engine.
 
-Instead it requests the ROM's own `EXPRESSIVE` variant while preserving:
+The module can optionally request the ROM's own `EXPRESSIVE` variant while preserving:
 
 - the existing wallpaper color source;
 - ColorOS generated dynamic overlays / FRROs;
 - OEM blur/translucent composition;
 - other theme JSON fields.
 
-The helper stores only the previous theme-style enum and restores it on uninstall **only if** the current style is still EXPRESSIVE, so a later manual user theme choice is not overwritten.
+This option is **disabled by default**. MD3E component behavior does not require forcing an EXPRESSIVE hue style. When explicitly enabled, the helper stores only the previous theme-style enum and restores it on uninstall **only if** the current style is still EXPRESSIVE, so a later manual user theme choice is not overwritten.
 
 This makes the color layer genuinely native-first: ColorOS generates the palette; the module focuses on correcting legacy geometry/surface overrides and on component-scoped expressive behavior.

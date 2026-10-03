@@ -140,7 +140,7 @@ def build_one(
     android:versionName="{version}">
     <uses-sdk android:minSdkVersion="37" android:targetSdkVersion="37" />
     <application android:allowBackup="false" android:hasCode="false" android:extractNativeLibs="false" />
-    <overlay android:targetPackage="{target}" android:isStatic="true" android:priority="1200" />
+    <overlay android:targetPackage="{target}" android:isStatic="false" />
 </manifest>
 ''',
             encoding="utf-8",
