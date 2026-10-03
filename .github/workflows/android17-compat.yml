@@ -26,7 +26,18 @@ jobs:
         run: |
           SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" "platforms;android-37" "build-tools;37.0.0"
+          AVAILABLE="$("$SDKMANAGER" --list --channel=3)"
+          printf '%s\n' "$AVAILABLE" | grep -E 'platforms;android-37|build-tools;37\.' || true
+          printf '%s\n' "$AVAILABLE" | grep -q '^platforms;android-37[[:space:]]' || {
+            echo "Android 17 platform is not visible to sdkmanager" >&2
+            exit 1
+          }
+          BUILD_TOOLS="$(printf '%s\n' "$AVAILABLE" | awk '/^build-tools;37\./ {print $1}' | sort -V | tail -n 1)"
+          [ -n "$BUILD_TOOLS" ] || {
+            echo "Android Build-Tools 37.x is not visible to sdkmanager" >&2
+            exit 1
+          }
+          "$SDKMANAGER" --channel=3 "platforms;android-37" "$BUILD_TOOLS"
       - run: >-
           python tools/build_coloros17_hotfix.py
           --version 0.1.5-beta
