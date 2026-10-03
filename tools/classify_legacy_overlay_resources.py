@@ -105,14 +105,14 @@ def classify(resource_type: str, name: str) -> str:
             "sheet", "container", "neutral", "scrim", "shadow",
         )):
             return "surface_color"
+        if any(x in n for x in ("text", "label", "icon", "foreground", "tint", "content", "on_")):
+            return "content_color"
         if any(x in n for x in (
             "accent", "activated", "primary", "secondary", "tertiary", "link",
             "blue", "cyan", "green", "orange", "pink", "purple", "red", "yellow",
             "monet", "dynamic",
         )):
             return "semantic_accent"
-        if any(x in n for x in ("text", "label", "icon", "foreground", "tint", "content", "on_")):
-            return "content_color"
         return "color_other"
     if resource_type in {"drawable", "mipmap"}:
         component = (
