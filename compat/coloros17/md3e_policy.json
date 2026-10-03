@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "philosophy": "ColorOS 17 native-first, Material 3 Expressive augmentation",
+  "rules": [
+    {
+      "id": "preserve-native-geometry",
+      "severity": "error",
+      "summary": "Do not globally override shared COUI geometry tokens to make one screen look more expressive."
+    },
+    {
+      "id": "preserve-list-semantics",
+      "severity": "error",
+      "summary": "Ordinary settings/preferences remain continuous grouped lists unless a specific component is explicitly classified as segmented."
+    },
+    {
+      "id": "preserve-dividers",
+      "severity": "error",
+      "summary": "Do not globally zero or make transparent native list/popup dividers."
+    },
+    {
+      "id": "component-scoped-expressive",
+      "severity": "error",
+      "summary": "Expressive shapes and motion must be applied to a known component/screen scope, never package-wide by default."
+    },
+    {
+      "id": "native-expressive-first",
+      "severity": "warning",
+      "summary": "Where Android 17 SettingsLib already provides expressive resources, reuse or expose them before introducing replacement geometry."
+    },
+    {
+      "id": "semantic-color-only",
+      "severity": "error",
+      "summary": "Dynamic color mappings must preserve distinct page, container, elevated, selected, outline/divider and on-surface roles."
+    },
+    {
+      "id": "native-blur-first",
+      "severity": "warning",
+      "summary": "Keep ColorOS blur pipelines when available instead of emulating blur with opaque Material surfaces."
+    }
+  ],
+  "forbidden_global_resource_overrides": [
+    "color/coui_color_divider",
+    "color/coui_popup_list_group_divider_color",
+    "dimen/coui_list_divider_height",
+    "dimen/coui_popup_list_group_divider_height",
+    "dimen/coui_popup_list_group_divider_total_height",
+    "dimen/coui_round_corner_m",
+    "dimen/coui_round_corner_m_radius",
+    "dimen/coui_round_corner_s",
+    "dimen/coui_round_corner_s_radius",
+    "dimen/widget_popup_group_divider_height"
+  ],
+  "review_required_resource_patterns": [
+    "^dimen/coui_round_corner_",
+    "^dimen/notification_.*corner.*",
+    "^dimen/volume_.*radius.*",
+    "^dimen/.*card.*radius.*",
+    "^dimen/.*popup.*divider.*",
+    "^color/.*divider.*"
+  ],
+  "component_policies": {
+    "settings.standard_preference_group": {
+      "structure": "continuous_grouped_list",
+      "shape_source": "native_coui",
+      "divider_source": "native_coui",
+      "motion": "standard",
+      "expressive": "color_typography_state_layers_only"
+    },
+    "settings.homepage": {
+      "structure": "native_homepage_or_scoped_expressive",
+      "shape_source": "native_or_settingslib_expressive",
+      "motion": "standard_with_prominent_expressive_exceptions",
+      "expressive": "allowed"
+    },
+    "settings.prominent_card": {
+      "structure": "card",
+      "shape_source": "settingslib_expressive_or_native_card",
+      "motion": "expressive",
+      "expressive": "allowed"
+    },
+    "settings.segmented_group": {
+      "structure": "segmented_only_when_item_count_and_position_are_known",
+      "shape_source": "settingslib_expressive",
+      "motion": "expressive",
+      "expressive": "allowed"
+    },
+    "launcher.popup": {
+      "structure": "popup_menu",
+      "shape_source": "native_launcher_popup",
+      "divider_source": "native_launcher_popup",
+      "motion": "standard",
+      "expressive": "state_layers_and_color_only"
+    },
+    "systemui.qs_media_volume": {
+      "structure": "component_specific",
+      "shape_source": "native_systemui",
+      "motion": "expressive_for_prominent_interactions",
+      "expressive": "allowed_but_never_shared_with_settings_geometry"
+    },
+    "systemui.notifications": {
+      "structure": "native_notification_stack",
+      "shape_source": "native_systemui",
+      "motion": "standard_or_native",
+      "expressive": "color_state_layers_only_unless_runtime_verified"
+    },
+    "dialogs_popups": {
+      "structure": "native_dialog_or_popup",
+      "shape_source": "native_coui",
+      "divider_source": "native_coui",
+      "motion": "standard",
+      "expressive": "color_typography_state_layers_only"
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "platform": {
+    "android_release": 17,
+    "sdk": 37,
+    "coloros_major": 17,
+    "theme_style": "TONAL_SPOT",
+    "dynamic_color_source": "home_wallpaper",
+    "material_you_overlay_enable": true,
+    "material_blur_enabled": true,
+    "background_blur_supported": true
+  },
+  "native_coui_tokens": {
+    "dimen/coui_round_corner_m": "12dp",
+    "dimen/coui_round_corner_m_radius": "9dp",
+    "dimen/coui_round_corner_s": "8dp",
+    "dimen/coui_round_corner_s_radius": "8dp",
+    "dimen/coui_round_corner_xl": "20dp",
+    "dimen/coui_list_divider_height": "0.33dp",
+    "dimen/coui_list_card_divider_margin_start": "84dp",
+    "dimen/coui_list_card_divider_margin_end": "32dp",
+    "dimen/coui_list_card_head_or_tail_padding": "2dp",
+    "dimen/coui_popup_list_group_divider_height": "4dp",
+    "dimen/coui_popup_list_group_divider_total_height": "12dp",
+    "dimen/coui_preference_card_margin_horizontal": "16dp",
+    "dimen/coui_preference_card_margin_horizontal_tiny": "12dp",
+    "dimen/coui_preference_card_radius": "12dp",
+    "color/coui_color_divider_light": "#1f000000",
+    "color/coui_color_divider_dark": "#33ffffff",
+    "color/coui_popup_list_group_divider_color": "#14000000"
+  },
+  "settingslib_expressive_tokens": {
+    "dimen/settingslib_expressive_radius_none": "0dp",
+    "dimen/settingslib_expressive_radius_extrasmall1": "2dp",
+    "dimen/settingslib_expressive_radius_extrasmall2": "4dp",
+    "dimen/settingslib_expressive_radius_small": "8dp",
+    "dimen/settingslib_expressive_radius_medium": "12dp",
+    "dimen/settingslib_expressive_radius_large1": "16dp",
+    "dimen/settingslib_expressive_radius_large2": "20dp",
+    "dimen/settingslib_expressive_radius_large3": "24dp",
+    "dimen/settingslib_expressive_radius_extralarge1": "28dp",
+    "dimen/settingslib_expressive_radius_extralarge2": "32dp",
+    "dimen/settingslib_expressive_radius_extralarge3": "42dp",
+    "dimen/settingslib_expressive_radius_full": "360dp",
+    "dimen/settingslib_expressive_space_extrasmall1": "2dp",
+    "dimen/settingslib_expressive_space_extrasmall2": "4dp",
+    "dimen/settingslib_expressive_space_extrasmall3": "6dp",
+    "dimen/settingslib_expressive_space_extrasmall4": "8dp",
+    "dimen/settingslib_expressive_space_extrasmall5": "10dp",
+    "dimen/settingslib_expressive_space_extrasmall6": "12dp",
+    "dimen/settingslib_expressive_space_extrasmall7": "14dp",
+    "dimen/settingslib_expressive_space_small1": "16dp",
+    "dimen/settingslib_expressive_space_small2": "18dp",
+    "dimen/settingslib_expressive_space_small3": "20dp",
+    "dimen/settingslib_expressive_space_medium1": "32dp",
+    "dimen/settingslib_expressive_space_medium2": "36dp",
+    "dimen/settingslib_expressive_space_medium3": "40dp",
+    "dimen/settingslib_expressive_space_medium4": "48dp",
+    "dimen/settingslib_expressive_space_medium5": "56dp",
+    "dimen/settingslib_expressive_space_large1": "60dp",
+    "dimen/settingslib_expressive_space_large2": "64dp",
+    "dimen/settingslib_expressive_space_large3": "72dp",
+    "dimen/settingslib_expressive_space_large4": "80dp",
+    "dimen/settingslib_expressive_space_large5": "96dp"
+  },
+  "settingslib_expressive_capabilities": {
+    "flag_symbol": "FLAG_IS_EXPRESSIVE_DESIGN_ENABLED",
+    "layouts_present": [
+      "settingslib_expressive_preference",
+      "settingslib_expressive_preference_card",
+      "settingslib_expressive_preference_category",
+      "settingslib_expressive_preference_switch",
+      "settingslib_expressive_preference_two_target",
+      "settingslib_expressive_preference_dropdown",
+      "settingslib_expressive_main_switch_bar",
+      "settingslib_expressive_layout_slider",
+      "settingslib_expressive_preference_segmentedbutton",
+      "homepage_preference_expressive"
+    ],
+    "notes": [
+      "Android 17 Settings already ships a native SettingsLib Material 3 Expressive resource family.",
+      "Prefer enabling/scoping existing expressive components over replacing all COUI list rows."
+    ]
+  },
+  "provenance": {
+    "source": "User-provided ColorOS 17 system resource dumps",
+    "policy": "Metadata only; no proprietary APKs or artwork are stored in this repository."
+  }
+}
