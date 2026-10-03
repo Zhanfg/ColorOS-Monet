@@ -24,6 +24,9 @@ mkdir -p "$STATE_DIR" "$OVERLAY_DST" || abort "! 无法创建模块目录"
 if [ ! -f "$STATE_FILE" ]; then
     cp -f "$MODPATH/config/default.conf" "$STATE_FILE" || abort "! 无法初始化配置"
 fi
+if ! grep -q '^native_expressive=' "$STATE_FILE" 2>/dev/null; then
+    printf '\nnative_expressive=1\n' >> "$STATE_FILE"
+fi
 chmod 0600 "$STATE_FILE" 2>/dev/null
 [ -f "$DOCTOR" ] && chmod 0755 "$DOCTOR" 2>/dev/null
 

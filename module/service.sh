@@ -8,6 +8,7 @@ TARGETS="$MODDIR/payload/targets.tsv"
 NATIVE_MANIFEST="$MODDIR/payload/native-foundation-manifest.tsv"
 LOG="$STATE_DIR/overlay-status.log"
 LOCK="$STATE_DIR/service.lock"
+EXPRESSIVE_HELPER="$MODDIR/bin/coloros17-expressive-style"
 
 mkdir -p "$STATE_DIR" || exit 0
 mkdir "$LOCK" 2>/dev/null || exit 0
@@ -121,6 +122,15 @@ apply_disabled_overlay() {
         done < "$NATIVE_MANIFEST"
     else
         echo "native_foundation_manifest=absent"
+    fi
+    echo "--- native-expressive-color-pipeline ---"
+    SDK="$(getprop ro.build.version.sdk 2>/dev/null)"
+    if [ "$SDK" = 37 ] && read_flag native_expressive && [ -f "$EXPRESSIVE_HELPER" ]; then
+        /system/bin/sh "$EXPRESSIVE_HELPER" apply
+        echo "native_expressive=requested"
+        /system/bin/sh "$EXPRESSIVE_HELPER" status
+    else
+        echo "native_expressive=skipped"
     fi
 } > "$LOG" 2>&1
 
