@@ -7,7 +7,6 @@ import tempfile
 import zipfile
 
 OVERLAYS = {
-    "coloros-settings": "ColorOSSettingsMonet.apk",
     "x": "XMonet.apk",
     "tim": "TIMMonet.apk",
     "coolapk": "CoolapkMonet.apk",

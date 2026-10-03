@@ -16,7 +16,6 @@ COMPILE_SDK = 35
 BUILD_TOOLS_PREFERRED = "35.0.0"
 
 OVERLAYS = {
-    "coloros-settings": {"mapping": None},
     "x": {"mapping": "mapping/colors.tsv"},
     "tim": {"mapping": "mapping/colors.tsv"},
     "coolapk": {"mapping": "mapping"},
