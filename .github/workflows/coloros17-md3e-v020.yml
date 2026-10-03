@@ -1,0 +1,46 @@
+name: ColorOS 17 MD3E v0.2.0 P0
+
+on:
+  push:
+    branches:
+      - "coloros17-md3e-v0.2.0"
+    paths:
+      - "compat/coloros17/native_restore.tsv"
+      - "tools/build_coloros17_native_restore.py"
+      - ".github/workflows/coloros17-md3e-v020.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-restore:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Install Android 17 SDK
+        shell: bash
+        run: |
+          SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
+      - name: Build P0 native restore layer
+        run: >-
+          python tools/build_coloros17_native_restore.py
+          --version 0.2.0-alpha1
+          --version-code 26100320
+          --output dist/ColorOS17-NativeRestore-P0.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ColorOS17-NativeRestore-P0
+          path: |
+            dist/ColorOS17-NativeRestore-P0.zip
+            dist/native-restore/*.apk
+            dist/native-restore/native-restore-manifest.tsv

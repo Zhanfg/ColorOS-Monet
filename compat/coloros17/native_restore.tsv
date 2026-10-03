@@ -1,0 +1,60 @@
+# key	target_package	type	name	default	night	format
+battery	com.oplus.battery	color	coui_color_divider	#1f000000	#33ffffff	
+battery	com.oplus.battery	dimen	coui_round_corner_m	12dp		
+battery	com.oplus.battery	dimen	coui_round_corner_m_radius	9dp		
+clock	com.coloros.alarmclock	color	coui_color_divider	#1f000000	#33ffffff	
+clock	com.coloros.alarmclock	dimen	coui_round_corner_m	12dp		
+clock	com.coloros.alarmclock	dimen	coui_round_corner_m_radius	9dp		
+contacts	com.android.contacts	color	coui_color_divider	#1f000000	#33ffffff	
+contacts	com.android.contacts	dimen	coui_round_corner_m	12dp		
+contacts	com.android.contacts	dimen	coui_round_corner_m_radius	9dp		
+eyeprotect	com.oplus.eyeprotect	color	coui_color_divider	#1f000000	#33ffffff	
+eyeprotect	com.oplus.eyeprotect	dimen	coui_round_corner_m	12dp		
+eyeprotect	com.oplus.eyeprotect	dimen	coui_round_corner_m_radius	9dp		
+launcher	com.android.launcher	color	coui_color_divider	#1f000000	#33ffffff	
+launcher	com.android.launcher	dimen	coui_round_corner_m	12dp		
+launcher	com.android.launcher	dimen	coui_round_corner_m_radius	9dp		
+launcher	com.android.launcher	dimen	coui_round_corner_s	8dp		
+launcher	com.android.launcher	dimen	coui_list_divider_height	0.33dp		
+launcher	com.android.launcher	dimen	widget_popup_group_divider_height	4dp		
+linker	com.oplus.linker	color	coui_color_divider	#1f000000	#33ffffff	
+linker	com.oplus.linker	dimen	coui_round_corner_m	12dp		
+linker	com.oplus.linker	dimen	coui_round_corner_m_radius	9dp		
+linker	com.oplus.linker	dimen	coui_list_divider_height	0.33dp		
+notificationmanager	com.oplus.notificationmanager	color	coui_color_divider	#1f000000	#33ffffff	
+notificationmanager	com.oplus.notificationmanager	dimen	coui_round_corner_m	12dp		
+notificationmanager	com.oplus.notificationmanager	dimen	coui_round_corner_m_radius	9dp		
+notificationmanager	com.oplus.notificationmanager	dimen	coui_list_divider_height	0.33dp		
+oplus	oplus	dimen	oplus_toast_bg_radius	10dp		
+permission	com.oplus.securitypermission	color	coui_color_divider	#1f000000	#33ffffff	
+permission	com.oplus.securitypermission	color	coui_popup_list_group_divider_color	#14000000	#14000000	
+permission	com.oplus.securitypermission	dimen	coui_round_corner_m	12dp		
+permission	com.oplus.securitypermission	dimen	coui_list_divider_height	0.33dp		
+phone	com.android.phone	color	coui_color_divider	#1f000000	#33ffffff	
+phone	com.android.phone	dimen	coui_round_corner_m	12dp		
+phone	com.android.phone	dimen	coui_round_corner_m_radius	9dp		
+phonemanager	com.coloros.phonemanager	color	coui_color_divider	#1f000000	#33ffffff	
+phonemanager	com.coloros.phonemanager	dimen	coui_round_corner_m	12dp		
+phonemanager	com.coloros.phonemanager	dimen	coui_round_corner_m_radius	9dp		
+phonemanager	com.coloros.phonemanager	dimen	coui_list_divider_height	0.33dp		
+pscanvas	com.oplus.pscanvas	color	coui_color_divider	#1f000000	#33ffffff	
+pscanvas	com.oplus.pscanvas	dimen	coui_round_corner_m	12dp		
+pscanvas	com.oplus.pscanvas	dimen	coui_round_corner_m_radius	9dp		
+settings	com.android.settings	color	coui_color_divider	#1f000000	#33ffffff	
+settings	com.android.settings	color	coui_popup_list_group_divider_color	#14000000	#14000000	
+settings	com.android.settings	dimen	coui_round_corner_m	12dp		
+systemui	com.android.systemui	color	coui_color_divider	#1f000000	#33ffffff	
+systemui	com.android.systemui	dimen	battery_percent_in_text_size	10dp		
+systemui	com.android.systemui	dimen	battery_percent_in_text_offset_x	1dp		
+systemui	com.android.systemui	dimen	notification_corner_radius	16dp		
+systemui	com.android.systemui	dimen	coui_popup_list_group_divider_height	4dp		
+systemui	com.android.systemui	dimen	volume_vertical_row_radius	11dp		
+systemui	com.android.systemui	dimen	volume_vertical_row_radius_weight	0.99		float
+systemui	com.android.systemui	dimen	volume_elevation	8dp		
+systemui	com.android.systemui	dimen	navigation_handle_bottom	7dp		
+systemui	com.android.systemui	dimen	usb_dialog_single_list_checkbox_padding_vertical	18dp		
+systemui	com.android.systemui	dimen	qs_tile_corner_radius_default	20dp		
+wirelesssettings	com.oplus.wirelesssettings	color	coui_color_divider	#1f000000	#33ffffff	
+wirelesssettings	com.oplus.wirelesssettings	dimen	coui_round_corner_m	12dp		
+wirelesssettings	com.oplus.wirelesssettings	dimen	coui_round_corner_m_radius	9dp		
+wirelesssettings	com.oplus.wirelesssettings	dimen	coui_list_divider_height	0.33dp		
