@@ -18,8 +18,8 @@ This is an aggregate clean-room compatibility report generated from the user's l
 | `PRESERVE_TARGET_GEOMETRY_TINT_ONLY` | **613** | Keep ColorOS 17 icon geometry; tint only when semantically appropriate |
 | `DROP_REMOVED_RESOURCE` | **385** | Legacy resource no longer exists in the current target |
 | `MIGRATE_RENAMED_OR_DROP` | **285** | Resource family appears obsolete/renamed and requires an explicit migration |
-| `MD3E_SEMANTIC` | **102** | Strong candidate for native Monet/MD3E semantic color mapping |
-| `MD3E_CONTENT_OR_NATIVE` | **60** | Content color needs component-level judgment |
+| `MD3E_SEMANTIC` | **49** | Strong candidate for native Monet/MD3E semantic color mapping |
+| `MD3E_CONTENT_OR_NATIVE` | **113** | Content color needs component-level judgment |
 
 ## Important package results
 
