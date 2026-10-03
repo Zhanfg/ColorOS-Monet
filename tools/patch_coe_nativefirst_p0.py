@@ -153,8 +153,38 @@ def main() -> int:
     args = ap.parse_args()
 
     with zipfile.ZipFile(args.input) as src:
-        original_dex = src.read("classes.dex")
-        patched_dex, patched = patch_dex(original_dex)
+        dex_names = [
+            name for name in src.namelist()
+            if name == "classes.dex" or (
+                name.startswith("classes") and name.endswith(".dex")
+                and name[7:-4].isdigit()
+            )
+        ]
+        if not dex_names:
+            raise RuntimeError("APK contains no classes*.dex")
+
+        replacement_dex: dict[str, bytes] = {}
+        patched: list[tuple[str, str, str, int, int]] = []
+        remaining = set(TARGET_METHODS)
+
+        for dex_name in dex_names:
+            raw = src.read(dex_name)
+            try:
+                patched_raw, hits = patch_dex(raw)
+            except RuntimeError as exc:
+                # A multidex APK may legitimately place the target class in a
+                # different dex. Only ignore the explicit class-not-found case.
+                if str(exc).startswith("class not found:"):
+                    continue
+                raise
+            replacement_dex[dex_name] = patched_raw
+            for class_name, method_name, code_off, insns_size in hits:
+                patched.append((dex_name, class_name, method_name, code_off, insns_size))
+                remaining.discard((class_name, method_name))
+
+        if remaining:
+            missing = ", ".join(f"{c}->{m}" for c, m in sorted(remaining))
+            raise RuntimeError(f"target methods not found across dex files: {missing}")
 
         with tempfile.TemporaryDirectory(prefix="coe-nativefirst-p0-") as td:
             work = Path(td)
@@ -166,7 +196,7 @@ def main() -> int:
                     upper = info.filename.upper()
                     if upper.startswith("META-INF/") and upper.endswith((".RSA", ".DSA", ".EC", ".SF")):
                         continue
-                    payload = patched_dex if info.filename == "classes.dex" else src.read(info.filename)
+                    payload = replacement_dex.get(info.filename, src.read(info.filename))
                     clone = zipfile.ZipInfo(info.filename, date_time=info.date_time)
                     clone.compress_type = info.compress_type
                     clone.external_attr = info.external_attr
