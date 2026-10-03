@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="monet17_icon_primary">@android:color/system_accent1_900</color>
-    <color name="monet17_icon_secondary">@android:color/system_accent2_900</color>
-    <color name="monet17_icon_tertiary">@android:color/system_accent3_900</color>
-</resources>
