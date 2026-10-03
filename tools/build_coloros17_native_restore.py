@@ -93,6 +93,10 @@ def values_xml(entries: list[Entry], night: bool) -> str:
             lines.append(f'    <item type="dimen" name="{e.name}" format="float">{value}</item>')
         elif e.typ == "dimen":
             lines.append(f'    <dimen name="{e.name}">{value}</dimen>')
+        elif e.typ == "bool":
+            lines.append(f'    <bool name="{e.name}">{value}</bool>')
+        elif e.typ == "integer":
+            lines.append(f'    <integer name="{e.name}">{value}</integer>')
         else:
             raise RuntimeError(f"unsupported type {e.typ}/{e.name}")
     lines.append("</resources>")
