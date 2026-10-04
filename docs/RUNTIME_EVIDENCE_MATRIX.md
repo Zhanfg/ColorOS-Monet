@@ -9,7 +9,7 @@ The static architecture is established. The remaining blockers are runtime- or X
 | UXDesign Monet ownership | UXDesign produces candidates/state; SystemUI creates Android FRRO | user-change/reboot ownership trace; COUI XML consumption | theme JSON + UX color XML snapshots + overlay state |
 | QS | QSIconViewProxy/Lottie owner exists | actual active tile/view/state class and loader | package provenance + logcat; Java instance trace still separate |
 | Media | plugin section implementation proven | actual root/layout instance and host/plugin binding | package provenance + logcat; XML/runtime binding still separate |
-| Volume | OplusVolumeDialogImpl chain proven | active DI choice and capability/session classes | package provenance + logcat; helper bytecode/runtime trace still separate |
+| Volume | OplusVolumeDialogImpl chain + material/blur helper class definitions proven | active DI choice, capability values and runtime lifecycle | package provenance + logcat + narrow evidence collector |
 | Notification | multiple state/color owners proven | active card-type/blur/colorized path | package provenance + logcat; component trace still separate |
 
 The one-shot shell collector is:
@@ -17,3 +17,12 @@ The one-shot shell collector is:
 `scripts/ColorOS17_MD3E_RuntimeEvidence_v1.sh`
 
 It is read-only and does not mutate the device to manufacture evidence.
+
+
+## Narrow evidence collector
+
+The archived full SystemUI DEX closed the volume-helper bytecode existence gap. The remaining XML/framework/runtime items can be collected without another full ROM dump using:
+
+`scripts/ColorOS17_MD3E_NarrowEvidence_v2.sh`
+
+It extracts only relevant Settings/SystemUI binary XML, framework DEX containers and read-only runtime provenance, and automatically creates 8 MiB parts when the archive is large.

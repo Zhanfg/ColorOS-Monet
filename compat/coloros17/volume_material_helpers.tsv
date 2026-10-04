@@ -1,0 +1,53 @@
+class	kind	member	evidence
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	baseEffectOk	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	blurDisabled	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	isDefaultTheme	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	lightPackageEnabled	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	motionPlatform	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	paintBackend	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	platformBlurEnabled	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	field	spotLightEnabled	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	resolve	code_off=0x1d0af0
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	resolveBlurDisabled	code_off=0x1d0a74
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	resolveMotionPlatform	code_off=0x1d0a94
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	resolvePlatformBlurEnabled	code_off=0x1d0ab4
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	getUsesPlatformPaint	code_off=0x1d099c
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	getUsesSolidPaint	code_off=0x1d09c0
+com.oplus.systemui.volume.utils.material.VolumeMaterialCapability	method	getUsesViewRootPaint	code_off=0x1d09f0
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	field	host	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	field	engineAcquired	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	field	capturePipelineRunnable	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	ensureForSlider	code_off=0x1d4978
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	invalidatePanel	code_off=0x1d4a38
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	onBeforeHideAnimate	code_off=0x1d4a68
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	onBeforeShowAnimate	code_off=0x1d4ab0
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	prepareEngine	code_off=0x1d4b60
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	startAttachedObservers	code_off=0x1d4bd8
+com.oplus.systemui.volume.utils.material.VolumePlatformBlurSession	method	stopCapturePipeline	code_off=0x1d4c9c
+com.oplus.systemui.volume.utils.material.VolumeCornerSpec	field	cornerRadius	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeCornerSpec	field	radiusWeight	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.VolumeCornerSpec	method	getPlatformRadiusWeight	code_off=0x1d0244
+com.oplus.systemui.volume.utils.material.VolumeCornerSpec	method	getSmoothWeightForViewRoot	code_off=0x1d01b4
+com.oplus.systemui.volume.utils.material.OplusVolumeShapeGeometry	field	cornerRadius	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.OplusVolumeShapeGeometry	field	cornerWeight	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.OplusVolumeShapeGeometry	field	smoothCorner	full SystemUI classes9.dex
+com.oplus.systemui.volume.utils.material.OplusVolumeShapeGeometry	method	create	code_off=0x1cd9dc
+com.oplus.systemui.volume.utils.material.OplusVolumeShapeGeometry	method	hasSameMaterialBounds	code_off=0x1cd964
+com.oplus.systemui.volume.utils.material.VolumeSurfaceFactory	method	createBackground	code_off=0x1d5140
+com.oplus.systemui.volume.utils.material.VolumeSurfaceFactory	method	createContent	code_off=0x1d5188
+com.oplus.systemui.volume.utils.material.VolumeSurfaceFactory	method	createSolidPlaceholder	code_off=0x1d562c
+com.oplus.systemui.volume.OplusVolumeDialogImpl	field	mOplusVolumeDialogView	full SystemUI classes4.dex
+com.oplus.systemui.volume.OplusVolumeDialogImpl	field	mRows	full SystemUI classes4.dex
+com.oplus.systemui.volume.OplusVolumeDialogImpl	field	mController	full SystemUI classes4.dex
+com.oplus.systemui.volume.OplusVolumeDialogImpl	method	init	code_off=0x4e4c04
+com.oplus.systemui.volume.OplusVolumeDialogImpl	method	onStateChangedH	code_off=0x4e4f28
+com.oplus.systemui.volume.OplusVolumeDialogImpl	method	onThemeChanged	code_off=0x4e5234
+com.oplus.systemui.volume.OplusVolumeDialogImpl	method	showH	code_off=0x4e5740
+com.oplus.systemui.volume.OplusVolumeDialogImpl	method	updateVolumeRowSliderH	code_off=0x4e661c
+com.oplus.systemui.volume.view.OplusVolumeDialogView	field	platformBlurSession	full SystemUI classes4.dex
+com.oplus.systemui.volume.view.OplusVolumeDialogView	field	blurHostHelper	full SystemUI classes4.dex
+com.oplus.systemui.volume.view.OplusVolumeDialogView	field	volumeInteractor	full SystemUI classes4.dex
+com.oplus.systemui.volume.view.OplusVolumeDialogView	method	initDialog	code_off=0x5040c0
+com.oplus.systemui.volume.view.OplusVolumeDialogView	method	onThemeChanged	code_off=0x504e2c
+com.oplus.systemui.volume.view.OplusVolumeDialogView	method	refreshVolumeSpotLightType	code_off=0x504f80
+com.oplus.systemui.volume.view.OplusVolumeDialogView	method	releaseBlurResourcesAndDismiss	code_off=0x504ff4
