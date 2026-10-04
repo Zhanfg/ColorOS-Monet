@@ -12,6 +12,7 @@ on:
       - "tools/classify_legacy_overlay_resources.py"
       - "tools/lint_coloros17_semantic_policy.py"
       - "tools/lint_coloros17_component_policy.py"
+      - "scripts/ColorOS17_MD3E_RuntimeClosure_v3.sh"
       - "tools/lint_settings_icon_bridge.py"
       - "tools/lint_coloros17_settings_icon_gate.py"
       - "tools/lint_settings_expressive_component_catalog.py"
@@ -73,6 +74,7 @@ jobs:
             module/action.sh \
             module/uninstall.sh \
             module/bin/coloros-monet-doctor \
+            scripts/ColorOS17_MD3E_RuntimeClosure_v3.sh \
             experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh
 
       - name: Install Android 17 SDK
