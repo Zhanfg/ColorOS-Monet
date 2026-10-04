@@ -88,16 +88,30 @@ def main() -> int:
             rows.append(cols)
 
     by_symbol: dict[str, set[str]] = {}
+    optional_by_symbol: dict[str, set[str]] = {}
     for row in rows:
         symbol, family, size, off, on, action = row[3], row[4], row[5], row[6], row[7], row[8]
         if symbol not in symbols:
             raise SystemExit(f"mapped symbol missing from upstream: {symbol}")
-        wanted = {
+
+        required = {
             f"{family}/{asset_name(symbol, size, off)}",
         }
         if action == "STATEFUL_SYMBOL":
-            wanted.add(f"{family}/{asset_name(symbol, size, on)}")
-        by_symbol.setdefault(symbol, set()).update(wanted)
+            required.add(f"{family}/{asset_name(symbol, size, on)}")
+        by_symbol.setdefault(symbol, set()).update(required)
+
+        # Record optional capabilities as review evidence. These do not make a
+        # mapping approved; they only tell us whether one glyph can express
+        # state/optical-size changes without swapping semantic geometry.
+        optional = {
+            f"{family}/{asset_name(symbol, size, 'fill1')}",
+            f"{family}/{asset_name(symbol, size, 'grad200')}",
+        }
+        for optical in ("20", "24", "40", "48"):
+            optional.add(f"{family}/{asset_name(symbol, optical, 'base')}")
+            optional.add(f"{family}/{asset_name(symbol, optical, 'fill1')}")
+        optional_by_symbol.setdefault(symbol, set()).update(optional)
 
     capability_rows = []
     failures = []
@@ -110,15 +124,19 @@ def main() -> int:
             failures.append(f"{symbol}: subtree truncated")
             continue
         paths = {item["path"] for item in tree.get("tree", []) if item.get("type") == "blob"}
-        for wanted in sorted(by_symbol[symbol]):
+
+        required_paths = by_symbol[symbol]
+        all_paths = required_paths | optional_by_symbol.get(symbol, set())
+        for wanted in sorted(all_paths):
             exists = wanted in paths
-            capability_rows.append([symbol, wanted, "1" if exists else "0"])
-            if not exists:
+            kind = "required" if wanted in required_paths else "optional"
+            capability_rows.append([symbol, wanted, "1" if exists else "0", kind])
+            if kind == "required" and not exists:
                 failures.append(f"{symbol}: missing {wanted}")
 
     with args.capabilities_output.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f, delimiter="\t")
-        w.writerow(["symbol", "asset", "exists"])
+        w.writerow(["symbol", "asset", "exists", "kind"])
         w.writerows(capability_rows)
 
     print(f"pinned_commit={actual}")
