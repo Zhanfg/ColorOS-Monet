@@ -10,6 +10,7 @@ on:
       - "compat/coloros17/settings_oplus_homepage_icons.tsv"
       - "tools/validate_oplus_homepage_icon_candidates.py"
       - "tools/verify_aosp_settings_upstream.py"
+      - "tools/build_oplus_homepage_icon_review_pack.py"
       - "compat/material-symbols/aosp-settings.source"
       - "tools/verify_material_symbols_upstream_api.py"
       - "tools/resolve_coloros17_icon_sources.py"
@@ -44,7 +45,8 @@ jobs:
             tools/suggest_material_symbol_matches.py \
             tools/materialize_material_symbol_assets.py \
             tools/validate_oplus_homepage_icon_candidates.py \
-            tools/verify_aosp_settings_upstream.py
+            tools/verify_aosp_settings_upstream.py \
+            tools/build_oplus_homepage_icon_review_pack.py
 
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
@@ -71,6 +73,15 @@ jobs:
           --oplus-homepage compat/coloros17/settings_oplus_homepage_icons.tsv
           --output dist/coloros17-icon-resolution.tsv
 
+      - name: Build OPlus homepage Material Symbols review pack
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python tools/build_oplus_homepage_icon_review_pack.py
+          --homepage compat/coloros17/settings_oplus_homepage_icons.tsv
+          --upstream-lock compat/material-symbols/upstream.lock
+          --output dist/oplus-homepage-material-review
+
       - name: Validate OPlus homepage icon candidates
         run: >-
           python tools/validate_oplus_homepage_icon_candidates.py
@@ -88,3 +99,4 @@ jobs:
             dist/material-symbols-mapped-capabilities.tsv
             dist/coloros17-icon-resolution.tsv
             dist/aosp-settings-upstream.lock
+            dist/oplus-homepage-material-review/**
