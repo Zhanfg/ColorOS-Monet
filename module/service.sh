@@ -4,12 +4,9 @@
 MODDIR=${0%/*}
 STATE_DIR=/data/adb/coloros-monet
 STATE_FILE="$STATE_DIR/config.conf"
-TARGETS="$MODDIR/payload/targets.tsv"
-NATIVE_MANIFEST="$MODDIR/payload/native-foundation-manifest.tsv"
 SEMANTIC_MANIFEST="$MODDIR/payload/semantic-accent-manifest.tsv"
 LOG="$STATE_DIR/overlay-status.log"
 LOCK="$STATE_DIR/service.lock"
-EXPRESSIVE_HELPER="$MODDIR/bin/coloros17-expressive-style"
 
 mkdir -p "$STATE_DIR" || exit 0
 mkdir "$LOCK" 2>/dev/null || exit 0
@@ -36,67 +33,14 @@ overlay_enabled() {
         grep -Eq '\[x\]|STATE_ENABLED|STATE_ENABLED_IMMUTABLE'
 }
 
-package_version() {
-    dumpsys package "$1" 2>/dev/null | sed -n 's/.*versionName=//p' | head -n 1
-}
-
-apply_requested_overlay() {
+apply_semantic_overlay() {
     key="$1"
     target="$2"
     overlay="$3"
+    apk="$4"
+    count="$5"
 
-    echo "[$key] target=$target overlay=$overlay requested=1"
-    if ! package_present "$target"; then
-        echo "guard=target_missing"
-        cmd overlay disable --user 0 "$overlay" 2>&1
-        return 1
-    fi
-    if ! package_present "$overlay"; then
-        echo "guard=overlay_missing"
-        return 1
-    fi
-
-    target_version="$(package_version "$target")"
-    echo "target_version=${target_version:-unknown}"
-    if [ "$key" = x ] && [ "$target_version" != 12.13.0 ]; then
-        echo "compatibility_warning=reviewed_for_12.13.0"
-    fi
-
-    echo "enable_output_begin"
-    cmd overlay enable --user 0 "$overlay" 2>&1
-    enable_rc=$?
-    echo "enable_output_end"
-    echo "enable_exit_code=$enable_rc"
-    sleep 1
-
-    if [ "$enable_rc" -ne 0 ] || ! overlay_enabled "$overlay"; then
-        echo "guard=enable_rejected"
-        cmd overlay disable --user 0 "$overlay" 2>&1
-        return 1
-    fi
-
-    echo "guard=accepted"
-    cmd overlay list --user 0 2>&1 | grep -F "$overlay" || true
-    return 0
-}
-
-apply_disabled_overlay() {
-    key="$1"
-    target="$2"
-    overlay="$3"
-    echo "[$key] target=$target overlay=$overlay requested=0"
-    cmd overlay disable --user 0 "$overlay" 2>&1
-    echo "guard=disabled_by_configuration"
-}
-
-apply_ordered_overlay() {
-    role="$1"
-    key="$2"
-    target="$3"
-    overlay="$4"
-
-    echo "[$key] target=$target overlay=$overlay role=$role"
-
+    echo "[$key] target=$target overlay=$overlay apk=$apk entries=$count"
     if ! package_present "$target"; then
         echo "guard=target_missing"
         return 1
@@ -106,16 +50,12 @@ apply_ordered_overlay() {
         return 1
     fi
 
-    echo "enable_output_begin"
     cmd overlay enable --user 0 "$overlay" 2>&1
     enable_rc=$?
-    echo "enable_output_end"
     echo "enable_exit_code=$enable_rc"
 
-    echo "priority_output_begin"
     cmd overlay set-priority --user 0 "$overlay" highest 2>&1
     priority_rc=$?
-    echo "priority_output_end"
     echo "priority_exit_code=$priority_rc"
 
     sleep 1
@@ -124,13 +64,8 @@ apply_ordered_overlay() {
         return 1
     fi
 
-    if [ "$priority_rc" -ne 0 ]; then
-        echo "priority_warning=set_priority_rejected"
-    fi
-
     echo "guard=accepted"
-    cmd overlay list --user 0 2>&1 | grep -F "$overlay" || true
-    cmd overlay dump "$overlay" 2>&1 | head -n 120 || true
+    cmd overlay list --user 0 2>/dev/null | grep -F "$overlay" || true
     return 0
 }
 
@@ -140,61 +75,27 @@ apply_ordered_overlay() {
     echo "build=$(getprop ro.build.display.id 2>/dev/null)"
     echo "boot_completed=$(getprop sys.boot_completed 2>/dev/null)"
     echo "policy=no_app_or_system_service_restart"
-    echo "--- overlays ---"
-    TAB=$(printf '\t')
-    while IFS="$TAB" read -r key target overlay _apk; do
-        case "$key" in ''|'#'*) continue ;; esac
-        if read_flag "$key"; then
-            apply_requested_overlay "$key" "$target" "$overlay"
-        else
-            apply_disabled_overlay "$key" "$target" "$overlay"
-        fi
-        pm path "$target" 2>&1
-        pm path "$overlay" 2>&1
-        echo
-    done < "$TARGETS"
-
-    echo "--- coloros17-native-foundation ---"
-    if [ -f "$NATIVE_MANIFEST" ]; then
-        TAB=$(printf '\t')
-        while IFS="$TAB" read -r key target overlay apk count; do
-            case "$key" in ''|'#'*) continue ;; esac
-            [ "$key" = key ] && continue
-            echo "apk=$apk entries=$count"
-            apply_ordered_overlay native_foundation "$key" "$target" "$overlay" || true
-            echo
-        done < "$NATIVE_MANIFEST"
-    else
-        echo "native_foundation_manifest=absent"
-    fi
-
+    echo "theme_policy=do_not_mutate_theme_style"
     echo "--- md3e-semantic-accent ---"
-    if [ -f "$SEMANTIC_MANIFEST" ]; then
+
+    if [ ! -f "$SEMANTIC_MANIFEST" ]; then
+        echo "semantic_accent_manifest=absent"
+    elif read_flag md3e_semantic; then
         TAB=$(printf '\t')
         while IFS="$TAB" read -r key target overlay apk count; do
             case "$key" in ''|'#'*) continue ;; esac
             [ "$key" = key ] && continue
-            echo "apk=$apk entries=$count"
-            if read_flag md3e_semantic; then
-                apply_ordered_overlay md3e_semantic "$key" "$target" "$overlay" || true
-            else
-                cmd overlay disable --user 0 "$overlay" 2>&1
-                echo "guard=disabled_by_configuration"
-            fi
+            apply_semantic_overlay "$key" "$target" "$overlay" "$apk" "$count" || true
             echo
         done < "$SEMANTIC_MANIFEST"
     else
-        echo "semantic_accent_manifest=absent"
-    fi
-
-    echo "--- native-expressive-color-pipeline ---"
-    SDK="$(getprop ro.build.version.sdk 2>/dev/null)"
-    if [ "$SDK" = 37 ] && read_flag native_expressive && [ -f "$EXPRESSIVE_HELPER" ]; then
-        /system/bin/sh "$EXPRESSIVE_HELPER" apply
-        echo "native_expressive=requested"
-        /system/bin/sh "$EXPRESSIVE_HELPER" status
-    else
-        echo "native_expressive=skipped"
+        TAB=$(printf '\t')
+        while IFS="$TAB" read -r key target overlay apk count; do
+            case "$key" in ''|'#'*) continue ;; esac
+            [ "$key" = key ] && continue
+            cmd overlay disable --user 0 "$overlay" 2>&1
+            echo "[$key] guard=disabled_by_configuration"
+        done < "$SEMANTIC_MANIFEST"
     fi
 } > "$LOG" 2>&1
 

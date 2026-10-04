@@ -1,34 +1,18 @@
-# P2: use ColorOS 17's native EXPRESSIVE Monet variant
+# Native EXPRESSIVE palette experiment — blocked pending hard analysis
 
-The current ColorOS 17 UXDesign package (17.0.15) already ships the Google/libmonet dynamic-color stack and exposes native variants including:
+ColorOS 17 UXDesign clearly exposes Monet/Material style concepts including `EXPRESSIVE` and `TONAL_SPOT`, but the complete ownership and regeneration flow is still under hard analysis.
 
-- EXPRESSIVE
-- TONAL_SPOT
-- SPRITZ
-- VIBRANT
-- MONOCHROMATIC
-
-The live device baseline stores the current selection in:
+Therefore the clean v0.2.0 shipping module **does not mutate**:
 
 `Settings.Secure.theme_customization_overlay_packages`
 
-with:
+and does not ship the earlier `coloros17-expressive-style` helper.
 
-`"android.theme.customization.theme_style":"TONAL_SPOT"`
+The previous helper has been moved to an experiment-only location for reference. It must not return to the shipping module until the Codex report proves:
 
-UXDesign also contains the user-facing wallpaper color labels for the variants; the Chinese label for EXPRESSIVE is “饱满” (“Bright” in the default resource).
+1. the real style/variant mapping;
+2. which component owns palette regeneration;
+3. whether changing the Settings.Secure JSON is sufficient;
+4. how to respect later user theme changes.
 
-## Design decision
-
-v0.2.0 should not synthesize a second independent Monet palette engine.
-
-The module can optionally request the ROM's own `EXPRESSIVE` variant while preserving:
-
-- the existing wallpaper color source;
-- ColorOS generated dynamic overlays / FRROs;
-- OEM blur/translucent composition;
-- other theme JSON fields.
-
-This option is **disabled by default**. MD3E component behavior does not require forcing an EXPRESSIVE hue style. When explicitly enabled, the helper stores only the previous theme-style enum and restores it on uninstall **only if** the current style is still EXPRESSIVE, so a later manual user theme choice is not overwritten.
-
-This makes the color layer genuinely native-first: ColorOS generates the palette; the module focuses on correcting legacy geometry/surface overrides and on component-scoped expressive behavior.
+Until then, the shipping semantic layer only consumes the ROM's already-active `system_primary_light/dark` values.

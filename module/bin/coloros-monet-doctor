@@ -1,33 +1,27 @@
 #!/system/bin/sh
 # SPDX-License-Identifier: Apache-2.0
-# Read-only diagnostics for the X overlay. This script does not restart apps or services.
+# Read-only diagnostics for the ColorOS 17 MD3E semantic layer.
+# No app/service restart and no overlay/theme mutation.
 
 STATE_DIR=/data/adb/coloros-monet
 REPORT_ROOT="$STATE_DIR/reports"
 DOWNLOAD_ROOT=/sdcard/Download
-TARGET_PACKAGE=com.twitter.android
-OVERLAY_PACKAGE=dev.zhanfg.colorosmonet.overlay.x
+MODDIR="${0%/*}/.."
+SEMANTIC_MANIFEST="$MODDIR/payload/semantic-accent-manifest.tsv"
 STAMP="$(date +%Y%m%d_%H%M%S 2>/dev/null)"
 [ -n "$STAMP" ] || STAMP=unknown
-WORK="$REPORT_ROOT/ColorOS_Monet_X_Doctor_$STAMP"
+WORK="$REPORT_ROOT/ColorOS17_MD3E_Doctor_$STAMP"
 SUMMARY="$WORK/SUMMARY.txt"
 
-say() {
-    printf '%s\n' "$*"
-}
-
-have() {
-    command -v "$1" >/dev/null 2>&1
-}
+say() { printf '%s\n' "$*"; }
+have() { command -v "$1" >/dev/null 2>&1; }
 
 capture() {
     output="$1"
     shift
     {
         printf '$'
-        for arg in "$@"; do
-            printf ' %s' "$arg"
-        done
+        for arg in "$@"; do printf ' %s' "$arg"; done
         printf '\n'
         "$@"
         rc=$?
@@ -48,151 +42,130 @@ sha256_file() {
     fi
 }
 
-overlay_line() {
-    cmd overlay list --user 0 2>/dev/null | grep -F "$OVERLAY_PACKAGE" | head -n 1
-}
-
-overlay_enabled() {
-    overlay_line | grep -Eq '\[x\]|STATE_ENABLED|STATE_ENABLED_IMMUTABLE'
-}
-
 if [ "$(id -u 2>/dev/null)" != 0 ]; then
     say "[错误] 需要 Root 权限。"
     exit 1
 fi
 
-mkdir -p "$WORK" "$DOWNLOAD_ROOT" || {
-    say "[错误] 无法创建诊断目录。"
-    exit 1
-}
+mkdir -p "$WORK" "$DOWNLOAD_ROOT" || exit 1
 
-say "[1/7] 读取设备与构建信息"
+say "[1/6] 读取设备 / ColorOS / Monet 基线"
 {
     echo "time=$(date '+%F %T %z' 2>/dev/null)"
     echo "model=$(getprop ro.product.model 2>/dev/null)"
     echo "device=$(getprop ro.product.device 2>/dev/null)"
-    echo "platform=$(getprop ro.board.platform 2>/dev/null)"
     echo "sdk=$(getprop ro.build.version.sdk 2>/dev/null)"
     echo "release=$(getprop ro.build.version.release 2>/dev/null)"
-    echo "build=$(getprop ro.build.display.id 2>/dev/null)"
+    echo "display=$(getprop ro.build.display.id 2>/dev/null)"
+    echo "oplusrom=$(getprop ro.build.version.oplusrom 2>/dev/null)"
     echo "fingerprint=$(getprop ro.build.fingerprint 2>/dev/null)"
     echo "selinux=$(getenforce 2>/dev/null)"
-} > "$WORK/device.txt"
+    echo "material_blur=$(getprop persist.sys.oplus.material_blur_switch 2>/dev/null)"
+    echo "sf_background_blur=$(getprop ro.surface_flinger.supports_background_blur 2>/dev/null)"
+    echo "theme_json=$(settings get secure theme_customization_overlay_packages 2>/dev/null)"
+} > "$WORK/device_theme.txt"
 
-say "[2/7] 读取目标包与覆盖包"
-capture "$WORK/target_pm_path.txt" pm path "$TARGET_PACKAGE"
-capture "$WORK/overlay_pm_path.txt" pm path "$OVERLAY_PACKAGE"
-capture "$WORK/target_package_full.txt" dumpsys package "$TARGET_PACKAGE"
-capture "$WORK/overlay_package_full.txt" dumpsys package "$OVERLAY_PACKAGE"
+say "[2/6] 读取模块配置"
 {
-    dumpsys package "$TARGET_PACKAGE" 2>/dev/null | grep -Ei \
-        'versionName=|versionCode=|codePath=|resourcePath=|primaryCpuAbi=|secondaryCpuAbi=|splitNames=|installerPackageName=|signing|digest|flags=' | head -n 500
-} > "$WORK/target_package_summary.txt"
-
-{
-    for package in "$TARGET_PACKAGE" "$OVERLAY_PACKAGE"; do
-        echo "===== $package ====="
-        pm path "$package" 2>/dev/null | sed 's/^package://' | while IFS= read -r apk; do
-            [ -f "$apk" ] || continue
-            ls -lZ "$apk" 2>&1
-            sha256_file "$apk"
-        done
-        echo
-    done
-} > "$WORK/package_files_sha256.txt"
-
-say "[3/7] 读取 OverlayManager 与 idmap 状态"
-capture "$WORK/overlay_list.txt" cmd overlay list --user 0
-capture "$WORK/overlay_dump.txt" cmd overlay dump "$OVERLAY_PACKAGE"
-{
-    echo "overlay_line=$(overlay_line)"
-    if overlay_enabled; then
-        echo "overlay_enabled=1"
-    else
-        echo "overlay_enabled=0"
-    fi
-} > "$WORK/overlay_state.txt"
-
-{
-    for resource in \
-        colorPrimary \
-        material_personalized_color_primary \
-        blue_600 \
-        appBackground
-    do
-        echo "===== $resource ====="
-        cmd overlay lookup --verbose "$TARGET_PACKAGE" "$TARGET_PACKAGE:color/$resource" 2>&1
-        echo "exit_code=$?"
-        echo
-    done
-} > "$WORK/overlay_lookup.txt"
-
-say "[4/7] 检查 idmap 缓存"
-{
-    echo "===== matching paths ====="
-    find /data/resource-cache -type f 2>/dev/null | grep -Ei 'twitter|xmonet|coloros.?monet' | sort
+    [ -f "$MODDIR/module.prop" ] && cat "$MODDIR/module.prop"
     echo
-    echo "===== directory listing ====="
-    ls -laZ /data/resource-cache 2>&1
-} > "$WORK/idmap_inventory.txt"
+    echo "--- config ---"
+    cat "$STATE_DIR/config.conf" 2>/dev/null
+    echo
+    echo "--- semantic manifest ---"
+    cat "$SEMANTIC_MANIFEST" 2>/dev/null
+} > "$WORK/module_state.txt"
 
-if have idmap2; then
-    find /data/resource-cache -type f 2>/dev/null | grep -Ei 'twitter|xmonet|coloros.?monet' | while IFS= read -r idmap; do
-        safe_name="$(basename "$idmap" | tr '/ :' '___')"
-        capture "$WORK/idmap2_${safe_name}.txt" idmap2 dump --idmap-path "$idmap"
-    done
+say "[3/6] 检查 semantic overlays"
+: > "$WORK/semantic_packages.txt"
+if [ -f "$SEMANTIC_MANIFEST" ]; then
+    TAB=$(printf '\t')
+    while IFS="$TAB" read -r key target overlay apk count; do
+        case "$key" in ''|'#'*) continue ;; esac
+        [ "$key" = key ] && continue
+        {
+            echo "===== $key ====="
+            echo "target=$target"
+            echo "overlay=$overlay"
+            echo "apk=$apk"
+            echo "entry_count=$count"
+            echo "--- target path ---"
+            pm path "$target" 2>&1
+            echo "--- overlay path ---"
+            pm path "$overlay" 2>&1
+            echo "--- overlay state ---"
+            cmd overlay list --user 0 2>/dev/null | grep -F "$overlay" || true
+            echo "--- overlay dump ---"
+            cmd overlay dump "$overlay" 2>&1 | head -n 160
+            echo
+        } >> "$WORK/semantic_packages.txt"
+    done < "$SEMANTIC_MANIFEST"
+else
+    echo "semantic_manifest_missing=1" >> "$WORK/semantic_packages.txt"
 fi
 
-say "[5/7] 读取进程退出记录与近期错误"
-capture "$WORK/activity_exit_info.txt" dumpsys activity exit-info "$TARGET_PACKAGE"
+say "[4/6] 检查关键资源最终解析"
 {
-    logcat -b crash -d -v threadtime 2>/dev/null
+    for spec in \
+        'com.android.settings com.android.settings:color/coui_color_primary_blue' \
+        'com.android.settings com.android.settings:color/coui_color_primary_text_blue' \
+        'com.android.systemui com.android.systemui:color/coui_color_primary_blue' \
+        'com.android.launcher com.android.launcher:color/coui_color_primary_blue' \
+        'com.oplus.wirelesssettings com.oplus.wirelesssettings:color/coui_color_primary_blue' \
+        'com.oplus.notificationmanager com.oplus.notificationmanager:color/coui_color_primary_blue'
+    do
+        target="$(printf '%s' "$spec" | cut -d' ' -f1)"
+        res="$(printf '%s' "$spec" | cut -d' ' -f2)"
+        echo "===== $res ====="
+        if have timeout; then
+            timeout 5 cmd overlay lookup --verbose "$target" "$res" 2>&1
+        else
+            cmd overlay lookup --verbose "$target" "$res" 2>&1
+        fi
+        echo
+    done
+} > "$WORK/resource_lookup.txt"
+
+say "[5/6] 检查 idmap / OverlayManager / 近期异常"
+capture "$WORK/overlay_list.txt" cmd overlay list --user 0
+{
+    find /data/resource-cache -type f 2>/dev/null | grep -Ei 'colorosmonet\.semantic|zhanfg.*semantic' | sort
+} > "$WORK/idmap_paths.txt"
+if have idmap2; then
+    while IFS= read -r idmap; do
+        [ -f "$idmap" ] || continue
+        safe="$(basename "$idmap" | tr '/ :' '___')"
+        capture "$WORK/idmap2_$safe.txt" idmap2 dump --idmap-path "$idmap"
+    done < "$WORK/idmap_paths.txt"
+fi
+{
     logcat -b all -d -v threadtime 2>/dev/null | grep -Ei \
-        'AndroidRuntime|FATAL EXCEPTION|com\.twitter\.android|OverlayManager|idmap|ResourcesNotFoundException|Resources.NotFoundException|Piko|twitter' | tail -n 12000
+        'OverlayManager|idmap|colorosmonet\.semantic|Resources\$NotFoundException|ResourcesNotFoundException|FATAL EXCEPTION' | tail -n 8000
 } > "$WORK/logcat_relevant.txt"
 
-say "[6/7] 生成判定摘要"
-TARGET_PATH="$(pm path "$TARGET_PACKAGE" 2>/dev/null | head -n 1)"
-OVERLAY_PATH="$(pm path "$OVERLAY_PACKAGE" 2>/dev/null | head -n 1)"
-TARGET_VERSION="$(dumpsys package "$TARGET_PACKAGE" 2>/dev/null | sed -n 's/.*versionName=//p' | head -n 1)"
+say "[6/6] 生成摘要并打包"
 {
-    echo "ColorOS Monet X read-only diagnostic"
+    echo "ColorOS 17 MD3E semantic-layer read-only diagnostic"
     echo "time=$(date '+%F %T %z' 2>/dev/null)"
-    echo "target_package=$TARGET_PACKAGE"
-    echo "target_version=${TARGET_VERSION:-unknown}"
-    echo "overlay_package=$OVERLAY_PACKAGE"
-    echo
-    if [ -z "$TARGET_PATH" ]; then
-        echo "result=TARGET_PACKAGE_MISSING"
-        echo "meaning=X 目标应用未被 PackageManager 识别。"
-    elif [ -z "$OVERLAY_PATH" ]; then
-        echo "result=OVERLAY_PACKAGE_MISSING"
-        echo "meaning=覆盖 APK 未被 PackageManager 识别，优先检查模块挂载与安装位置。"
-    elif overlay_enabled; then
-        echo "result=OVERLAY_ENABLED"
-        echo "meaning=覆盖处于启用态；若 X 仍闪退，应继续查看 activity_exit_info 与 logcat，不能把闪退直接归因于莫奈覆盖。"
-    else
-        echo "result=OVERLAY_NOT_ENABLED"
-        echo "meaning=覆盖未处于启用态；overlay_dump、lookup 与 idmap 输出用于区分 overlayable、签名、资源名和 idmap 拒绝。"
-    fi
-    echo
-    echo "safety=READ_ONLY_NO_RUNTIME_RESTART"
+    echo "sdk=$(getprop ro.build.version.sdk 2>/dev/null)"
+    echo "build=$(getprop ro.build.display.id 2>/dev/null)"
+    echo "semantic_manifest_present=$([ -f "$SEMANTIC_MANIFEST" ] && echo 1 || echo 0)"
+    echo "safety=READ_ONLY_NO_RESTART_NO_THEME_MUTATION"
     echo "work_directory=$WORK"
+    echo
+    echo "Important:"
+    echo "- non-EXPRESSIVE theme style is not an error;"
+    echo "- this diagnostic does not change theme_customization_overlay_packages;"
+    echo "- inspect semantic_packages/resource_lookup/idmap outputs together."
 } > "$SUMMARY"
 cat "$SUMMARY"
 
-say "[7/7] 打包报告"
-ARCHIVE="$DOWNLOAD_ROOT/ColorOS_Monet_X_Doctor_$STAMP.tar.gz"
+ARCHIVE="$DOWNLOAD_ROOT/ColorOS17_MD3E_Doctor_$STAMP.tar.gz"
 if tar -czf "$ARCHIVE" -C "$REPORT_ROOT" "$(basename "$WORK")" 2>/dev/null; then
-    :
+    sha256_file "$ARCHIVE" > "$ARCHIVE.sha256"
+    chmod 0644 "$ARCHIVE" "$ARCHIVE.sha256" 2>/dev/null
+    say "[完成] $ARCHIVE"
 else
-    ARCHIVE="$DOWNLOAD_ROOT/ColorOS_Monet_X_Doctor_$STAMP.tar"
-    tar -cf "$ARCHIVE" -C "$REPORT_ROOT" "$(basename "$WORK")" || {
-        say "[错误] 报告目录已生成，但压缩失败：$WORK"
-        exit 2
-    }
+    say "[警告] 压缩失败，原始目录：$WORK"
+    exit 2
 fi
-sha256_file "$ARCHIVE" > "$ARCHIVE.sha256"
-chmod 0644 "$ARCHIVE" "$ARCHIVE.sha256" 2>/dev/null
-say "[完成] 报告：$ARCHIVE"
-say "[完成] 校验：$ARCHIVE.sha256"
