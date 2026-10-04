@@ -4,6 +4,8 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -11,8 +13,21 @@ PREFIX=")]}'\n"
 
 def fetch_text(url: str) -> str:
     req=urllib.request.Request(url, headers={"User-Agent":"ColorOS-Monet-upstream-verifier/1"})
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        return resp.read().decode("utf-8")
+    last=None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return resp.read().decode("utf-8")
+        except urllib.error.HTTPError as exc:
+            last=exc
+            if exc.code not in {429,500,502,503,504} or attempt==3:
+                raise
+        except urllib.error.URLError as exc:
+            last=exc
+            if attempt==3:
+                raise
+        time.sleep(2 ** attempt)
+    raise RuntimeError(f"unreachable retry state: {last}")
 
 def fetch_json(url: str):
     text=fetch_text(url)
