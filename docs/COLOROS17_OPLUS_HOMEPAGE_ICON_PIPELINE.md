@@ -82,3 +82,14 @@ python tools/extract_settings_oplus_homepage_icons.py \
 ```
 
 No vendor XML or drawable payload is stored in the public repository; only derived resource/controller metadata is committed.
+
+
+## DEX ownership confirmation
+
+The OPlus preference hierarchy itself declares the two-tone/tint state:
+`SettingJumpPreference` owns `mShowTwoToneColor`, `mTintIcon`,
+`mTintType` and `mNeedChangeCanvasType`, while its subclasses bind the
+homepage rows. See `docs/COLOROS17_OPLUS_ICON_OWNER.md`.
+
+This upgrades the homepage icon-owner conclusion from XML-only evidence to
+XML + class-structure evidence.
