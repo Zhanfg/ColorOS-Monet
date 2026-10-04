@@ -14,6 +14,9 @@ ALLOWED_NAMES = {
     "coui_color_primary_blue",
     "coui_color_primary_on_popup_blue",
     "coui_color_primary_text_blue",
+    "coui_color_container_theme_blue",
+    "coui_color_label_theme_blue",
+    "coui_color_tips",
     "colorPrimary",
 }
 LIGHT = "@android:color/system_primary_light"

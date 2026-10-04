@@ -2,7 +2,7 @@
 
 The resource classifier reduced the legacy v0.1.4 color overrides to a small set of high-confidence accent roles that still exist on the current ColorOS 17 targets.
 
-The first conservative layer contains **67 unique high-confidence target color resources across 14 packages**.
+The first conservative layer contains **106 locally proven target color resources across 14 packages**.
 
 The retained resource family is intentionally narrow:
 
