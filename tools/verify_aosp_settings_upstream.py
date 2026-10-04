@@ -48,9 +48,13 @@ def main() -> int:
 
     base=cfg.get("repository","https://android.googlesource.com/platform/packages/apps/Settings").rstrip("/")
     branch=cfg.get("branch","android17-release")
-    ref=f"refs/heads/{branch}"
+    branch_ref=cfg.get("branch_ref",f"refs/heads/{branch}")
+    branch_head, branch_meta=resolve_ref(base, branch_ref)
 
-    commit, meta=resolve_ref(base, ref)
+    pinned=cfg.get("pinned_commit") or branch_head
+    pinned_commit, pinned_meta=resolve_ref(base, pinned)
+    if pinned_commit != pinned:
+        raise RuntimeError(f"pinned commit did not resolve exactly: {pinned} -> {pinned_commit}")
 
     required=[
         "res/drawable/ic_settings_display_expressive.xml",
@@ -62,7 +66,7 @@ def main() -> int:
     ]
     verified=[]
     for path in required:
-        data=fetch_gitiles_file(base, ref, path)
+        data=fetch_gitiles_file(base, pinned, path)
         if not data.strip():
             raise RuntimeError(f"empty upstream file: {path}")
         verified.append((path,len(data)))
@@ -70,10 +74,12 @@ def main() -> int:
     out=[
         f"repository={base}",
         f"branch={branch}",
-        f"ref={ref}",
-        f"commit={commit}",
-        f"tree={meta.get('tree','')}",
-        "status=verified",
+        f"branch_ref={branch_ref}",
+        f"branch_head={branch_head}",
+        f"pinned_commit={pinned}",
+        f"pinned_tree={pinned_meta.get('tree','')}",
+        f"update_available={1 if branch_head != pinned else 0}",
+        "status=verified_pinned",
         f"verified_file_count={len(verified)}",
     ]
     for i,(path,size) in enumerate(verified,1):

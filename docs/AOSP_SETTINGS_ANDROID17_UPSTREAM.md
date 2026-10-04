@@ -24,3 +24,22 @@ This means the project uses two distinct pinned/verified upstreams:
 2. Android 17 AOSP Settings for component-level Expressive integration and wrapper resources.
 
 Material Symbols is a glyph source; AOSP Settings is the reference for how those/related assets are wired into Settings components.
+
+
+## Exact pinned revision
+
+The first verified Android 17 Settings snapshot is pinned to:
+
+`213829fb67f5e070029e0513a088f31bc8f5c1ed`
+
+tree:
+
+`f41bf360ab496bb4c018a33f93b74858b8ed223c`
+
+The verifier now distinguishes:
+
+- `branch_head`: the moving `android17-release` head;
+- `pinned_commit`: the immutable revision used by this project;
+- `update_available`: whether upstream has advanced.
+
+A branch advance does not silently change our icon/component reference. Updating the pin must be an explicit reviewed commit.
