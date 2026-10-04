@@ -27,11 +27,46 @@ have() { command -v "$1" >/dev/null 2>&1; }
     exit 1
 }
 
+find_resetprop() {
+    for p in \
+        "$(command -v resetprop 2>/dev/null)" \
+        /data/adb/ksu/bin/resetprop \
+        /data/adb/magisk/resetprop \
+        /system/bin/resetprop
+    do
+        [ -n "$p" ] && [ -x "$p" ] && { echo "$p"; return 0; }
+    done
+    return 1
+}
+
+RESETPROP="$(find_resetprop)"
 ORIGINAL="$(getprop "$PROP" 2>/dev/null)"
-printf '%s\n' "$ORIGINAL" > "$WORK/original_property.txt"
+if getprop 2>/dev/null | grep -Fq "[$PROP]:"; then
+    ORIGINAL_PRESENT=1
+else
+    ORIGINAL_PRESENT=0
+fi
+{
+    echo "value=$ORIGINAL"
+    echo "present=$ORIGINAL_PRESENT"
+    echo "resetprop=${RESETPROP:-unavailable}"
+} > "$WORK/original_property.txt"
+
+write_prop() {
+    value="$1"
+    if [ -n "$RESETPROP" ]; then
+        "$RESETPROP" "$PROP" "$value" >/dev/null 2>&1
+    else
+        setprop "$PROP" "$value" >/dev/null 2>&1
+    fi
+}
 
 restore() {
-    setprop "$PROP" "$ORIGINAL" 2>/dev/null
+    if [ "$ORIGINAL_PRESENT" = 0 ] && [ -n "$RESETPROP" ]; then
+        "$RESETPROP" -d "$PROP" >/dev/null 2>&1 || "$RESETPROP" "$PROP" "" >/dev/null 2>&1
+    else
+        write_prop "$ORIGINAL"
+    fi
 }
 trap restore 0 1 2 15
 
@@ -82,12 +117,12 @@ say "============================================================"
 say "[0/5] original $PROP='$ORIGINAL'"
 
 say "[1/5] A: native Expressive debug override = false"
-setprop "$PROP" false 2>/dev/null
+write_prop false
 recreate_settings
 capture_state "$WORK/A_native_off" "A_NATIVE_OFF"
 
 say "[2/5] B: native Expressive debug override = true"
-setprop "$PROP" true 2>/dev/null
+write_prop true
 recreate_settings
 capture_state "$WORK/B_native_on" "B_NATIVE_ON"
 
@@ -105,6 +140,8 @@ trap - 0 1 2 15
 {
     echo "collector=ColorOS17_SettingsExpressive_ABProbe_v1"
     echo "original_property=$ORIGINAL"
+    echo "original_property_present=$ORIGINAL_PRESENT"
+    echo "resetprop=${RESETPROP:-unavailable}"
     echo "restored_property=$(getprop "$PROP" 2>/dev/null)"
     echo "reboot_required=0"
     echo "mutated_process=com.android.settings only"
@@ -132,3 +169,10 @@ rm -rf "$WORK"
 
 say "[✓] $OUT"
 say "[✓] 已恢复 $PROP='$(getprop "$PROP" 2>/dev/null)'"
+if [ "$ORIGINAL_PRESENT" = 0 ]; then
+    if getprop 2>/dev/null | grep -Fq "[$PROP]:"; then
+        say "[i] 原属性最初不存在；当前 shell/property 工具保留了空值记录。重启后该非持久属性会消失。"
+    else
+        say "[✓] 原属性最初不存在，已恢复为不存在。"
+    fi
+fi
