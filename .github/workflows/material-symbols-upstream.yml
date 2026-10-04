@@ -8,6 +8,9 @@ on:
       - "compat/material-symbols/upstream.lock"
       - "compat/material-symbols/coloros_icon_map.tsv"
       - "tools/verify_material_symbols_upstream_api.py"
+      - "tools/resolve_coloros17_icon_sources.py"
+      - "tools/suggest_material_symbol_matches.py"
+      - "tools/materialize_material_symbol_assets.py"
       - ".github/workflows/material-symbols-upstream.yml"
   workflow_dispatch:
 
@@ -29,6 +32,14 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate icon-mapping tools
+        run: |
+          python -m py_compile \
+            tools/verify_material_symbols_upstream_api.py \
+            tools/resolve_coloros17_icon_sources.py \
+            tools/suggest_material_symbol_matches.py \
+            tools/materialize_material_symbol_assets.py
+
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -39,9 +50,18 @@ jobs:
           --catalog-output dist/material-symbols-catalog.tsv
           --capabilities-output dist/material-symbols-mapped-capabilities.tsv
 
+      - name: Build ColorOS icon source-resolution table
+        run: >-
+          python tools/resolve_coloros17_icon_sources.py
+          --native-pairs compat/material-symbols/native_expressive_pairs.tsv
+          --native-map compat/material-symbols/native_expressive_map.tsv
+          --material-map compat/material-symbols/coloros_icon_map.tsv
+          --output dist/coloros17-icon-resolution.tsv
+
       - uses: actions/upload-artifact@v4
         with:
           name: material-symbols-verified-${{ github.sha }}
           path: |
             dist/material-symbols-catalog.tsv
             dist/material-symbols-mapped-capabilities.tsv
+            dist/coloros17-icon-resolution.tsv

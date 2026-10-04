@@ -25,8 +25,8 @@ def main() -> int:
     args = p.parse_args()
 
     exact_pairs = {}
-    for row in read_tsv(args.native_pairs)[1:] if False else read_tsv(args.native_pairs):
-        if len(row) < 6:
+    for row in read_tsv(args.native_pairs):
+        if len(row) < 6 or row[0] == "target_package":
             continue
         package, typ, base, expressive, evidence, source = row[:6]
         exact_pairs[(package, base)] = (expressive, evidence)
