@@ -1,0 +1,17 @@
+# normalized_coloros_name	material_symbol	confidence	notes
+back	arrow_back	HIGH	canonical navigation alias
+arrow_back_black	arrow_back	HIGH	color/state suffix removed
+search_black	search	HIGH	color suffix removed
+clear_black	close	MEDIUM	verify whether action means clear-field or close
+settings_storage	storage	HIGH	Settings category alias
+settings_security	security	HIGH	Settings category alias
+settings_print	print	HIGH	Settings category alias
+settings_bluetooth	settings_bluetooth	HIGH	exact upstream symbol
+settings_ethernet	settings_ethernet	HIGH	exact upstream symbol
+settings_language	language	HIGH	generic language category
+settings_location	location_on	HIGH	generic location category
+settings_wifi	wifi	HIGH	generic Wi-Fi category
+bluetooth_settings	settings_bluetooth	HIGH	generic Bluetooth settings
+vpn_profile	vpn_key	MEDIUM	consumer review required
+flashlight	flashlight_on	HIGH	active-capable symbol
+location	location_on	HIGH	canonical Material symbol

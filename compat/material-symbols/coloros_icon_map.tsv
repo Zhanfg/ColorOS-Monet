@@ -1,1 +1,66 @@
 # target_package	target_resource	semantic_role	material_symbol	family	size	unselected_variant	selected_variant	action	confidence	notes
+com.android.settings	ic_nfc	nfc	nfc	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_help	help	help	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_lock	lock	lock	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_person	person	person	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_remove_24dp	remove	remove	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_search_24dp	search	search	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_upload	upload	upload	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_storage	storage	storage	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_vpn_key	vpn_key	vpn_key	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_settings_24dp	settings	settings	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_bluetooth_disabled	bluetooth_disabled	bluetooth_disabled	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_lock_open_24dp	lock_open	lock_open	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_volume_up_filled	volume_up	volume_up	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_add_circle	add_circle	add_circle	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_person_add	person_add	person_add	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_add_a_photo	add_a_photo	add_a_photo	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_expand_less	expand_less	expand_less	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_expand_more	expand_more	expand_more	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_battery_full	battery_full	battery_full	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_arrow_forward	arrow_forward	arrow_forward	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_battery_alert_24dp	battery_alert	battery_alert	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_notifications	notifications	notifications	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_person_remove	person_remove	person_remove	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_account_circle_24dp	account_circle	account_circle	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_arrow_downward	arrow_downward	arrow_downward	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_settings_print	print	print	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic print action
+com.android.settings	ic_wifi_tethering	wifi_tethering	wifi_tethering	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_battery_unknown	battery_unknown	battery_unknown	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_notifications_off_24dp	notifications_off	notifications_off	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_settings_bluetooth	settings_bluetooth	settings_bluetooth	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
+com.android.settings	ic_settings_ethernet	settings_ethernet	settings_ethernet	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
+com.android.settings	ic_settings_security	security	security	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic security semantic
+com.android.settings	settings_storage_ic	storage	storage	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic storage semantic
+com.android.settings	ic_accessibility_new	accessibility	accessibility_new	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol exists
+com.android.systemui	ic_call	call	call	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_menu	menu	menu	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_alarm	alarm	alarm	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	affordance_camera_icon	camera	camera	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic lockscreen camera affordance
+com.android.systemui	ic_keyboard	keyboard	keyboard	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_location	location	location_on	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	canonical Material location symbol
+com.android.systemui	ic_mic_off	mic_off	mic_off	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_more_vert	more_vert	more_vert	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	affordance_flashlight_icon	flashlight	flashlight_on	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic flashlight affordance
+com.android.systemui	ic_volume_off	volume_off	volume_off	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_edit_square	edit_square	edit_square	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
+com.android.systemui	clear_all_icon	clear_all	clear_all	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
+com.android.systemui	ic_qr_code_scanner	qr_code_scanner	qr_code_scanner	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	ic_apps	apps	apps	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	ic_back	back	arrow_back	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	canonical Material back navigation
+com.android.launcher	ic_edit_icon	edit	edit	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic edit action
+com.android.launcher	home_icon	home	home	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	close_icon	close	close	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	ic_share	share	share	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	ic_expand_less	expand_less	expand_less	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.launcher	ic_expand_more	expand_more	expand_more	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.oplus.notificationmanager	menu_ic_add_normal	add	add	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic add action
+com.oplus.notificationmanager	info_icon	info	info	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic info action
+com.oplus.notificationmanager	delete_icon	delete	delete	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic delete action
+com.oplus.notificationmanager	ic_arrow_back	back	arrow_back	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	canonical Material back navigation
+com.oplus.wirelesssettings	ic_delete	delete	delete	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic delete action
+com.oplus.wirelesssettings	menu_ic_add	add	add	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic add action
+com.oplus.wirelesssettings	menu_ic_cancel	cancel	cancel	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic cancel action
+com.oplus.wirelesssettings	menu_ic_save	save	save	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic save action
+com.oplus.wirelesssettings	vpn_profile_ic	vpn	vpn_key	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	MEDIUM	profile semantics require consumer confirmation
+com.oplus.wirelesssettings	bluetooth_settings_ic	bluetooth_settings	settings_bluetooth	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic Bluetooth settings semantic

@@ -1,0 +1,57 @@
+name: Verify Material Symbols upstream
+
+on:
+  push:
+    branches:
+      - "coloros17-md3e-v0.2.0"
+    paths:
+      - "compat/material-symbols/**"
+      - "tools/build_material_symbols_index.py"
+      - "tools/validate_material_symbols_mapping.py"
+      - ".github/workflows/material-symbols-upstream.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ColorOS-Monet
+        uses: actions/checkout@v4
+        with:
+          path: project
+
+      - name: Checkout pinned Google Material Symbols
+        uses: actions/checkout@v4
+        with:
+          repository: google/material-design-icons
+          ref: 737e3324305806514d7909874fa1818ae1808232
+          path: material-design-icons
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build complete upstream Android index
+        run: >-
+          python project/tools/build_material_symbols_index.py
+          --upstream material-design-icons
+          --output project/dist/material-symbols-android-index.tsv
+
+      - name: Validate curated ColorOS mappings
+        run: >-
+          python project/tools/validate_material_symbols_mapping.py
+          --upstream material-design-icons
+          --mapping project/compat/material-symbols/coloros_icon_map.tsv
+
+      - name: Confirm pinned revision
+        shell: bash
+        run: |
+          test "$(git -C material-design-icons rev-parse HEAD)" = "737e3324305806514d7909874fa1818ae1808232"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: material-symbols-android-index-737e3324305806514d7909874fa1818ae1808232
+          path: project/dist/material-symbols-android-index.tsv
