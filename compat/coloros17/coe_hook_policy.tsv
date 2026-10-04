@@ -1,0 +1,49 @@
+hook	action	confidence	rationale
+CardHook	REPLACE	HIGH	Package-wide card path/margin/radius override conflicts with native grouped-card ownership
+ListHook	REPLACE	HIGH	Package-wide content reassignment lacks fragment/adapter/component predicate
+MonetColorSpec2025Hook	DELETE	HIGH	Native ColorScheme uses SPEC_2026 and SystemUI owns FRRO generation
+QsLottieHook	REPLACE	HIGH	QSIconViewProxy target still exists; old hook suppresses native Lottie rather than augmenting it
+AospMediaCardHook	REPLACE	HIGH	Old root namespace is stale and global View/ImageView interception rebuilds native media UI
+MediaSeekBarHook	RETARGET	HIGH	New media section root exists; keep only exact component binding
+MediaCreditCleanupHook	NEEDS_EVIDENCE	LOW	LiveAlertTextView exists but credit semantics are not proven
+LockscreenLyricsHook	NEEDS_EVIDENCE	MEDIUM	Plugin lifecycle and full class set not verified
+FontHook	RETARGET	HIGH	SimpleQsClock casing changed; global TextView font override must be removed
+QsDrawableHook	REPLACE	HIGH	Native QS drawable/state path exists; old hook replaces native flow
+ClassicQsHook	DELETE	HIGH	Global QS visual rewrite violates native-first architecture
+QsHighlightCornerHook	DELETE	HIGH	Fixed corner rewrite conflicts with native component geometry
+QsHighlightCornerHookOld	DELETE	HIGH	Legacy duplicate geometry override
+QsThreeStageCornerHook	DELETE	HIGH	Native three-stage geometry owner exists
+QsVerticalSliderHook	REPLACE	MEDIUM	Keep native slider ownership; future hook must be component-scoped
+StockVolumeDialogHook	DELETE	HIGH	OplusVolumeDialogImpl is the proven OPlus implementation chain
+VolumeDialogHook	REPLACE	MEDIUM	OPlus owner exists but active DI/runtime instance still requires trace
+VolumeDialogOldHook	REPLACE	HIGH	Legacy fixed-corner/animation scope is too broad
+NotificationHook	REPLACE	MEDIUM	Notification states have multiple owners and require component split
+ColorOSNotifyIconPatch	REPLACE	MEDIUM	Icon/state behavior must be scoped to verified notification components
+ScrimHook	DELETE	HIGH	Global scrim is not a valid per-component color/blur owner
+ScrimAltHook	DELETE	HIGH	Global blur/mix override conflicts with native blur ownership
+ShadeHeaderForegroundHook	NEEDS_EVIDENCE	MEDIUM	Foreground consumer and theme state require runtime binding
+CapsuleNotificationTextColorHook	NEEDS_EVIDENCE	MEDIUM	Capsule/plugin semantic role not fully verified
+PanoramicAodCapsuleBackgroundHook	NEEDS_EVIDENCE	MEDIUM	AOD/lockscreen role remains outside verified scope
+PixelLockscreenClockHook	DELETE	HIGH	Pixel replacement design is outside ColorOS native-first scope
+GestureHook	DELETE	HIGH	Navigation behavior remains native
+StockUdfpsIconHook	NEEDS_EVIDENCE	MEDIUM	Fingerprint consumer chain incomplete
+BatteryPercentTextSizeHook	NEEDS_EVIDENCE	MEDIUM	Typography consumer/layout requires XML/runtime evidence
+NativeGlobalActionsLiteHook	NEEDS_EVIDENCE	LOW	Power-menu dependencies are incomplete
+OverscrollHook	DELETE	HIGH	Global overscroll replacement conflicts with native motion
+SwitchHook	REPLACE	MEDIUM	COUISwitch exists but row/state scope must be component-specific
+ToolbarHook	DELETE	HIGH	Native AppBar blur/material effect should remain owner
+CouiToolbarHookFade	DELETE	HIGH	Global toolbar motion rewrite is not native-first
+ToolbarHookScale	DELETE	HIGH	Global toolbar scale rewrite is not native-first
+PopupHook	DELETE	HIGH	Popup state/selection is a separate native component system
+SettingsThemeUtilsHook	DELETE	HIGH	Forcing theme-rejection gates changes native theme ownership
+AppInfoButtonHook	NEEDS_EVIDENCE	MEDIUM	Exact AppInfo layout/component identity not proven
+WifiButtonHook	NEEDS_EVIDENCE	LOW	WirelessSettings bytecode was not part of hard-analysis input
+IconMaskOverlayHook	DELETE	HIGH	Native adaptive icon mask ownership should remain system-owned
+DockHook	DELETE	HIGH	Launcher visual rewrite is outside v0.2.0 system scope
+DockHookExp	DELETE	HIGH	Launcher visual rewrite is outside v0.2.0 system scope
+MaterialHook	DELETE	HIGH	Launcher decoration/press replacement is outside native-first scope
+RecentsStyleHook	DELETE	HIGH	Recents geometry/motion replacement is outside native-first scope
+FolderIconBlurMixHook	NEEDS_EVIDENCE	LOW	Launcher consumer not verified
+LauncherScrimSuppression	NEEDS_EVIDENCE	LOW	Launcher blur/scrim consumer not verified
+ThemedIconHook	NEEDS_EVIDENCE	LOW	UXDesign producer exists but Launcher consumer DEX was not analyzed
+ModuleStatusHook	KEEP	HIGH	Module-local diagnostic/status hook does not own vendor visuals

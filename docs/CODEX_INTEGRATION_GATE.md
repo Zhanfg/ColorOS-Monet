@@ -1,20 +1,35 @@
 # Codex integration gate
 
-The shipping v0.2.0 branch may continue with simple resource-policy and packaging work while hard structural analysis runs.
+Hard structural analysis is complete. Static conclusions are integrated, but runtime/resource gates remain.
 
-The following implementation areas are frozen until the corresponding Codex reports exist:
+## Unfrozen for implementation
 
-- Settings grouped/segmented card hooks;
-- UXDesign theme-style mutation or palette-generation hooks;
-- SystemUI QS/media/notification/volume/clock hooks;
-- COE CardHook/ListHook/MonetColorSpec2025Hook/QsLottieHook retargeting.
+Only high-confidence decisions may now be implemented:
 
-Allowed meanwhile:
+- removal of global/legacy hooks marked DELETE;
+- exact retarget preparation marked RETARGET, with fail-closed guards;
+- native-first icon/source precedence;
+- diagnostic instrumentation needed to satisfy remaining evidence requests;
+- packaging and policy enforcement.
 
-- semantic color allowlist maintenance;
-- packaging and update safety;
-- read-only diagnostics;
-- CI policy linting;
-- removal of legacy/global/generic-artwork paths.
+## Still frozen
 
-This prevents speculative code from outrunning structural evidence.
+Do not enable or ship:
+
+- any Settings segmented-card entry unless it appears in the exact tuple whitelist;
+- any package-wide CardHook/ListHook behavior;
+- automatic UXDesign/theme-style mutation;
+- SystemUI QS/media/notification/volume/clock visual hooks without the listed runtime/XML gate;
+- any NEEDS_EVIDENCE COE hook.
+
+## Evidence source
+
+Frozen reports:
+
+- `codex/hard-analysis/reports/00_ARCHITECTURE_SYNTHESIS.md`
+- `01_UXDESIGN_MONET_PIPELINE.md`
+- `02_SETTINGS_GROUPED_CARD_MODEL.md`
+- `03_SYSTEMUI_COMPONENT_MAP.md`
+- `04_COE_293_ANDROID17_MIGRATION.md`
+
+The reports are static evidence. Runtime uncertainty is not permission to guess.
