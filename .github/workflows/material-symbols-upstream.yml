@@ -8,6 +8,8 @@ on:
       - "compat/material-symbols/upstream.lock"
       - "compat/material-symbols/coloros_icon_map.tsv"
       - "compat/coloros17/settings_oplus_homepage_icons.tsv"
+      - "compat/material-symbols/settings_homepage_full_source_map.tsv"
+      - "tools/validate_settings_homepage_source_map.py"
       - "tools/validate_oplus_homepage_icon_candidates.py"
       - "tools/verify_aosp_settings_upstream.py"
       - "tools/build_oplus_homepage_icon_review_pack.py"
@@ -46,7 +48,8 @@ jobs:
             tools/materialize_material_symbol_assets.py \
             tools/validate_oplus_homepage_icon_candidates.py \
             tools/verify_aosp_settings_upstream.py \
-            tools/build_oplus_homepage_icon_review_pack.py
+            tools/build_oplus_homepage_icon_review_pack.py \
+            tools/validate_settings_homepage_source_map.py
 
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
@@ -90,6 +93,12 @@ jobs:
           --native-pairs compat/material-symbols/native_expressive_pairs.tsv
           --native-map compat/material-symbols/native_expressive_map.tsv
           --native-unmatched compat/material-symbols/native_expressive_unmatched.tsv
+
+      - name: Validate complete OPlus homepage source map
+        run: >-
+          python tools/validate_settings_homepage_source_map.py
+          --table compat/material-symbols/settings_homepage_full_source_map.tsv
+          --catalog dist/material-symbols-catalog.tsv
 
       - uses: actions/upload-artifact@v4
         with:

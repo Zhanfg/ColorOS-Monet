@@ -56,19 +56,26 @@ The existence of `top_level_settings_expressive.xml` and
 `ic_settings_*_expressive` does **not** prove that the current ColorOS
 homepage actually consumes them.
 
-For the main ColorOS Settings homepage, the next decisive artifact is:
+The decisive OPlus homepage XML has now been decoded from the user's current
+Settings APK. It contains 42 icon-bearing rows and preserves explicit OPlus
+preference classes, controllers, two-tone tint types and layout categories.
 
-`res/xml/top_level_settings_oplus.xml`
+The exact row inventory is recorded in
+`compat/coloros17/settings_oplus_homepage_icons.tsv`, and the complete source
+decision is recorded in
+`compat/material-symbols/settings_homepage_full_source_map.tsv`.
 
-We need to inspect its preference/icon references and any OPlus controller-side
-rebinding before promoting homepage icon replacements.
+Therefore the remaining icon question is no longer resource ownership. It is
+visual/runtime verification of the selected glyph source inside the existing
+OPlus two-tone/container pipeline.
 
-Until then:
+Policy:
 
 - do not force the AOSP Expressive homepage XML;
-- do not replace homepage icons with Material Symbols;
-- keep the native ColorOS home structure;
-- use the AOSP/Material assets as reference/fallback only.
+- keep the native OPlus homepage structure and tint owner;
+- prefer native Expressive glyphs where exact;
+- use Material Symbols only for generic rows with an exact semantic match;
+- keep OEM/service-specific rows native.
 
 ## Why this is useful
 
