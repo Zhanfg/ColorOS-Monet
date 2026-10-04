@@ -38,5 +38,7 @@ echo "persistent=0"
 echo "reboot_required=0"
 echo
 echo "请手动退出并重新打开“设置”观察。"
+echo "本探针测试的是：OPlus XML/Preference + OPlus style + SettingsLib Expressive adapter。"
+echo "它不会切换成 AOSP top_level_settings_expressive.xml。"
 echo "脚本没有 force-stop Settings，也没有修改 Monet/theme JSON。"
 echo "再次运行本脚本会恢复第一次运行前的 property 值。"

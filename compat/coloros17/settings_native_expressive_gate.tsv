@@ -11,3 +11,7 @@ group_background	com.android.settingslib.widget.SettingsPreferenceGroupAdapter	u
 homepage_icon	com.android.settings.dashboard.DashboardFeatureProviderImpl	setPreferenceIcon()/getExpressiveHomepageIcon()	Expressive homepage tile => native icon normalized + category foreground/background rounded AdaptiveIcon	HIGH
 coloros_home_activity	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	BaseHomePageImpl.getSwitchDefaultFragment()	Creates OplusTopLevelSettings	HIGH
 coloros_home_fragment	com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId()	Uses xml/top_level_settings_oplus, but still inherits SettingsBasePreferenceFragment adapter path	HIGH
+oplus_activity_provider	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	declared interfaces	does not implement ExpressiveDesignEnabledProvider; no OPlus activity override branch	HIGH
+oplus_fragment_inheritance	com.oplus.settings.feature.homepage.OplusTopLevelSettings	superclass + declared methods	extends TopLevelSettings and does not override onCreateAdapter()	HIGH
+oplus_style	com.oplus.settings.feature.homepage.OplusTopLevelSettings	useOplusStyle()	constant true; OPlus style remains active under the inherited adapter path	HIGH
+oplus_screen_xml	com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId()	constant 0x7f180269 => xml/top_level_settings_oplus	HIGH
