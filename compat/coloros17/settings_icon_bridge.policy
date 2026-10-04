@@ -1,0 +1,16 @@
+# Settings icon bridge experiment policy
+status=EXPERIMENT_ONLY
+shipping=forbidden
+target_package=com.android.settings
+native_expressive_source=current_target_apk
+material_symbols_source=google/material-design-icons
+material_symbols_family=materialsymbolsrounded
+material_symbols_size=24
+preserve_oplus_tint_owner=true
+preserve_two_tone_category=true
+copy_vendor_artwork=false
+generic_redraw=false
+force_settings_expressive_theme=false
+force_stop_settings=false
+boot_property_write=false
+runtime_activation=manual_only
