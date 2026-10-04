@@ -26,6 +26,7 @@ on:
       - "compat/material-symbols/native_expressive_full_provenance.tsv"
       - "tools/verify_setupdesign_upstream.py"
       - "tools/lint_coloros17_settings_expressive_wrappers.py"
+      - "tools/validate_settings_homepage_native_expressive.py"
       - ".github/workflows/material-symbols-upstream.yml"
   workflow_dispatch:
 
@@ -61,7 +62,8 @@ jobs:
             tools/audit_aosp_settings_expressive_drift.py \
             tools/build_oplus_homepage_icon_review_pack.py \
             tools/validate_settings_homepage_source_map.py \
-            tools/lint_coloros17_settings_expressive_wrappers.py
+            tools/lint_coloros17_settings_expressive_wrappers.py \
+            tools/validate_settings_homepage_native_expressive.py
 
       - name: Validate pinned upstream manifest
         run: python tools/lint_upstream_manifest.py
@@ -135,6 +137,9 @@ jobs:
           python tools/lint_coloros17_settings_expressive_wrappers.py
           --homepage compat/material-symbols/settings_homepage_full_source_map.tsv
           --wrappers compat/material-symbols/coloros17_settings_expressive_wrappers.tsv
+
+      - name: Validate homepage native Expressive provenance
+        run: python tools/validate_settings_homepage_native_expressive.py
 
       - uses: actions/upload-artifact@v4
         with:

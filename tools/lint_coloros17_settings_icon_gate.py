@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 NATIVE_MAP = ROOT / "compat/material-symbols/native_expressive_map.tsv"
 MATERIAL_MAP = ROOT / "compat/material-symbols/coloros_icon_map.tsv"
+WRAPPERS = ROOT / "compat/material-symbols/coloros17_settings_expressive_wrappers.tsv"
 ROUTE = ROOT / "compat/coloros17/settings_homepage_route.tsv"
 HOMEPAGE = ROOT / "compat/coloros17/settings_oplus_homepage_icons.tsv"
 
@@ -94,19 +95,44 @@ def main() -> int:
                 f"Material Symbol candidate missing glyph: {row.get('key')}"
             )
 
+    wrappers = {r["expressive_resource"]: r for r in rows(WRAPPERS)}
+
     for row in rows(NATIVE_MAP):
         if row["target_package"] != "com.android.settings":
             continue
+
         base = drawable_name(row["current_or_base_resource"])
-        if base in homepage_icons:
+        expressive = drawable_name(row["native_expressive_resource"])
+        verification = row.get("verification", "")
+
+        # The current model intentionally allows native Expressive resources to
+        # serve as *secondary* candidates for OPlus homepage rows. What remains
+        # forbidden is promoting the OPlus current glyph itself into a shipping
+        # replacement without the native gate + consumer review.
+        if "HOMEPAGE_WRAPPER_FOREGROUND_VERIFIED" in verification:
+            wrapper = wrappers.get(expressive)
+            if not wrapper:
+                failures.append(
+                    f"{expressive}: homepage wrapper verification claimed but wrapper row is missing"
+                )
+            else:
+                if wrapper.get("target_package") != "com.android.settings":
+                    failures.append(
+                        f"{expressive}: wrapper target drifted to {wrapper.get('target_package')}"
+                    )
+                if wrapper.get("evidence") not in {
+                    "CURRENT_TARGET_XML",
+                    "CURRENT_TARGET_BINARY_XML",
+                }:
+                    failures.append(
+                        f"{expressive}: wrapper evidence is not current-target proof"
+                    )
+
+        # A literal collision with the OPlus XML's currently selected icon is
+        # still not allowed to become an implicit native-Expressive promotion.
+        if base in homepage_icons and "HOMEPAGE_WRAPPER_FOREGROUND_VERIFIED" not in verification:
             failures.append(
-                "non-homepage native expressive table collides with OPlus homepage icon: "
-                f"{base}"
-            )
-        if "NOT_OPLUS_HOMEPAGE_ICON_RESOURCE" not in row["verification"]:
-            failures.append(
-                "Settings native expressive row missing verified homepage exclusion: "
-                f"{row['current_or_base_resource']}"
+                f"{base}: homepage glyph collision lacks explicit wrapper/consumer proof"
             )
 
     for row in rows(MATERIAL_MAP):
