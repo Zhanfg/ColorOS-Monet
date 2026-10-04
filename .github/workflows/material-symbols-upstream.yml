@@ -9,6 +9,8 @@ on:
       - "compat/material-symbols/coloros_icon_map.tsv"
       - "compat/coloros17/settings_oplus_homepage_icons.tsv"
       - "tools/validate_oplus_homepage_icon_candidates.py"
+      - "tools/verify_aosp_settings_upstream.py"
+      - "compat/material-symbols/aosp-settings.source"
       - "tools/verify_material_symbols_upstream_api.py"
       - "tools/resolve_coloros17_icon_sources.py"
       - "tools/suggest_material_symbol_matches.py"
@@ -41,7 +43,8 @@ jobs:
             tools/resolve_coloros17_icon_sources.py \
             tools/suggest_material_symbol_matches.py \
             tools/materialize_material_symbol_assets.py \
-            tools/validate_oplus_homepage_icon_candidates.py
+            tools/validate_oplus_homepage_icon_candidates.py \
+            tools/verify_aosp_settings_upstream.py
 
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
@@ -52,6 +55,12 @@ jobs:
           --mapping compat/material-symbols/coloros_icon_map.tsv
           --catalog-output dist/material-symbols-catalog.tsv
           --capabilities-output dist/material-symbols-mapped-capabilities.tsv
+
+      - name: Verify Android 17 AOSP Settings Expressive upstream
+        run: >-
+          python tools/verify_aosp_settings_upstream.py
+          --source compat/material-symbols/aosp-settings.source
+          --output dist/aosp-settings-upstream.lock
 
       - name: Build ColorOS icon source-resolution table
         run: >-
@@ -78,3 +87,4 @@ jobs:
             dist/material-symbols-catalog.tsv
             dist/material-symbols-mapped-capabilities.tsv
             dist/coloros17-icon-resolution.tsv
+            dist/aosp-settings-upstream.lock
