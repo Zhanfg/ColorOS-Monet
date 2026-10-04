@@ -36,8 +36,11 @@ def main() -> int:
         wrapper_by_name[name] = row
         if row.get("target_package") != "com.android.settings":
             failures.append(f"{name}: unexpected target_package={row.get('target_package')}")
-        if row.get("evidence") != "CURRENT_TARGET_XML":
-            failures.append(f"{name}: wrapper evidence is not CURRENT_TARGET_XML")
+        if row.get("evidence") not in {"CURRENT_TARGET_XML", "CURRENT_TARGET_BINARY_XML"}:
+            failures.append(
+                f"{name}: wrapper evidence is not current-target XML proof: "
+                f"{row.get('evidence')}"
+            )
         if not row.get("wrapped_drawable"):
             failures.append(f"{name}: missing wrapped_drawable")
         if not row.get("tint_role", "").startswith("homepage_"):
@@ -55,9 +58,13 @@ def main() -> int:
     extra = sorted(actual - expected)
 
     if missing:
-        failures.append("homepage native Expressive candidates missing target wrapper proof: " + ", ".join(missing))
-    if extra:
-        failures.append("target wrapper proof rows are not in homepage native Expressive set: " + ", ".join(extra))
+        failures.append(
+            "homepage native Expressive candidates missing target wrapper proof: "
+            + ", ".join(missing)
+        )
+    # Extra rows are expected: the wrapper table is the complete current-target
+    # Expressive wrapper inventory, while the OPlus homepage map intentionally
+    # consumes only a conservative subset.
 
     if failures:
         print("Settings Expressive wrapper policy violations:")
@@ -67,7 +74,8 @@ def main() -> int:
 
     print(
         f"Settings Expressive wrapper policy ok: "
-        f"{len(expected)} homepage wrappers proven in current target XML"
+        f"{len(expected)} homepage candidates proven / "
+        f"{len(actual)} current-target Expressive wrappers inventoried"
     )
     return 0
 
