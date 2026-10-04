@@ -11,6 +11,7 @@ on:
       - "tools/build_coloros17_semantic_accent.py"
       - "tools/lint_coloros17_semantic_policy.py"
       - "tools/lint_coloros17_component_policy.py"
+      - "tools/lint_coloros17_settings_icon_gate.py"
       - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
 
