@@ -29,6 +29,10 @@ jobs:
           repository: google/material-design-icons
           ref: 737e3324305806514d7909874fa1818ae1808232
           path: material-design-icons
+          filter: blob:none
+          sparse-checkout: |
+            symbols/android
+          sparse-checkout-cone-mode: true
 
       - uses: actions/setup-python@v5
         with:
