@@ -24,9 +24,11 @@ Public Android 17 SetupDesign confirms the base Expressive switch contract:
 - `sud_ic_switch_selector_expressive` is the checked-state selector;
 - the checked state references `sud_ic_switch_check_mark_expressive`;
 - the checked glyph is a 16dp vector themed by `?attr/colorPrimary`;
-- `SwitchItem.updateThumbIconDrawable(...)` installs the selector on the
-  checked path;
-- the public unchecked path sets the MaterialSwitch thumb icon to `null`.
+- `SwitchItem` references the Expressive selector under the Glif Expressive
+  activation path.
+
+The verifier intentionally does **not** assert a specific public unchecked
+runtime branch unless that behavior is directly proven from the pinned source.
 
 Current ColorOS 17 extends that public contract. Settings and SystemUI both
 contain a local:
@@ -53,12 +55,10 @@ The source resolver therefore has four public/native tiers:
 
 ## Current-target divergence from public SetupDesign
 
-Public Android 17 SetupDesign uses:
+Public Android 17 SetupDesign proves the checked Expressive selector/check
+family and its Glif Expressive activation path.
 
-- checked -> Expressive check-mark glyph;
-- unchecked -> no thumb icon.
-
-Current ColorOS 17 uses:
+Current ColorOS 17 additionally proves, in the target resource XML:
 
 - checked -> Expressive check-mark glyph;
 - unchecked -> local Expressive cross glyph.
