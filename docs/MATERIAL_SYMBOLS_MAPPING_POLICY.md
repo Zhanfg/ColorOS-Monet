@@ -70,3 +70,17 @@ Therefore the Settings homepage must not be bulk-generated from Material Symbols
 Material Symbols may only fill an individually verified glyph gap after the OPlus preference consumer is traced.
 
 See `docs/COLOROS17_OPLUS_HOMEPAGE_ICON_PIPELINE.md`.
+
+
+## Settings homepage exception
+
+Current ColorOS 17 Settings homepage category wrappers are already proven to
+embed native Expressive foreground glyphs inside 24dp categorical containers.
+
+For these resources, the source decision is final:
+
+`KEEP_NATIVE_WRAPPER`
+
+Material Symbols must not replace `ic_homepage_*` category wrappers.
+
+See `docs/SETTINGS_HOMEPAGE_ICON_ARCHITECTURE.md`.
