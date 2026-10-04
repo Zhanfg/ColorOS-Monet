@@ -48,6 +48,7 @@ jobs:
             tools/classify_legacy_overlay_resources.py \
             tools/lint_coloros17_semantic_policy.py \
             tools/lint_coloros17_component_policy.py \
+            tools/lint_settings_homepage_runtime_policy.py \
             tools/lint_settings_icon_bridge.py \
             tools/lint_coloros17_settings_icon_gate.py \
             tools/lint_settings_expressive_component_catalog.py \
@@ -55,6 +56,7 @@ jobs:
 
           python tools/lint_coloros17_semantic_policy.py
           python tools/lint_coloros17_component_policy.py
+          python tools/lint_settings_homepage_runtime_policy.py
           python tools/lint_settings_icon_bridge.py
           python tools/lint_coloros17_settings_icon_gate.py
           python tools/lint_settings_expressive_component_catalog.py

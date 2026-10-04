@@ -100,12 +100,23 @@ def main() -> int:
     p.add_argument("--framework-res",type=Path,required=True)
     p.add_argument("--settings-apk",type=Path,required=True)
     p.add_argument("--material-upstream",type=Path,required=True)
-    p.add_argument("--mode",choices=("native","material","combined"),default="combined")
+    p.add_argument("--mode",choices=("native","material","combined"),required=True)
+    p.add_argument(
+        "--after-native-gate",
+        action="store_true",
+        help="Acknowledge that the native Settings Expressive A/B gate was tested first.",
+    )
     p.add_argument("--output",type=Path,required=True)
     p.add_argument("--package",default="dev.zhanfg.coloros17.experiment.settingsiconbridge")
     p.add_argument("--version-code",type=int,default=26100420)
     p.add_argument("--version-name",default="0.2.0-settings-icon-bridge-exp1")
     args=p.parse_args()
+
+    if not args.after_native_gate:
+        raise RuntimeError(
+            "icon bridge is second-stage only: run/review the native Settings "
+            "Expressive A/B probe first, then pass --after-native-gate"
+        )
 
     lock=lock_values(LOCK)
     pinned=lock.get("ref","")
@@ -191,7 +202,7 @@ def main() -> int:
     print(f"selected={len(selected)}")
     for key,source,target,kind in selected:
         print(f"{kind}\t{key}\t{source}\t{target}")
-    print("NOTE=experiment-only unsigned RRO; not part of shipping module")
+    print("NOTE=second-stage experiment-only unsigned RRO; native Settings Expressive gate must be tested first")
     return 0
 
 if __name__=="__main__":
