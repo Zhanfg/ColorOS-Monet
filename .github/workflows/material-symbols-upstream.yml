@@ -48,6 +48,7 @@ jobs:
             tools/materialize_material_symbol_assets.py \
             tools/validate_oplus_homepage_icon_candidates.py \
             tools/verify_aosp_settings_upstream.py \
+            tools/audit_aosp_settings_expressive_drift.py \
             tools/build_oplus_homepage_icon_review_pack.py \
             tools/validate_settings_homepage_source_map.py
 
@@ -66,6 +67,12 @@ jobs:
           python tools/verify_aosp_settings_upstream.py
           --source compat/material-symbols/aosp-settings.source
           --output dist/aosp-settings-upstream.lock
+
+      - name: Audit Android 17 Settings Expressive drift
+        run: >-
+          python tools/audit_aosp_settings_expressive_drift.py
+          --source compat/material-symbols/aosp-settings.source
+          --output dist/aosp-settings-expressive-drift.md
 
       - name: Build ColorOS icon source-resolution table
         run: >-
@@ -108,4 +115,5 @@ jobs:
             dist/material-symbols-mapped-capabilities.tsv
             dist/coloros17-icon-resolution.tsv
             dist/aosp-settings-upstream.lock
+            dist/aosp-settings-expressive-drift.md
             dist/oplus-homepage-material-review/**
