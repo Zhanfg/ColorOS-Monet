@@ -1,0 +1,7 @@
+repository=https://android.googlesource.com/platform/frameworks/base
+moving_branch=android17-release
+moving_branch_commit=94b4c163b7dfe5ce3607f7bb8456f9573f7de57d
+github_mirror=https://github.com/aosp-mirror/platform_frameworks_base
+scope=packages/SettingsLib
+license=Apache-2.0
+purpose=Android 17 SettingsLib Expressive component and resource reference
