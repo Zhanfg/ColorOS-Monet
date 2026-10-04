@@ -21,6 +21,7 @@ def main() -> int:
     p.add_argument("--native-pairs", type=Path, required=True)
     p.add_argument("--native-map", type=Path, required=True)
     p.add_argument("--material-map", type=Path, required=True)
+    p.add_argument("--oplus-homepage", type=Path)
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args()
 
@@ -57,14 +58,26 @@ def main() -> int:
             "notes": notes,
         }
 
-    keys = sorted(set(exact_pairs) | set(curated_native) | set(material))
+    oplus_homepage = set()
+    if args.oplus_homepage:
+        for row in read_tsv(args.oplus_homepage):
+            if len(row) < 3 or row[0] == "preference_key":
+                continue
+            oplus_homepage.add(("com.android.settings", row[2]))
+
+    keys = sorted(set(exact_pairs) | set(curated_native) | set(material) | oplus_homepage)
     out = []
     for package, base in keys:
         exact = exact_pairs.get((package, base))
         native = curated_native.get((package, base))
         mat = material.get((package, base))
 
-        if exact:
+        if (package, base) in oplus_homepage:
+            source = "KEEP_NATIVE_OPLUS_HOMEPAGE"
+            selected = base
+            confidence = "HIGH"
+            gate = "VERIFIED_OPLUS_XML_AND_DEX_OWNER"
+        elif exact:
             source = "COLOROS_NATIVE_EXPRESSIVE"
             selected = exact[0]
             confidence = "HIGH"

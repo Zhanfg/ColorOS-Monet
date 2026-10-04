@@ -86,3 +86,22 @@ An icon may ship only after:
 6. the mapping is promoted out of `NEEDS_REVIEW`.
 
 This keeps the icon migration native-first and auditable.
+
+
+## OPlus homepage consumer closure
+
+The real `top_level_settings_oplus.xml` has now been inspected from the current
+ColorOS 17 Settings APK.
+
+- 42 homepage rows have explicit icon resources;
+- 41/42 opt into OPlus two-tone icon handling;
+- 39/42 request OPlus draw-type conversion;
+- none of the 42 resources directly uses a `*_expressive` icon name.
+
+DEX class structure independently confirms that
+`SettingJumpPreference` owns the two-tone/tint fields used by the row
+subclasses.
+
+Therefore the AOSP-style `ic_settings_*_expressive` family is **not** treated
+as the ColorOS homepage source. Those resources remain valid for their real
+non-homepage consumers, while the OPlus homepage keeps its own icon pipeline.
