@@ -7,6 +7,8 @@ on:
     paths:
       - "compat/material-symbols/upstream.lock"
       - "compat/material-symbols/coloros_icon_map.tsv"
+      - "compat/coloros17/settings_oplus_homepage_icons.tsv"
+      - "tools/validate_oplus_homepage_icon_candidates.py"
       - "tools/verify_material_symbols_upstream_api.py"
       - "tools/resolve_coloros17_icon_sources.py"
       - "tools/suggest_material_symbol_matches.py"
@@ -38,7 +40,8 @@ jobs:
             tools/verify_material_symbols_upstream_api.py \
             tools/resolve_coloros17_icon_sources.py \
             tools/suggest_material_symbol_matches.py \
-            tools/materialize_material_symbol_assets.py
+            tools/materialize_material_symbol_assets.py \
+            tools/validate_oplus_homepage_icon_candidates.py
 
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
@@ -56,7 +59,17 @@ jobs:
           --native-pairs compat/material-symbols/native_expressive_pairs.tsv
           --native-map compat/material-symbols/native_expressive_map.tsv
           --material-map compat/material-symbols/coloros_icon_map.tsv
+          --oplus-homepage compat/coloros17/settings_oplus_homepage_icons.tsv
           --output dist/coloros17-icon-resolution.tsv
+
+      - name: Validate OPlus homepage icon candidates
+        run: >-
+          python tools/validate_oplus_homepage_icon_candidates.py
+          --homepage compat/coloros17/settings_oplus_homepage_icons.tsv
+          --catalog dist/material-symbols-catalog.tsv
+          --native-pairs compat/material-symbols/native_expressive_pairs.tsv
+          --native-map compat/material-symbols/native_expressive_map.tsv
+          --native-unmatched compat/material-symbols/native_expressive_unmatched.tsv
 
       - uses: actions/upload-artifact@v4
         with:
