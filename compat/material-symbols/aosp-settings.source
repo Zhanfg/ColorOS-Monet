@@ -9,3 +9,4 @@ manifest_commit=29ace668ae756c7b8917c57abb440f6518844b0c
 latest_release_manifest_commit=ad156f32caaa06dae91c02d443f6a8fe210eaa54
 status=official-android17-r1-pinned
 purpose=Reproducible Android 17 Settings Expressive integration baseline; branch head is monitored separately for drift
+github_mirror=https://api.github.com/repos/aosp-mirror/platform_packages_apps_settings

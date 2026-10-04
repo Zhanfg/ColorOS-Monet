@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -10,13 +12,24 @@ PREFIX = ")]}'\n"
 
 def fetch_json(url: str):
     req = urllib.request.Request(
-        url, headers={"User-Agent": "ColorOS-Monet-aosp-drift/1"}
+        url, headers={"User-Agent": "ColorOS-Monet-aosp-drift/2"}
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        text = resp.read().decode("utf-8")
-    if text.startswith(PREFIX):
-        text = text[len(PREFIX):]
-    return json.loads(text)
+    last = None
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=40) as resp:
+                text = resp.read().decode("utf-8")
+            if text.startswith(PREFIX):
+                text = text[len(PREFIX):]
+            return json.loads(text)
+        except (urllib.error.HTTPError, urllib.error.URLError) as exc:
+            last = exc
+            if isinstance(exc, urllib.error.HTTPError) and exc.code not in {429,500,502,503,504}:
+                raise
+            if attempt == 4:
+                raise
+            time.sleep(min(20, 2 ** attempt))
+    raise RuntimeError(last)
 
 def config(path: Path) -> dict[str, str]:
     out: dict[str, str] = {}
@@ -54,43 +67,60 @@ def main() -> int:
     branch_ref = cfg.get("branch_ref", f"refs/heads/{cfg['branch']}")
     pinned = cfg["pinned_commit"]
 
-    branch_head = resolve(base, branch_ref)
-    pinned_names = drawable_names(base, pinned)
-    branch_names = drawable_names(base, branch_head)
+    lines = ["# AOSP Settings Expressive drawable drift", ""]
+    try:
+        branch_head = resolve(base, branch_ref)
+        pinned_names = drawable_names(base, pinned)
+        branch_names = drawable_names(base, branch_head)
 
-    added = sorted(branch_names - pinned_names)
-    removed = sorted(pinned_names - branch_names)
-    common = sorted(pinned_names & branch_names)
+        added = sorted(branch_names - pinned_names)
+        removed = sorted(pinned_names - branch_names)
+        common = sorted(pinned_names & branch_names)
 
-    lines = [
-        "# AOSP Settings Expressive drawable drift",
+        lines.extend([
+            "status=verified",
+            f"pinned_commit={pinned}",
+            f"branch_head={branch_head}",
+            f"pinned_count={len(pinned_names)}",
+            f"branch_count={len(branch_names)}",
+            f"common_count={len(common)}",
+            f"added_count={len(added)}",
+            f"removed_count={len(removed)}",
+            "",
+            "## Added after pinned Android 17 r1 baseline",
+            "",
+        ])
+        lines.extend(f"- {name}" for name in added)
+        lines.extend(["", "## Removed from current android17-release branch", ""])
+        lines.extend(f"- {name}" for name in removed)
+        print(
+            f"pinned={len(pinned_names)} branch={len(branch_names)} "
+            f"added={len(added)} removed={len(removed)}"
+        )
+    except Exception as exc:
+        # Drift monitoring is advisory. The pinned revision is verified by the
+        # separate verifier (with a GitHub mirror fallback), so a Gitiles outage
+        # must not make the immutable build input fail.
+        lines.extend([
+            "status=upstream_temporarily_unavailable",
+            f"pinned_commit={pinned}",
+            f"branch_ref={branch_ref}",
+            f"error_type={type(exc).__name__}",
+            "",
+            "No shipping mapping was changed.",
+        ])
+        print(f"drift check unavailable: {type(exc).__name__}")
+
+    lines.extend([
         "",
-        f"pinned_commit={pinned}",
-        f"branch_head={branch_head}",
-        f"pinned_count={len(pinned_names)}",
-        f"branch_count={len(branch_names)}",
-        f"common_count={len(common)}",
-        f"added_count={len(added)}",
-        f"removed_count={len(removed)}",
+        "## Policy",
         "",
-        "## Added after pinned Android 17 r1 baseline",
-        "",
-    ]
-    lines.extend(f"- {name}" for name in added)
-    lines.extend(["", "## Removed from current android17-release branch", ""])
-    lines.extend(f"- {name}" for name in removed)
-    lines.extend(["", "## Policy", ""])
-    lines.append(
         "Branch drift is review input only. Shipping mappings stay pinned until "
-        "the current ColorOS target exposes/consumes the corresponding resource."
-    )
+        "the current ColorOS target exposes/consumes the corresponding resource.",
+    ])
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    print(
-        f"pinned={len(pinned_names)} branch={len(branch_names)} "
-        f"added={len(added)} removed={len(removed)}"
-    )
     return 0
 
 if __name__ == "__main__":

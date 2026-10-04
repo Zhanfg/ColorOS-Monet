@@ -76,6 +76,8 @@ jobs:
           --capabilities-output dist/material-symbols-mapped-capabilities.tsv
 
       - name: Verify Android 17 AOSP Settings Expressive upstream
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python tools/verify_aosp_settings_upstream.py
           --source compat/material-symbols/aosp-settings.source
