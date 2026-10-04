@@ -74,6 +74,7 @@ jobs:
             module/action.sh \
             module/uninstall.sh \
             module/bin/coloros-monet-doctor \
+            scripts/ColorOS17_MD3E_RuntimeClosure_v4.sh \
             scripts/ColorOS17_MD3E_RuntimeClosure_v3.sh \
             experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh
 
