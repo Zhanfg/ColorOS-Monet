@@ -2,65 +2,64 @@
 
 Tracking issue: #16
 
-Current clean baseline:
-- branch: `coloros17-md3e-v0.2.0`
-- semantic layer: 106 locally proven accent resources across 14 system packages
-- no generic vendor artwork
-- no legacy third-party overlays in the shipping module
-- no automatic ColorOS theme-style mutation
+Hard analysis completed at:
+`21c0f02ec27774f0865db9d7eb12601f79aaa79b`
 
-## Freeze boundary while hard analysis runs
+Current implementation branch:
+`coloros17-md3e-v0.2.0`
 
-Do not modify:
+## Completed
 
-- Settings grouped/segmented card hooks;
-- UXDesign palette/style ownership;
-- SystemUI QS/media/notification/volume/clock hooks;
-- COE Android 17 retargeting.
+- [x] Five hard-analysis reports landed and were copied into the implementation branch.
+- [x] Native Settings grouped-card ownership established.
+- [x] UXDesign/SystemUI Monet ownership separated.
+- [x] COE hook keep/retarget/replace/delete matrix established.
+- [x] SystemUI QS/notification/media/volume/clock owners separated.
+- [x] Package-wide CardHook/ListHook rejected.
+- [x] Global MonetColorSpec2025 replacement rejected.
+- [x] Automatic ColorOS theme-style mutation removed from shipping path.
+- [x] Generic vendor artwork path retired.
+- [x] Official Material Symbols upstream pinned.
+- [x] Native ColorOS/AOSP Expressive assets take precedence over Material Symbols.
+- [x] CI architecture-policy lints added.
+- [x] Semantic MD3E layer defaults off until runtime consumer validation.
 
-Allowed parallel work:
+## Current implementation order
 
-- semantic provenance;
-- CI/policy gates;
-- packaging/update safety;
-- read-only diagnostics;
-- ROM-update compatibility checks;
-- visual-regression capture tooling.
+1. Evidence closure
+   - collect exact runtime provenance with `ColorOS17_MD3E_RuntimeEvidence_v1.sh`;
+   - obtain only the narrow XML/framework/helper evidence requested by Codex.
 
-## Integration order
+2. Settings
+   - segmented whitelist remains empty;
+   - add a component only after exact Activity/Fragment/adapter/key/view/layout proof.
 
-1. **Settings grouped-card report**
-   - establish native first/middle/last/single ownership;
-   - implement only an explicit segmented-card whitelist.
+3. UXDesign / Monet
+   - consume the currently active native palette;
+   - no boot-time style forcing;
+   - native user theme changes always win.
 
-2. **UXDesign Monet report**
-   - settle whether v0.2.0 consumes active colors only or may request a native variant;
-   - user theme changes must always win over module defaults.
+4. COE
+   - source-level migration only;
+   - DELETE actions first, then RETARGET/REPLACE with fail-closed guards;
+   - temporary binary no-op patcher remains under `experiments/` only.
 
-3. **COE migration report**
-   - replace binary P0 no-op with source-level keep/retarget/replace/delete decisions;
-   - all hooks fail closed.
+5. SystemUI
+   - QS, notification, media, volume and clock remain independent contracts;
+   - preserve native blur, state machines, geometry and motion.
 
-4. **SystemUI component map**
-   - implement QS, notification, media, volume and clock separately;
-   - preserve native blur/translucency and plugin ownership.
+6. One-reboot validation
+   - only after component gates above are satisfied;
+   - build one candidate, reboot once, collect post-boot evidence and visual regression.
 
-5. **Architecture synthesis**
-   - resolve contradictions across all four reports before implementation merge.
+## Release gate
 
-## Validation gate
+No alpha is promoted merely because CI is green. A candidate must also have:
 
-A flashable alpha is not produced merely because each component compiles.
-
-Before the next on-device reboot candidate:
-
-- all hard-analysis reports are present;
-- architecture contradictions are resolved;
-- CI semantic-policy checks pass;
-- no global COUI radius/divider/card override is present;
-- no package-wide CardHook/ListHook is present;
-- no generic replacement artwork is present;
-- no unconditional theme-style mutation is present;
-- light/dark + current-wallpaper visual regression plan is generated.
-
-Only then build a single one-reboot validation candidate.
+- no global COUI radius/divider/card override;
+- no package-wide CardHook/ListHook;
+- no parallel Monet generator;
+- no unconditional theme-style mutation;
+- no generic replacement artwork;
+- exact component whitelist entries for every non-native hook;
+- light/dark/current-wallpaper regression coverage.
