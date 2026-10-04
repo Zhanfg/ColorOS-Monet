@@ -14,6 +14,11 @@ def read_tsv(path: Path) -> list[list[str]]:
             rows.append(next(csv.reader([raw], delimiter="\t")))
     return rows
 
+def read_dict_tsv(path: Path) -> list[dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as f:
+        lines = [line for line in f if line.strip() and not line.lstrip().startswith("#")]
+    return list(csv.DictReader(lines, delimiter="\t"))
+
 def main() -> int:
     p = argparse.ArgumentParser(
         description="Resolve ColorOS icon source precedence without emitting any artwork."
@@ -58,25 +63,52 @@ def main() -> int:
             "notes": notes,
         }
 
-    oplus_homepage = set()
+    homepage = {}
     if args.oplus_homepage:
-        for row in read_tsv(args.oplus_homepage):
-            if len(row) < 3 or row[0] == "preference_key":
-                continue
-            oplus_homepage.add(("com.android.settings", row[2]))
+        for row in read_dict_tsv(args.oplus_homepage):
+            icon = (
+                row["current_icon"]
+                .removeprefix("@drawable/")
+                .removeprefix("drawable/")
+                .removeprefix("@mipmap/")
+                .removeprefix("mipmap/")
+            )
+            homepage[("com.android.settings", icon)] = row
 
-    keys = sorted(set(exact_pairs) | set(curated_native) | set(material) | oplus_homepage)
+    keys = sorted(set(exact_pairs) | set(curated_native) | set(material) | set(homepage))
     out = []
     for package, base in keys:
         exact = exact_pairs.get((package, base))
         native = curated_native.get((package, base))
         mat = material.get((package, base))
+        home = homepage.get((package, base))
 
-        if (package, base) in oplus_homepage:
-            source = "KEEP_NATIVE_OPLUS_HOMEPAGE"
-            selected = base
-            confidence = "HIGH"
-            gate = "VERIFIED_OPLUS_XML_AND_DEX_OWNER"
+        semantic = (
+            native["semantic"] if native
+            else (mat["semantic"] if mat else (home["key"] if home else ""))
+        )
+        material_fallback = mat["symbol"] if mat else ""
+
+        if home:
+            action = home["action"]
+            confidence = home["confidence"]
+            if action == "KEEP_NATIVE":
+                source = "KEEP_NATIVE_OPLUS_HOMEPAGE"
+                selected = base
+                gate = "VERIFIED_OPLUS_XML_AND_DEX_OWNER"
+            elif action == "NATIVE_EXPRESSIVE":
+                source = "OPLUS_HOMEPAGE_NATIVE_EXPRESSIVE_CANDIDATE"
+                selected = home["candidate"]
+                gate = "PENDING_NATIVE_EXPRESSIVE_PROBE"
+            elif action == "MATERIAL_SYMBOL_CANDIDATE":
+                source = "OPLUS_HOMEPAGE_MATERIAL_SYMBOL_CANDIDATE"
+                selected = home["candidate"]
+                gate = "PENDING_GLYPH_SWAP_PROBE"
+                material_fallback = home["candidate"]
+            else:
+                source = "OPLUS_HOMEPAGE_NEEDS_REVIEW"
+                selected = home.get("candidate", "")
+                gate = "PENDING_COMPONENT_REVIEW"
         elif exact:
             source = "COLOROS_NATIVE_EXPRESSIVE"
             selected = exact[0]
@@ -101,12 +133,12 @@ def main() -> int:
         out.append([
             package,
             base,
-            native["semantic"] if native else (mat["semantic"] if mat else ""),
+            semantic,
             source,
             selected,
             confidence,
             gate,
-            mat["symbol"] if mat else "",
+            material_fallback,
         ])
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
