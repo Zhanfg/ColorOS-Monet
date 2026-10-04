@@ -25,8 +25,17 @@ def main() -> int:
             failures.append(f"missing homepage route evidence: {stage} -> {needle}")
 
     with MAP.open(encoding="utf-8", newline="") as f:
-        reader=csv.DictReader((line for line in f if line.strip() and not line.startswith("#")), delimiter="\t")
-        for row in reader:
+        raw=[line for line in f if line.strip()]
+    if not raw:
+        failures.append("native expressive map is empty")
+        raw=[]
+    if raw and raw[0].startswith("#"):
+        header=raw[0].lstrip("# ").rstrip("\n")
+        data=[line for line in raw[1:] if not line.startswith("#")]
+        reader=csv.DictReader(data, fieldnames=header.split("\t"), delimiter="\t")
+    else:
+        reader=csv.DictReader((line for line in raw if not line.startswith("#")), delimiter="\t")
+    for row in reader:
             if row["target_package"]!="com.android.settings":
                 continue
             if row["decision"] in {"MATERIAL_SYMBOL","STATEFUL_SYMBOL"}:
