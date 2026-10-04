@@ -71,11 +71,8 @@ def main() -> int:
         failures.append("checked glyph is not themed with colorPrimary")
     if "sud_ic_switch_selector_expressive" not in switch:
         failures.append("SwitchItem does not install Expressive selector")
-    if "setThumbIconDrawable(null)" not in switch.replace("\n", " "):
-        # tolerate line wrapping by a second whitespace-normalized check
-        compact = " ".join(switch.split())
-        if "setThumbIconDrawable(null)" not in compact:
-            failures.append("SwitchItem unchecked path is not null thumb icon")
+    if not re.search(r"setThumbIconDrawable\s*\(\s*null\s*\)", switch):
+        failures.append("SwitchItem unchecked path is not null thumb icon")
     if "shouldApplyGlifExpressiveStyle" not in switch:
         failures.append("SwitchItem missing Glif Expressive activation gate")
 
