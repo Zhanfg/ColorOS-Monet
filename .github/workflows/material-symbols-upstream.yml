@@ -5,11 +5,15 @@ on:
     branches:
       - "coloros17-md3e-v0.2.0"
     paths:
-      - "compat/material-symbols/**"
-      - "tools/build_material_symbols_index.py"
-      - "tools/validate_material_symbols_mapping.py"
+      - "compat/material-symbols/upstream.lock"
+      - "compat/material-symbols/coloros_icon_map.tsv"
+      - "tools/verify_material_symbols_upstream_api.py"
       - ".github/workflows/material-symbols-upstream.yml"
   workflow_dispatch:
+
+concurrency:
+  group: material-symbols-upstream-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -20,42 +24,24 @@ jobs:
     steps:
       - name: Checkout ColorOS-Monet
         uses: actions/checkout@v4
-        with:
-          path: project
-
-      - name: Checkout pinned Google Material Symbols
-        uses: actions/checkout@v4
-        with:
-          repository: google/material-design-icons
-          ref: 737e3324305806514d7909874fa1818ae1808232
-          path: material-design-icons
-          filter: blob:none
-          sparse-checkout: |
-            symbols/android
-          sparse-checkout-cone-mode: true
 
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Build complete upstream Android index
+      - name: Verify pinned Google Material Symbols through GitHub API
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: >-
-          python project/tools/build_material_symbols_index.py
-          --upstream material-design-icons
-          --output project/dist/material-symbols-android-index.tsv
-
-      - name: Validate curated ColorOS mappings
-        run: >-
-          python project/tools/validate_material_symbols_mapping.py
-          --upstream material-design-icons
-          --mapping project/compat/material-symbols/coloros_icon_map.tsv
-
-      - name: Confirm pinned revision
-        shell: bash
-        run: |
-          test "$(git -C material-design-icons rev-parse HEAD)" = "737e3324305806514d7909874fa1818ae1808232"
+          python tools/verify_material_symbols_upstream_api.py
+          --lock compat/material-symbols/upstream.lock
+          --mapping compat/material-symbols/coloros_icon_map.tsv
+          --catalog-output dist/material-symbols-catalog.tsv
+          --capabilities-output dist/material-symbols-mapped-capabilities.tsv
 
       - uses: actions/upload-artifact@v4
         with:
-          name: material-symbols-android-index-737e3324305806514d7909874fa1818ae1808232
-          path: project/dist/material-symbols-android-index.tsv
+          name: material-symbols-verified-${{ github.sha }}
+          path: |
+            dist/material-symbols-catalog.tsv
+            dist/material-symbols-mapped-capabilities.tsv

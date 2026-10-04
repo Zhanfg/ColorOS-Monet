@@ -5,3 +5,4 @@ android_symbols_root=symbols/android
 preferred_family=materialsymbolsrounded
 license=Apache-2.0
 symbol_directory_count=4150
+android_tree_sha=d35dbcc05e3ef8dd56fd110d3f667fc183f9580e
