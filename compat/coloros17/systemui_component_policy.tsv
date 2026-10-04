@@ -2,5 +2,5 @@ component	keep_native	md3e_augmentation_candidate	release_gate
 QS	1x1/2x1/2x2/three-stage layout geometry native state propagation deformation press ripple Lottie scheduling	semantic foreground/tint only after exact tile/view/state binding	NEEDS_RUNTIME_TRACE
 Notification	base surface state selector focus outline grouping low-blur/colorized pipeline	verified semantic foreground/state layer per exact CardType/mode	NEEDS_RUNTIME_TRACE
 Media	plugin template topology artwork immersive background	bounded control tint/state after exact media_card_section/root/binder verification	NEEDS_RESOURCE_XML+NEEDS_RUNTIME_TRACE
-Volume	OplusVolumeDialogImpl OplusVolumeSeekBar OS17 geometry deformation slider blur/material capability	semantic role tint only at exact OPlus component owner	NEEDS_RAW_BYTECODE+NEEDS_RUNTIME_TRACE
+Volume	VolumeModuleExImpl provider→OplusVolumeDialogImpl OplusVolumeSeekBar OS17 geometry deformation slider blur/material capability	semantic role tint only at exact live OPlus component owner	NEEDS_RUNTIME_TRACE
 Clock	SimpleQsClock native metrics DarkIconDispatcher contrast dispatch	instance-scoped foreground only	NEEDS_RUNTIME_TRACE
