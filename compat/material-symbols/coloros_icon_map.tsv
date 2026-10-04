@@ -1,12 +1,12 @@
 # target_package	target_resource	semantic_role	material_symbol	family	size	unselected_variant	selected_variant	action	confidence	notes
 com.android.settings	ic_nfc	nfc	nfc	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
-com.android.settings	ic_help	help	help	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_help	help	help	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native expressive sibling exists: ic_help_expressive; Material Symbol retained only as fallback reference
 com.android.settings	ic_lock	lock	lock	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_person	person	person	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_remove_24dp	remove	remove	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_search_24dp	search	search	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_upload	upload	upload	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
-com.android.settings	ic_storage	storage	storage	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_storage	storage	storage	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native expressive sibling exists: ic_storage_expressive; Material Symbol retained only as fallback reference
 com.android.settings	ic_vpn_key	vpn_key	vpn_key	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_settings_24dp	settings	settings	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_bluetooth_disabled	bluetooth_disabled	bluetooth_disabled	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
@@ -20,7 +20,7 @@ com.android.settings	ic_expand_more	expand_more	expand_more	materialsymbolsround
 com.android.settings	ic_battery_full	battery_full	battery_full	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_arrow_forward	arrow_forward	arrow_forward	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_battery_alert_24dp	battery_alert	battery_alert	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
-com.android.settings	ic_notifications	notifications	notifications	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_notifications	notifications	notifications	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native expressive sibling exists: ic_notifications_expressive; Material Symbol retained only as fallback reference
 com.android.settings	ic_person_remove	person_remove	person_remove	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_account_circle_24dp	account_circle	account_circle	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_arrow_downward	arrow_downward	arrow_downward	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
@@ -30,7 +30,7 @@ com.android.settings	ic_battery_unknown	battery_unknown	battery_unknown	material
 com.android.settings	ic_notifications_off_24dp	notifications_off	notifications_off	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_settings_bluetooth	settings_bluetooth	settings_bluetooth	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
 com.android.settings	ic_settings_ethernet	settings_ethernet	settings_ethernet	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol name
-com.android.settings	ic_settings_security	security	security	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic security semantic
+com.android.settings	ic_settings_security	security	security	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native expressive sibling exists: ic_settings_security_expressive; Material Symbol retained only as fallback reference
 com.android.settings	settings_storage_ic	storage	storage	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic storage semantic
 com.android.settings	ic_accessibility_new	accessibility	accessibility_new	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol exists
 com.android.systemui	ic_call	call	call	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
