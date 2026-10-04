@@ -1,0 +1,9 @@
+stage	owner	method_or_manifest	result	confidence
+launcher_entry	AndroidManifest.xml	com.android.settings.Settings targetActivity	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	HIGH
+settings_action	AndroidManifest.xml	android.settings.SETTINGS	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	HIGH
+homepage_activity	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	getHomePageImpl/getMainFragment	BaseHomePageImpl-managed TopLevelSettings instance	HIGH
+fragment_factory	com.oplus.settings.feature.homepage.BaseHomePageImpl	getSwitchDefaultFragment	new com.oplus.settings.feature.homepage.OplusTopLevelSettings	HIGH
+fragment_inheritance	com.oplus.settings.feature.homepage.OplusTopLevelSettings	superclass	com.android.settings.homepage.TopLevelSettings	HIGH
+screen_resource	com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId	0x7f180269 => xml/top_level_settings_oplus	HIGH
+aosp_expressive_gate	com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	0x7f180266 => xml/top_level_settings_expressive	HIGH
+coloros_homepage_effect	OplusTopLevelSettings	override wins	AOSP expressive selector is bypassed for the OPlus homepage fragment unless OPlus XML itself opts into expressive resources	HIGH

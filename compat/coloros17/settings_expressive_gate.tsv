@@ -1,6 +1,6 @@
-class	method	condition	result_resource_id	resource_name_status	confidence
+class	method	condition	result_resource_id	resource_name	confidence
 com.android.settings.homepage.TopLevelSettings	getPreferenceScreenResId	delegates_to_getPreferenceLayoutResId	-	-	HIGH
-com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	DesktopSettingsUtils.shouldShowTopLevelDeviceCategory(context)==true	0x7f180267	NEEDS_RESOURCE_ID_MAP	HIGH
-com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	isExpressiveTheme(context)==true	0x7f180266	NEEDS_RESOURCE_ID_MAP	HIGH
-com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	default	0x7f180265	NEEDS_RESOURCE_ID_MAP	HIGH
-com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId	unconditional	0x7f180269	NEEDS_RESOURCE_ID_MAP	HIGH
+com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	DesktopSettingsUtils.shouldShowTopLevelDeviceCategory(context)==true	0x7f180267	xml/top_level_settings_expressive_desktop	HIGH
+com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	SettingsThemeHelper.isExpressiveTheme(context)==true	0x7f180266	xml/top_level_settings_expressive	HIGH
+com.android.settings.homepage.TopLevelSettings	getPreferenceLayoutResId	default	0x7f180265	xml/top_level_settings	HIGH
+com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId	unconditional	0x7f180269	xml/top_level_settings_oplus	HIGH

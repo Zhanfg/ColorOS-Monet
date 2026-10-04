@@ -35,9 +35,11 @@ jobs:
       - name: Validate sources and architecture policy
         shell: bash
         run: |
-          python -m py_compile             tools/package_module.py             tools/build_coloros17_semantic_accent.py             tools/classify_legacy_overlay_resources.py             tools/lint_coloros17_semantic_policy.py             tools/lint_coloros17_component_policy.py
+          python -m py_compile             tools/package_module.py             tools/build_coloros17_semantic_accent.py             tools/classify_legacy_overlay_resources.py             tools/lint_coloros17_semantic_policy.py             tools/lint_coloros17_component_policy.py \
+            tools/lint_coloros17_settings_icon_gate.py
           python tools/lint_coloros17_semantic_policy.py
           python tools/lint_coloros17_component_policy.py
+          python tools/lint_coloros17_settings_icon_gate.py
           grep -q '^md3e_semantic=0$' module/config/default.conf
           bash -n             module/customize.sh             module/service.sh             module/action.sh             module/uninstall.sh             module/bin/coloros-monet-doctor
 
