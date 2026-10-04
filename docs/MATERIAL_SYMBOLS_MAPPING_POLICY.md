@@ -48,12 +48,20 @@ slot. Do not take a 24 px path and blindly scale it for 20/40/48 dp slots.
 
 ## Stateful icons
 
-When the UI has a selected/unselected state and the same Material Symbol exposes
-a FILL variant, prefer a stateful mapping:
+A `fill1` asset is only a **candidate** selected state. Do not assume it changes
+the glyph merely because the file exists.
 
-`base → fill1`
+A mapping may use `base → fill1` only when:
 
-instead of swapping unrelated glyphs.
+1. the ColorOS consumer actually owns a selected/unselected state;
+2. both pinned upstream assets exist;
+3. the selected XML differs from the base XML;
+4. visual review confirms that the transition fits the component.
+
+If base and `fill1` are byte-identical, treat the symbol as a static glyph and
+leave state/tint ownership to ColorOS/OPlus.
+
+See `docs/MATERIAL_SYMBOLS_STATE_AXIS.md`.
 
 ## Shipping rule
 

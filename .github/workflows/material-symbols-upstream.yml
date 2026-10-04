@@ -26,6 +26,7 @@ on:
       - "compat/material-symbols/native_expressive_full_provenance.tsv"
       - "tools/verify_setupdesign_upstream.py"
       - "tools/lint_coloros17_settings_expressive_wrappers.py"
+      - "tools/summarize_material_symbol_state_deltas.py"
       - ".github/workflows/material-symbols-upstream.yml"
   workflow_dispatch:
 
@@ -62,6 +63,7 @@ jobs:
             tools/build_oplus_homepage_icon_review_pack.py \
             tools/validate_settings_homepage_source_map.py \
             tools/lint_coloros17_settings_expressive_wrappers.py \
+            tools/summarize_material_symbol_state_deltas.py \
       - name: Validate pinned upstream manifest
         run: python tools/lint_upstream_manifest.py
 
@@ -114,6 +116,13 @@ jobs:
           --upstream-lock compat/material-symbols/upstream.lock
           --output dist/oplus-homepage-material-review
 
+      - name: Summarize Material Symbol selected-state deltas
+        run: >-
+          python tools/summarize_material_symbol_state_deltas.py
+          --manifest dist/oplus-homepage-material-review/REVIEW_MANIFEST.tsv
+          --review-root dist/oplus-homepage-material-review
+          --output dist/material-symbols-state-deltas.tsv
+
       - name: Validate OPlus homepage icon candidates
         run: >-
           python tools/validate_oplus_homepage_icon_candidates.py
@@ -143,6 +152,7 @@ jobs:
           path: |
             dist/material-symbols-catalog.tsv
             dist/material-symbols-mapped-capabilities.tsv
+            dist/material-symbols-state-deltas.tsv
             dist/coloros17-icon-resolution.tsv
             dist/aosp-settings-upstream.lock
             dist/setupdesign-upstream.lock
