@@ -21,7 +21,7 @@ def read_dict_tsv(path: Path) -> list[dict[str, str]]:
 
 def main() -> int:
     p = argparse.ArgumentParser(
-        description="Resolve ColorOS icon source precedence without emitting any artwork."
+        description="Resolve ColorOS icon source precedence and verified Android 17 provenance without emitting artwork."
     )
     p.add_argument("--native-pairs", type=Path, required=True)
     p.add_argument("--native-map", type=Path, required=True)

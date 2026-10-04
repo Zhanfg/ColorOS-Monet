@@ -65,3 +65,17 @@ Current ColorOS 17 additionally proves, in the target resource XML:
 
 This is verified target behavior, not a missing upstream icon. It must not be
 “normalized” back to AOSP or replaced by a visually similar Material Symbol.
+
+
+## Official verifier result
+
+Pinned Android 17 SetupDesign verification confirms all three resource files
+exist at the release commit:
+
+- `sud_ic_switch_selector_expressive.xml`
+- `sud_ic_switch_check_mark_expressive.xml`
+- `sud_ic_switch_uncheck_mark_expressive.xml`
+
+The verifier deliberately does not infer the active unchecked runtime path from
+resource existence alone. Component code/theme state remains the behavioral
+owner.

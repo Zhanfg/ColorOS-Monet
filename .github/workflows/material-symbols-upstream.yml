@@ -23,6 +23,7 @@ on:
       - "tools/materialize_material_symbol_assets.py"
       - "compat/material-symbols/setupdesign.source"
       - "compat/material-symbols/native_expressive_provenance.tsv"
+      - "compat/material-symbols/native_expressive_full_provenance.tsv"
       - "tools/verify_setupdesign_upstream.py"
       - "tools/lint_coloros17_settings_expressive_wrappers.py"
       - ".github/workflows/material-symbols-upstream.yml"
@@ -101,7 +102,7 @@ jobs:
           --native-pairs compat/material-symbols/native_expressive_pairs.tsv
           --native-map compat/material-symbols/native_expressive_map.tsv
           --material-map compat/material-symbols/coloros_icon_map.tsv
-          --native-provenance compat/material-symbols/native_expressive_provenance.tsv
+          --native-provenance compat/material-symbols/native_expressive_full_provenance.tsv
           --oplus-homepage compat/coloros17/settings_oplus_homepage_icons.tsv
           --output dist/coloros17-icon-resolution.tsv
 
