@@ -5,6 +5,8 @@ import argparse
 import base64
 import json
 import re
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -25,8 +27,21 @@ def get(url: str) -> bytes:
         url,
         headers={"User-Agent": "ColorOS-Monet-SetupDesign-Verifier/1"},
     )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return response.read()
+    last = None
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.read()
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code not in {429, 500, 502, 503, 504} or attempt == 3:
+                raise
+        except urllib.error.URLError as exc:
+            last = exc
+            if attempt == 3:
+                raise
+        time.sleep(2 ** attempt)
+    raise RuntimeError(f"unreachable retry state: {last}")
 
 def get_json(url: str) -> dict:
     text = get(url).decode("utf-8")
