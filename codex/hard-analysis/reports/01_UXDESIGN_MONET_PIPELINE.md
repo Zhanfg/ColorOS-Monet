@@ -1,12 +1,12 @@
 # 1. Executive conclusion
 
-[OBSERVED] UXDesign 自身确实生成 native Monet **候选调色与预览数据**：`UxColorManager.initColorScheme`→`ra.m`→`v6.*`→Google libmonet Variant/tonal palettes；EXPRESSIVE 进入算法的位置可追到 `v6.b.<init>`。但 **Settings/SystemUI 最终 framework 动态资源的生成、FRRO 注册/激活完整链不在 UXDesign APK 内得到证明**。不能把预览算法存在当作 UXDesign 自己负责所有 FRRO。Confidence: HIGH（本地算法）；LOW（下游完整激活 owner）。
+[OBSERVED] UXDesign 自身确实生成 native Monet **候选调色与预览数据**：`UxColorManager.initColorScheme`→`ra.m`→`v6.*`→Google libmonet Variant/tonal palettes；EXPRESSIVE 进入算法的位置可追到 `v6.b.<init>`。跨 DEX 核对后，**最终 Android 动态资源由 SystemUI ThemeOverlayController 生成，ThemeOverlayApplier 注册/激活 FabricatedOverlay**。UXDesign 是 UI/state/XML producer，不能称为唯一 FRRO owner。Confidence: HIGH（静态生成及事务链）；MEDIUM（当前设备运行状态尚无 trace）。
 
 [OBSERVED] `a8/b` 的 MaterialStyle→OPlus utilities Variant 分派得到精确恢复；其可见 caller 属于单色图标链 `db.h`→`z7.b`，不是已证明的全系统 theme-style converter。系统主题 UI 的 Google style 选择与 MaterialStyle 图标选择分属不同状态。**未证明 Android theme-style string、MaterialStyle、libmonet Variant 是一个三列一一对应表。** Confidence: HIGH。
 
 [OBSERVED] UXDesign 会写 Settings.Secure JSON、OPlus configuration/material_color_value、多类 XML、版本和 follow-wallpaper 状态。online XML 是下载/迁移分支，不能误报为每次 EXPRESSIVE 都生成 online XML。Confidence: HIGH。
 
-[INFERRED] A5 结论为 **PARTIAL**：只改 `theme_customization_overlay_packages` 的 style，触及了 native apply 的一个输入，却不等同于完整 ColorOS apply；当前包不能证明它会同步所有 COUI/XML/consumer。对用户 ownership 而言，每次开机重写是明确不合格的方案。Confidence: HIGH（不同于 native 完整操作）；MEDIUM（单字段实际有效范围）。
+[INFERRED] A5 结论为 **PARTIAL**：只改 `theme_customization_overlay_packages` 的 style，触及了 native apply 的一个输入，却不等同于完整 ColorOS apply；已证明 observer 会重算 Android FRRO，但不能证明它会同步所有 COUI/XML/consumer。对用户 ownership 而言，每次开机重写是明确不合格的方案。Confidence: HIGH（不同于 native 完整操作）；MEDIUM（单字段实际有效范围）。
 
 # 2. Observed facts
 
@@ -73,7 +73,7 @@ S/SR：Settings DEX/资源表哈希和基线见 [Settings 报告](02_SETTINGS_GR
 | 状态/产物 | Producer / persistence / activation / consumer | Evidence & Confidence |
 |---|---|---|
 | Google candidate palette | UxColorManager→ra.m→Google scheme；prefs 缓存；UI/ViewModel读取 | U constructor/caller 链；OBSERVED/HIGH |
-| secure theme JSON | SystemColorApplyUtil.e→p1.a→Settings.Secure | U PC `0x1d8`；OBSERVED/HIGH。下游 FRRO owner 未证明 |
+| secure theme JSON | SystemColorApplyUtil.e→p1.a→Settings.Secure | U PC `0x1d8`；OBSERVED/HIGH。下游 SystemUI observer→ThemeOverlayController→ThemeOverlayApplier 已验证 |
 | OPlus material configuration | SystemColorApplyUtil.a→common.h.a builder，按 type/index 组合 flags；`d9.a.b(Configuration)`→IActivityManager.updateConfiguration；特定分支写 Settings.System `material_color_value` | U 调用链；OBSERVED/HIGH。framework 内部 resource reload 未给 |
 | wallpaper COUI XML | `ta.f.d(ArrayList,int)`→c(File,ArrayList,boolean)；`o.g()/h()` 返回 `coui_theme_color_wallpaper.xml` / `_night.xml`，非主用户子目录 | U writer/path；OBSERVED/HIGH |
 | custom COUI XML | `ta.a.e(int light,int night)`→d(File,ArrayList)→`o.a()/d()` 的 `ux_custom_color.xml` / `_night.xml` | U writer；OBSERVED/HIGH |
@@ -85,7 +85,19 @@ S/SR：Settings DEX/资源表哈希和基线见 [Settings 报告](02_SETTINGS_GR
 
 [OBSERVED] `UxColorSettingProvider` manifest authority 为 `com.oplus.uxdesign.uxcolor.material_setting_provider`，exported=true，但要求 `com.oplus.permission.safe.SECURITY`。`call` 含 ColorManager.initColorScheme、custom XML writer 等入口；不能假定普通模块有合法 API 权限或猜 method-string。Confidence: HIGH。
 
-[OBSERVED] 两个 U DEX 的 invoke/field 索引未找到 FabricatedOverlay 直接调用；出现的 OplusOverlayManager 调用属于 language/app-name 分支。**这只说明本输入未见直接色彩 FRRO 构建，不证明 ROM 没有 FRRO。** Reflection/JNI/framework 跨界仍未知。Confidence: HIGH（检索限定）；UNKNOWN/LOW（全系统 FRRO implementation）。
+[OBSERVED] 两个 U DEX 的 invoke/field 索引未找到 FabricatedOverlay 直接调用；出现的 OplusOverlayManager 调用属于 language/app-name 分支。**这只说明本输入未见直接色彩 FRRO 构建，不证明 ROM 没有 FRRO。** Reflection/JNI/framework 跨界仍未知。Confidence: HIGH（检索限定）；OBSERVED/HIGH（SystemUI 另有直接 FRRO implementation，见2.6）。
+
+## 2.6 COE 交叉验证补齐：SystemUI 的 Android FRRO 尾链
+
+[OBSERVED] 输入 `systemui/classes2-monet.dex` 包含完整 `ThemeOverlayController`、`ThemeOverlayApplier`、`ColorScheme`。`start()` 注册当前用户 secure JSON ContentObserver；`onChange` 有 provisioning/user/mSkipSettingChange 门控，然后 `reevaluateSystemTheme(true)`。Wallpaper listener、contrast listener、user callback 另可触发 reevaluation。Confidence: HIGH。
+
+[OBSERVED] `fetchThemeStyleFromSetting()` 调 **android.content.theming.ThemeStyle.valueOf(String):int**，允许 IDs 3/0/1/5/4/2/7；无效返回1。此 framework parser 自身不在输入，不能从名字猜其全部字符串映射。`ColorScheme(List,boolean,int,double)` 原始 packed-switch 已验证 ID3→PC `0x862`→SchemeExpressive (`0x866`)→Google Variant.EXPRESSIVE (`0x880`)；PC `0x76` 明确选择 **SPEC_2026**，不是需要模块补齐的旧版算法。Confidence: HIGH（ID→scheme）；LOW（未提供framework字符串parser）。
+
+[OBSERVED] `createOverlays(int)`（code_off `0x43016c`）创建light/dark ColorScheme，accent/neutral/dynamic三FRRO，分别消费 DynamicColors.getAllAccentPalette/getAllNeutralPalette/getAllDynamicColorsMapped/getFixedColorsMapped/getCustomColorsMapped。后者使用Google MaterialDynamicColors，其colorSpec初始化为ColorSpec2026。`ThemeOverlayController$$ExternalSyntheticLambda3.accept` 取DynamicColor.getArgb，写 `android:color/system_<role>_light/_dark`；neutral2_900 有OPlus特例。Confidence: HIGH。
+
+[OBSERVED] `newFabricatedOverlay` 的owner为com.android.systemui，target android。`reevaluateSystemTheme` 可从JSON system_palette十六进制seed重算，再把neutral/accent/dynamic identifiers交给ThemeOverlayApplier executor。`ThemeOverlayApplier$$ExternalSyntheticLambda0.run` PC `0x15e` registerFabricatedOverlay，setEnabled含user/profile策略，PC `0x21a` OverlayManager.commit。这证明注册/激活**代码路径**，不证明每次运行commit成功。Confidence: HIGH。
+
+[OBSERVED] wallpaper→COUI还有回路：`ThemeOverlayControllerExImpl.updateColorConfig` 检查COUITheme/mMaterialColor bits与mono-follow；Google分支 `calculateGoogleColors(WallpaperColors,int)` 使用上述SystemUI ColorScheme；其他分支 UxWallpaperColors.getTargetColors。`ApplyWallpaperColorsTask.doInBackground` 以 `key_wallpaper_colors_list` 调已保护UXDesign provider的 `apply_wallpaper_color`，另可通知mono provider。UXDesign写XML；实际framework加载XML仍缺原始loader。Confidence: HIGH。Android style→mono MaterialStyle并未因这条回路得到证明。
 
 # 3. Runtime flow
 
@@ -101,9 +113,17 @@ WallpaperManager(home) / Bitmap → WallpaperColors
   → ColorConfig(themeIndex 24)
   → SystemColorApplyUtil.e → p1.a → secure theme JSON
   → SystemColorApplyUtil.a → OPlus configuration / material_color_value
-  → ? framework color loader / FRRO builder / activation
-  → ? framework dynamic resource table
+  → secure observer / ThemeOverlayController.reevaluateSystemTheme
+  → ColorScheme(style ID3 → EXPRESSIVE, SPEC_2026)
+  → DynamicColors / MaterialDynamicColors / CustomDynamicColors
+  → accent + neutral + dynamic FabricatedOverlay(target android)
+  → ThemeOverlayApplier → registerFabricatedOverlay + setEnabled + commit
+  → Android system_* light/dark resources
   → Settings theme attrs / separate SystemUI consumers
+
+Wallpaper → ThemeOverlayControllerExImpl.updateColorConfig
+  → ApplyWallpaperColorsTask → UXDesign provider.apply_wallpaper_color
+  → wallpaper XML writer
 
 Wallpaper/custom colors → ta.f / ta.a → /data/oplus/uxres/uxcolor/*.xml
   → ? OPlus resource loader → COUI theme attrs → Settings consumers
@@ -126,7 +146,7 @@ Icon seed + MaterialStyle → db.h → z7.b → a8.b.e/b/a
 | enum 同名就是映射 | 有两套 namespace；SPRITZ→NEUTRAL、MONOCHROMATIC→MONOCHROME 证明名字并不统一 | SystemColorApplyUtil map、ra.m、a8.c | 使用实际分派；跨domain未证不补表 |
 | 只写 theme_style 即完整 apply | native 同步 seeds/source/timestamp/enable/configuration/two-tone/follow flag | SystemColorApplyUtil.e/a/d | PARTIAL；先验证完整native入口 |
 | online XML 就是 EXPRESSIVE output | online更新任务复制下载文件；wallpaper/custom/mono分别写其他XML | U writers/services | 正确分离 artifact ownership |
-| libmonet存在证明UXDesign自己激活FRRO | 本DEX未见颜色FRRO直接调用；跨framework尾链缺失 | invoke index | NEEDS_RAW_BYTECODE |
+| libmonet存在证明UXDesign自己激活FRRO | UXDesign未直接创建；SystemUI生成并注册三FRRO | U+SystemUI调用链 | 明确分工，不移交给module |
 | uninstall时尊重用户就够 | service在enabled时每次boot执行apply，会覆盖后来的手动选择 | 冻结service/helper源码 | REMOVE OLD OVERRIDE，见blocker |
 
 # 5. Implication for v0.2.0
@@ -172,10 +192,10 @@ onUninstall: restoreOnlyIfExactOwnershipStillProven()
 
 | Required evidence | 具体缺口 | 补充方式 |
 |---|---|---|
-| NEEDS_RAW_BYTECODE | secure theme-style string 到最终 framework palette/FRRO 的 parser、builder、OverlayManager activation；当前U只证明写端和候选算法 | 提供实际 ThemeOverlayController 的完整DEX、相关oplus-framework/services资源loader；追observer→transaction→resource consumer |
+| NEEDS_RAW_BYTECODE | android.content.theming.ThemeStyle.valueOf/name 的完整字符串映射；SystemUI的ID→scheme/FRRO/transaction已补齐 | 提供该framework类，验证字符串EXPRESSIVE→3；不能用COE自有索引代替native parser |
 | NEEDS_RAW_BYTECODE | Android string→MaterialStyle 是否存在自动同步；已见两条独立链，无三者统一转换的证据 | 追secure observer与icon setting writer的调用链；若在framework，补对应类 |
 | NEEDS_RESOURCE_XML | generated COUI XML→framework attr/resource mapping、完整styles引用；仅资源筛选text不足 | 相关OPlus loader XML schema、样例生成XML与resolved theme attrs；无需整个ROM |
 | NEEDS_RUNTIME_TRACE | 用户换wallpaper/Google style/custom/online色以后各资源最终生成、激活与consumer更新，单字段写入究竟覆盖多少 | 只读比较secure/configuration/XML摘要、overlay list/idmap与resolved资源；按user/profile、light/dark采样 |
 | NEEDS_RUNTIME_TRACE | ownership race、相同enum重选、module一次请求后的native用户改选 | 在明确用户操作边界记录状态generation；验证reboot不会重施加 |
 
-A1/A3/A4 的本地生产与保存段已实证，framework激活与全部消费段明确未完成；不声称已形成无缺口的全系统data flow。后续功能实现受这些缺口约束。
+A1/A3 的UI/state→SystemUI palette→FRRO transaction静态链已实证；COUI XML loader、framework ThemeStyle parser与A4全部consumer仍有明确缺口；不声称已形成无缺口的全系统data flow。后续功能实现受这些缺口约束。
