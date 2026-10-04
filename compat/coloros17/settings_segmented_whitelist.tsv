@@ -1,3 +1,5 @@
 # activity	fragment	adapter	preference_key	view_class	layout_or_hash	feature	evidence
 # Intentionally empty after Codex static analysis.
 # A row may be added only after exact runtime + resource XML verification.
+# Resource XML confirms native COUI continuous groups and a separate SettingsLib Expressive theme family.
+# No entry is authorized without exact runtime consumer tuple evidence.
