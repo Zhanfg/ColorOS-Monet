@@ -64,14 +64,28 @@ def vector_source(upstream: Path, symbol: str) -> Path:
     return p
 
 def sanitize_vector(source: Path) -> bytes:
-    # Preserve official geometry. ColorOS preference classes own tinting.
-    # Reject resource references that would make the experiment dependent on
-    # another Material package.
+    # Preserve Google's official path geometry while removing palette ownership
+    # from the copied probe asset. OPlus preference classes remain responsible
+    # for runtime tint/two-tone treatment.
     root=ET.fromstring(source.read_bytes())
     if root.tag != f"{{{ANDROID_NS}}}vector":
         raise RuntimeError(f"not a VectorDrawable: {source}")
+
+    tint_attr=f"{{{ANDROID_NS}}}tint"
+    if tint_attr in root.attrib:
+        # Material Symbols Android XML normally uses ?attr/colorControlNormal.
+        # The probe must not import that theme ownership into ColorOS.
+        root.attrib.pop(tint_attr)
+
+    color_attrs={
+        f"{{{ANDROID_NS}}}fillColor",
+        f"{{{ANDROID_NS}}}strokeColor",
+    }
     for node in root.iter():
-        for attr,value in node.attrib.items():
+        for attr,value in list(node.attrib.items()):
+            if attr in color_attrs and value=="@android:color/white":
+                node.attrib[attr]="#FFFFFFFF"
+                continue
             if value.startswith("@") or value.startswith("?"):
                 raise RuntimeError(
                     f"unexpected external resource reference {attr}={value} in {source}"
