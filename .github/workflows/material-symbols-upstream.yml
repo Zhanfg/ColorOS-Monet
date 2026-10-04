@@ -19,6 +19,10 @@ on:
       - "tools/resolve_coloros17_icon_sources.py"
       - "tools/suggest_material_symbol_matches.py"
       - "tools/materialize_material_symbol_assets.py"
+      - "compat/material-symbols/setupdesign.source"
+      - "compat/material-symbols/native_expressive_provenance.tsv"
+      - "tools/verify_setupdesign_upstream.py"
+      - "tools/lint_coloros17_settings_expressive_wrappers.py"
       - ".github/workflows/material-symbols-upstream.yml"
   workflow_dispatch:
 
