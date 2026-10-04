@@ -59,3 +59,14 @@ instead of swapping unrelated glyphs.
 
 `NEEDS_REVIEW` rows are documentation only and must never be emitted into an
 RRO automatically.
+
+
+## OPlus Settings homepage exclusion
+
+The current ColorOS 17 `top_level_settings_oplus.xml` has its own icon-treatment contract:
+41/42 icon-bearing preferences opt into OPlus two-tone handling and none directly references a `*_expressive` icon name.
+
+Therefore the Settings homepage must not be bulk-generated from Material Symbols.
+Material Symbols may only fill an individually verified glyph gap after the OPlus preference consumer is traced.
+
+See `docs/COLOROS17_OPLUS_HOMEPAGE_ICON_PIPELINE.md`.
