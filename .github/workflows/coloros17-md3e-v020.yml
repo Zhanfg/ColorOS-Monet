@@ -14,6 +14,7 @@ on:
       - "tools/lint_coloros17_component_policy.py"
       - "tools/lint_settings_icon_bridge.py"
       - "tools/lint_coloros17_settings_icon_gate.py"
+      - "tools/lint_settings_expressive_component_catalog.py"
       - "experiments/build_settings_homepage_icon_bridge.py"
       - "experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh"
       - ".github/workflows/coloros17-md3e-v020.yml"
@@ -45,6 +46,7 @@ jobs:
           python tools/lint_coloros17_component_policy.py
           python tools/lint_settings_icon_bridge.py
           python tools/lint_coloros17_settings_icon_gate.py
+          python tools/lint_settings_expressive_component_catalog.py
           grep -q '^md3e_semantic=0$' module/config/default.conf
           bash -n             module/customize.sh             module/service.sh             module/action.sh             module/uninstall.sh             module/bin/coloros-monet-doctor             experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh
 
