@@ -1,0 +1,7 @@
+repository=https://github.com/google/material-design-icons.git
+ref=737e3324305806514d7909874fa1818ae1808232
+branch=master
+android_symbols_root=symbols/android
+preferred_family=materialsymbolsrounded
+license=Apache-2.0
+symbol_directory_count=4150
