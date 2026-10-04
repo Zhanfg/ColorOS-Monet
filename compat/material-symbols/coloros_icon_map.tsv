@@ -11,7 +11,7 @@ com.android.settings	ic_vpn_key	vpn_key	vpn_key	materialsymbolsrounded	24	base	f
 com.android.settings	ic_settings_24dp	settings	settings	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_bluetooth_disabled	bluetooth_disabled	bluetooth_disabled	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_lock_open_24dp	lock_open	lock_open	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
-com.android.settings	ic_volume_up_filled	volume_up	volume_up	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.settings	ic_volume_up_filled	volume_up	volume_up	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native Expressive source takes precedence: ic_volume_up_expressive; Material Symbol retained only as fallback reference
 com.android.settings	ic_add_circle	add_circle	add_circle	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_person_add	person_add	person_add	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.settings	ic_add_a_photo	add_a_photo	add_a_photo	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
@@ -33,7 +33,7 @@ com.android.settings	ic_settings_ethernet	settings_ethernet	settings_ethernet	ma
 com.android.settings	ic_settings_security	security	security	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native expressive sibling exists: ic_settings_security_expressive; Material Symbol retained only as fallback reference
 com.android.settings	settings_storage_ic	storage	storage	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic storage semantic
 com.android.settings	ic_accessibility_new	accessibility	accessibility_new	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact upstream symbol exists
-com.android.systemui	ic_call	call	call	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
+com.android.systemui	ic_call	call	call	materialsymbolsrounded	24	base	fill1	KEEP_NATIVE	HIGH	native Expressive source takes precedence: ic_phone_expressive; Material Symbol retained only as fallback reference
 com.android.systemui	ic_menu	menu	menu	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.systemui	ic_alarm	alarm	alarm	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	exact generic system semantic
 com.android.systemui	affordance_camera_icon	camera	camera	materialsymbolsrounded	24	base	fill1	NEEDS_REVIEW	HIGH	generic lockscreen camera affordance
