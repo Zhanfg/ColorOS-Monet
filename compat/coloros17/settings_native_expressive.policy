@@ -1,0 +1,14 @@
+# Settings native Expressive activation policy
+status=EXPERIMENT_ONLY
+gate=SettingsThemeHelper.isExpressiveTheme
+debug_override_property=is_expressive_design_enabled
+aconfig_package=com.android.settingslib.widget.theme.flags
+aconfig_flag=is_expressive_design_enabled
+min_sdk=36
+shipping_default=off
+boot_write=forbidden
+monet_theme_style_write=forbidden
+force_stop=forbidden
+package_wide_card_hook=forbidden
+package_wide_list_hook=forbidden
+validation=OPlus_XML_plus_runtime_visual_trace_required

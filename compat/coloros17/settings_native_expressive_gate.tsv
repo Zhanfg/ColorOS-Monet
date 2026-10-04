@@ -1,0 +1,13 @@
+layer	owner	gate_or_method	behavior	confidence
+sdk_gate	com.android.settingslib.widget.SettingsThemeHelper	SDK_INT >= 36	Expressive path is disabled below Android 16/Baklava API level	HIGH
+debug_override	com.android.settingslib.widget.SettingsThemeHelper	SystemProperties.getBoolean("is_expressive_design_enabled", false)	true short-circuits the native Expressive gate on	HIGH
+activity_override	com.android.settingslib.widget.ExpressiveDesignEnabledProvider	isExpressiveDesignEnabled()	Activity may decide after system-property override is false	HIGH
+aconfig_default	com.android.settingslib.widget.theme.flags.FeatureFlagsImpl	Aconfig package com.android.settingslib.widget.theme.flags / flag is_expressive_design_enabled	Native fallback feature flag	HIGH
+setupwizard_guard	com.android.settings.core.SettingsBaseActivity	isExpressiveDesignEnabled()	Setup Wizard returns expressive only when setupwizard.theme startsWith glif_expressive	HIGH
+fragment_adapter	com.android.settingslib.widget.SettingsBasePreferenceFragment	onCreateAdapter()	Expressive => SettingsPreferenceGroupAdapter	HIGH
+fragment_divider	com.android.settingslib.widget.SettingsBasePreferenceFragment	onViewCreated()	Expressive => setDivider(null) + MarginItemDecoration	HIGH
+group_model	com.android.settingslib.widget.SettingsPreferenceGroupAdapter	buildItemPositionStates()	Builds first/middle/last/single states by actual section/group boundaries	HIGH
+group_background	com.android.settingslib.widget.SettingsPreferenceGroupAdapter	updateBackground()	Uses stateful round background and preserves native group position semantics	HIGH
+homepage_icon	com.android.settings.dashboard.DashboardFeatureProviderImpl	setPreferenceIcon()/getExpressiveHomepageIcon()	Expressive homepage tile => native icon normalized + category foreground/background rounded AdaptiveIcon	HIGH
+coloros_home_activity	com.oplus.settings.feature.homepage.OplusSettingsHomepageActivity	BaseHomePageImpl.getSwitchDefaultFragment()	Creates OplusTopLevelSettings	HIGH
+coloros_home_fragment	com.oplus.settings.feature.homepage.OplusTopLevelSettings	getPreferenceScreenResId()	Uses xml/top_level_settings_oplus, but still inherits SettingsBasePreferenceFragment adapter path	HIGH
