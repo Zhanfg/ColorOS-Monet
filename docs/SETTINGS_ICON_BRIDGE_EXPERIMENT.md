@@ -17,7 +17,7 @@ Redirect rows already classified `NATIVE_EXPRESSIVE` to the exact
 
 `material`
 
-Replace only rows classified `MATERIAL_SYMBOL_CANDIDATE` with the pinned
+Replace only rows whose preferred source is `MATERIAL_SYMBOL` with the pinned
 official Google Material Symbols Rounded 24px base glyph.
 
 `combined`

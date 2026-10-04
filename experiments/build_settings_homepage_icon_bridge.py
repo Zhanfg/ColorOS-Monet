@@ -9,7 +9,7 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
-MAP = ROOT / "compat/coloros17/settings_oplus_homepage_icons.tsv"
+MAP = ROOT / "compat/material-symbols/settings_homepage_full_source_map.tsv"
 LOCK = ROOT / "compat/material-symbols/upstream.lock"
 FAMILY = "materialsymbolsrounded"
 SIZE = "24"
@@ -24,8 +24,21 @@ def run(*args: object) -> None:
 
 def rows(path: Path) -> list[dict[str,str]]:
     with path.open(encoding="utf-8",newline="") as f:
-        lines=[line for line in f if line.strip() and not line.lstrip().startswith("#")]
-    return list(csv.DictReader(lines,delimiter="\t"))
+        return list(csv.DictReader(f,delimiter="\t"))
+
+def target_drawables(aapt2: Path, settings_apk: Path) -> set[str]:
+    text=subprocess.run(
+        [str(aapt2),"dump","resources","--no-values",str(settings_apk)],
+        check=True,text=True,stdout=subprocess.PIPE
+    ).stdout
+    out=set()
+    for line in text.splitlines():
+        line=line.strip()
+        if " drawable/" not in line or not line.startswith("resource "):
+            continue
+        name=line.rsplit(" drawable/",1)[1].removesuffix(" PUBLIC")
+        out.add(name)
+    return out
 
 def lock_values(path: Path) -> dict[str,str]:
     out={}
@@ -98,20 +111,29 @@ def main() -> int:
         drawables.mkdir(parents=True)
 
         aliases=['<?xml version="1.0" encoding="utf-8"?>',"<resources>"]
+        available=target_drawables(args.aapt2,args.settings_apk)
 
         for row in rows(MAP):
-            action=row["action"]
+            source_kind=row["preferred_source"]
             source=drawable_name(row["current_icon"])
-            candidate=drawable_name(row["candidate"])
-            if action=="NATIVE_EXPRESSIVE" and args.mode in ("native","combined"):
+            candidate=drawable_name(row["preferred_candidate"])
+
+            if source not in available:
+                raise RuntimeError(f"target drawable missing: {source} ({row['key']})")
+
+            if source_kind=="NATIVE_EXPRESSIVE" and args.mode in ("native","combined"):
                 if row["confidence"]!="HIGH":
                     continue
+                if candidate not in available:
+                    raise RuntimeError(
+                        f"native Expressive candidate missing: {candidate} ({row['key']})"
+                    )
                 aliases.append(
                     f'    <item type="drawable" name="{source}">'
                     f'@*com.android.settings:drawable/{candidate}</item>'
                 )
                 selected.append((row["key"],source,candidate,"NATIVE_EXPRESSIVE"))
-            elif action=="MATERIAL_SYMBOL_CANDIDATE" and args.mode in ("material","combined"):
+            elif source_kind=="MATERIAL_SYMBOL" and args.mode in ("material","combined"):
                 if row["confidence"] not in ("HIGH","MEDIUM") or not candidate:
                     continue
                 xml=vector_source(args.material_upstream,candidate)
