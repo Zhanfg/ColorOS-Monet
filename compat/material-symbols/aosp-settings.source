@@ -1,11 +1,10 @@
 repository=https://android.googlesource.com/platform/packages/apps/Settings
 branch=android17-release
-branch_ref=refs/heads/android17-release
-pinned_commit=213829fb67f5e070029e0513a088f31bc8f5c1ed
-pinned_tree=f41bf360ab496bb4c018a33f93b74858b8ed223c
+release_tag=android-17.0.0_r1
+release_commit=213829fb67f5e070029e0513a088f31bc8f5c1ed
 manifest_repository=https://android.googlesource.com/platform/manifest
-manifest_ref=refs/heads/android17-release
-manifest_commit=29ace668ae756c7b8917c57abb440f6518844b0c
-verified_expressive_files=6
-status=pinned
+manifest_ref=refs/heads/android-latest-release
+manifest_commit=ad156f32caaa06dae91c02d443f6a8fe210eaa54
+manifest_android17_release_commit=29ace668ae756c7b8917c57abb440f6518844b0c
+status=verified
 purpose=Android 17 Settings and SettingsLib Expressive integration reference
