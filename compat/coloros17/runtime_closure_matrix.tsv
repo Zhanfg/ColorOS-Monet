@@ -1,0 +1,9 @@
+gate	static_status	v3_evidence	next_action_if_closed	next_action_if_open
+settings_native_expressive_gate	PROVEN_STATIC	A/B sanitized UI hierarchy + screenshots	adopt native gate as Settings-first implementation path	build tiny process-scoped diagnostic trace
+settings_grouped_cards	PROVEN_NATIVE_CONTINUOUS	A/B + grouped/Expressive XML	keep COUI grouping; whitelist only proven Expressive components	no segmented hook
+historical_mCardBackgroundColor	FIELD_EXISTS_IN_ANALYZED_SUPERCLASS	APK hash + targeted exception stack	retarget exact failing loader/version or delete stale hook	instrument exact classloader only
+uxdesign_theme_ownership	PRODUCER_FLOW_PROVEN_STATIC	theme JSON + package hash	consume active native colors; user remains owner	trace one user theme change before any mutation
+systemui_media	PLUGIN_TOPOLOGY_PROVEN_STATIC	plugin XML + manifest/resources + runtime logs	define exact plugin root/binder contract	narrow plugin runtime trace
+systemui_qs	NATIVE_STATE_OWNER_PROVEN_STATIC	SystemUI runtime class/log evidence	augment exact verified tile consumer only	narrow QS instance trace
+systemui_volume	OPLUS_PROVIDER_AND_HELPERS_PROVEN_STATIC	runtime logs + window/surface evidence	bind semantic augmentation to live OPlus owner	narrow OplusVolumeDialogImpl lifecycle trace
+systemui_notification	MULTI_LAYER_OWNER_PROVEN_STATIC	SystemUI runtime class/log evidence	separate card/state/focus contracts	narrow notification card-type trace
