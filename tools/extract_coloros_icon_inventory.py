@@ -87,9 +87,16 @@ def main() -> int:
     p.add_argument("--targets", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--package", action="append", dest="packages")
+    p.add_argument(
+        "--all-packages",
+        action="store_true",
+        help="Inventory every package in the supplied target dump instead of the default system UI subset.",
+    )
     args = p.parse_args()
 
-    packages = set(args.packages or DEFAULT_PACKAGES)
+    if args.all_packages and args.packages:
+        raise SystemExit("--all-packages and --package cannot be used together")
+    packages = None if args.all_packages else set(args.packages or DEFAULT_PACKAGES)
     rows = []
 
     with tempfile.TemporaryDirectory(prefix="cos17-icon-inventory-") as td:
@@ -105,7 +112,7 @@ def main() -> int:
             badging = run(args.aapt2, "dump", "badging", apk)
             match = PACKAGE_RE.search(badging)
             package = match.group(1) if match else ""
-            if package not in packages:
+            if packages is not None and package not in packages:
                 continue
 
             resources = run(args.aapt2, "dump", "resources", "--no-values", apk)
