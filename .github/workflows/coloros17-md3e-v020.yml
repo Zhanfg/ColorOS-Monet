@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - "coloros17-md3e-v0.2.0"
+    paths:
+      - "module/**"
+      - "compat/coloros17/**"
+      - "tools/package_module.py"
+      - "tools/build_coloros17_semantic_accent.py"
+      - "tools/lint_coloros17_semantic_policy.py"
+      - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
 
 permissions:
