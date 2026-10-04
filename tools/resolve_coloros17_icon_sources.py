@@ -130,6 +130,18 @@ def main() -> int:
             confidence = mat["confidence"] if mat else "HIGH"
             gate = "NO_AUTOMATIC_REPLACEMENT"
 
+        prov = provenance.get((package, selected), {}) if selected else {}
+        upstream_owner = prov.get("upstream_source", "")
+        provenance_status = prov.get("status", "")
+        upstream_path = prov.get("upstream_path", "")
+
+        if source.startswith("GOOGLE_MATERIAL_SYMBOL") or "MATERIAL_SYMBOL" in source:
+            upstream_owner = "GOOGLE_MATERIAL_SYMBOLS"
+            provenance_status = "PINNED_UPSTREAM_CATALOG"
+        elif source.startswith("KEEP_NATIVE") and not upstream_owner:
+            upstream_owner = "COLOROS_NATIVE"
+            provenance_status = provenance_status or "NATIVE_OWNER"
+
         out.append([
             package,
             base,
@@ -139,6 +151,9 @@ def main() -> int:
             confidence,
             gate,
             material_fallback,
+            upstream_owner,
+            provenance_status,
+            upstream_path,
         ])
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -147,6 +162,7 @@ def main() -> int:
         w.writerow([
             "target_package","base_resource","semantic_role","preferred_source",
             "selected_asset_or_symbol","confidence","gate","material_fallback",
+            "upstream_owner","provenance_status","upstream_path",
         ])
         w.writerows(out)
 
