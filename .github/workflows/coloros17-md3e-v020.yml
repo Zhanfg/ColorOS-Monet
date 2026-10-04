@@ -9,9 +9,13 @@ on:
       - "compat/coloros17/**"
       - "tools/package_module.py"
       - "tools/build_coloros17_semantic_accent.py"
+      - "tools/classify_legacy_overlay_resources.py"
       - "tools/lint_coloros17_semantic_policy.py"
       - "tools/lint_coloros17_component_policy.py"
+      - "tools/lint_settings_icon_bridge.py"
       - "tools/lint_coloros17_settings_icon_gate.py"
+      - "experiments/build_settings_homepage_icon_bridge.py"
+      - "experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh"
       - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
 
@@ -36,15 +40,13 @@ jobs:
       - name: Validate sources and architecture policy
         shell: bash
         run: |
-          python -m py_compile             tools/package_module.py             tools/build_coloros17_semantic_accent.py             tools/classify_legacy_overlay_resources.py             tools/lint_coloros17_semantic_policy.py             tools/lint_coloros17_component_policy.py \
-            tools/lint_settings_icon_bridge.py \
-            tools/lint_coloros17_settings_icon_gate.py
+          python -m py_compile             tools/package_module.py             tools/build_coloros17_semantic_accent.py             tools/classify_legacy_overlay_resources.py             tools/lint_coloros17_semantic_policy.py             tools/lint_coloros17_component_policy.py             tools/lint_settings_icon_bridge.py             tools/lint_coloros17_settings_icon_gate.py             experiments/build_settings_homepage_icon_bridge.py
           python tools/lint_coloros17_semantic_policy.py
           python tools/lint_coloros17_component_policy.py
           python tools/lint_settings_icon_bridge.py
           python tools/lint_coloros17_settings_icon_gate.py
           grep -q '^md3e_semantic=0$' module/config/default.conf
-          bash -n             module/customize.sh             module/service.sh             module/action.sh             module/uninstall.sh             module/bin/coloros-monet-doctor
+          bash -n             module/customize.sh             module/service.sh             module/action.sh             module/uninstall.sh             module/bin/coloros-monet-doctor             experiments/ColorOS17_SettingsNativeExpressive_Toggle_v1.sh
 
       - name: Install Android 17 SDK
         shell: bash
@@ -75,7 +77,7 @@ jobs:
           unzip -l dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip > dist/module-files.txt
           grep -q 'payload/semantic-accent-manifest.tsv' dist/module-files.txt
           grep -q 'bin/coloros-monet-doctor' dist/module-files.txt
-          if grep -Eq 'native-foundation|payload/overlays/.+\.apk|coloros17-expressive-style|XMonet|TIMMonet|CoolapkMonet|ColorOSSettingsMonet|patch_coe_nativefirst_p0' dist/module-files.txt; then
+          if grep -Eq 'native-foundation|payload/overlays/.+\.apk|coloros17-expressive-style|XMonet|TIMMonet|CoolapkMonet|ColorOSSettingsMonet|patch_coe_nativefirst_p0|SettingsNativeExpressive' dist/module-files.txt; then
             echo "forbidden legacy/experimental payload found in clean module"
             exit 1
           fi
