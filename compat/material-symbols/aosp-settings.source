@@ -1,7 +1,7 @@
 repository=https://android.googlesource.com/platform/packages/apps/Settings
-branch=android17-release
-manifest_repository=https://android.googlesource.com/platform/manifest
-manifest_ref=refs/heads/android-latest-release
-manifest_commit=ad156f32caaa06dae91c02d443f6a8fe210eaa54
-status=branch-pinned-exact-settings-commit-pending
-purpose=Android Settings and SettingsLib Expressive integration reference
+stable_tag=android-17.0.0_r1
+stable_commit=213829fb67f5e070029e0513a088f31bc8f5c1ed
+moving_branch=android17-release
+license=Apache-2.0
+purpose=Android 17 Settings and SettingsLib Expressive integration reference
+policy=pin_stable_tag_for_reproducible_structure_compare; track moving_branch separately for later Android17 fixes
