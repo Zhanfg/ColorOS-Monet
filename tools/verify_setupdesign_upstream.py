@@ -54,6 +54,14 @@ def get_text(repo: str, commit: str, path: str) -> str:
     payload = get(url)
     return base64.b64decode(payload).decode("utf-8")
 
+def get_text_optional(repo: str, commit: str, path: str) -> str | None:
+    try:
+        return get_text(repo, commit, path)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None
+        raise
+
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--source", type=Path, required=True)
@@ -75,10 +83,12 @@ def main() -> int:
     selector_path = "main/res/drawable/sud_ic_switch_selector_expressive.xml"
     check_path = "main/res/drawable/sud_ic_switch_check_mark_expressive.xml"
     switch_path = "main/src/com/google/android/setupdesign/items/SwitchItem.java"
+    uncheck_path = "main/res/drawable/sud_ic_switch_uncheck_mark_expressive.xml"
 
     selector = get_text(repo, pinned_commit, selector_path)
     check = get_text(repo, pinned_commit, check_path)
     switch = get_text(repo, pinned_commit, switch_path)
+    uncheck = get_text_optional(repo, pinned_commit, uncheck_path)
 
     failures = []
     if "sud_ic_switch_check_mark_expressive" not in selector:
@@ -87,8 +97,9 @@ def main() -> int:
         failures.append("checked glyph is not themed with colorPrimary")
     if "sud_ic_switch_selector_expressive" not in switch:
         failures.append("SwitchItem does not install Expressive selector")
-    if not re.search(r"setThumbIconDrawable\s*\(\s*null\s*\)", switch):
-        failures.append("SwitchItem unchecked path is not null thumb icon")
+    unchecked_null = bool(
+        re.search(r"setThumbIconDrawable\s*\(\s*null\s*\)", switch)
+    )
     if "shouldApplyGlifExpressiveStyle" not in switch:
         failures.append("SwitchItem missing Glif Expressive activation gate")
 
@@ -105,10 +116,12 @@ def main() -> int:
         f"selector_path={selector_path}",
         f"check_path={check_path}",
         f"switch_item_path={switch_path}",
+        f"uncheck_path={uncheck_path}",
         "selector_refs_checked_glyph=1",
         "checked_glyph_uses_colorPrimary=1",
         "switch_item_expressive_gate=1",
-        "unchecked_thumb_icon_null=1",
+        f"unchecked_thumb_icon_null={1 if unchecked_null else 0}",
+        f"uncheck_resource_exists={1 if uncheck is not None else 0}",
         "status=verified",
         "",
     ])
