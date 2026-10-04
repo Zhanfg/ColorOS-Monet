@@ -6,6 +6,8 @@ on:
       - "coloros17-md3e-v0.2.0"
     paths:
       - "compat/material-symbols/upstream.lock"
+      - "compat/material-symbols/upstream_manifest.lock"
+      - "tools/lint_upstream_manifest.py"
       - "compat/material-symbols/coloros_icon_map.tsv"
       - "compat/coloros17/settings_oplus_homepage_icons.tsv"
       - "compat/material-symbols/settings_homepage_full_source_map.tsv"
@@ -47,6 +49,7 @@ jobs:
       - name: Validate icon-mapping tools
         run: |
           python -m py_compile \
+            tools/lint_upstream_manifest.py \
             tools/verify_material_symbols_upstream_api.py \
             tools/resolve_coloros17_icon_sources.py \
             tools/suggest_material_symbol_matches.py \
@@ -58,6 +61,9 @@ jobs:
             tools/build_oplus_homepage_icon_review_pack.py \
             tools/validate_settings_homepage_source_map.py \
             tools/lint_coloros17_settings_expressive_wrappers.py
+
+      - name: Validate pinned upstream manifest
+        run: python tools/lint_upstream_manifest.py
 
       - name: Verify pinned Google Material Symbols through GitHub API
         env:
