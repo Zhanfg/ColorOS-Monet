@@ -10,6 +10,7 @@ on:
       - "tools/package_module.py"
       - "tools/build_coloros17_semantic_accent.py"
       - "tools/lint_coloros17_semantic_policy.py"
+      - "tools/lint_coloros17_component_policy.py"
       - ".github/workflows/coloros17-md3e-v020.yml"
   workflow_dispatch:
 
@@ -21,39 +22,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Validate sources and semantic policy
+      - name: Validate sources and architecture policy
         shell: bash
         run: |
-          python -m py_compile \
-            tools/package_module.py \
-            tools/build_coloros17_semantic_accent.py \
-            tools/classify_legacy_overlay_resources.py \
-            tools/lint_coloros17_semantic_policy.py \
-            tools/lint_coloros17_component_policy.py
+          python -m py_compile             tools/package_module.py             tools/build_coloros17_semantic_accent.py             tools/classify_legacy_overlay_resources.py             tools/lint_coloros17_semantic_policy.py             tools/lint_coloros17_component_policy.py
           python tools/lint_coloros17_semantic_policy.py
           python tools/lint_coloros17_component_policy.py
-          grep -q '^md3e_semantic=0
-          bash -n \
-            module/customize.sh \
-            module/service.sh \
-            module/action.sh \
-            module/uninstall.sh \
-            module/bin/coloros-monet-doctor
+          grep -q '^md3e_semantic=0$' module/config/default.conf
+          bash -n             module/customize.sh             module/service.sh             module/action.sh             module/uninstall.sh             module/bin/coloros-monet-doctor
 
       - name: Install Android 17 SDK
         shell: bash
         run: |
           SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
+          "$SDKMANAGER" --channel=3             "platforms;android-37.0"             "build-tools;37.0.0"
 
       - name: Build conservative MD3E semantic accent layer
         run: >-
@@ -77,7 +70,7 @@ jobs:
           unzip -l dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip > dist/module-files.txt
           grep -q 'payload/semantic-accent-manifest.tsv' dist/module-files.txt
           grep -q 'bin/coloros-monet-doctor' dist/module-files.txt
-          if grep -Eq 'native-foundation|payload/overlays/.+\.apk|coloros17-expressive-style|XMonet|TIMMonet|CoolapkMonet|ColorOSSettingsMonet' dist/module-files.txt; then
+          if grep -Eq 'native-foundation|payload/overlays/.+\.apk|coloros17-expressive-style|XMonet|TIMMonet|CoolapkMonet|ColorOSSettingsMonet|patch_coe_nativefirst_p0' dist/module-files.txt; then
             echo "forbidden legacy/experimental payload found in clean module"
             exit 1
           fi
@@ -85,70 +78,7 @@ jobs:
       - name: Hash artifacts
         shell: bash
         run: |
-          sha256sum \
-            dist/ColorOS17-MD3E-SemanticAccent.zip \
-            dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip \
-            > dist/SHA256SUMS
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ColorOS17-MD3E-v0.2.0-alpha3
-          path: |
-            dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip
-            dist/ColorOS17-MD3E-SemanticAccent.zip
-            dist/SHA256SUMS
-            dist/module-files.txt
-            dist/semantic-accent/*.apk
-            dist/semantic-accent/semantic-accent-manifest.tsv
- module/config/default.conf
-          bash -n \
-            module/customize.sh \
-            module/service.sh \
-            module/action.sh \
-            module/uninstall.sh \
-            module/bin/coloros-monet-doctor
-
-      - name: Install Android 17 SDK
-        shell: bash
-        run: |
-          SDKMANAGER=/usr/local/lib/android/sdk/cmdline-tools/latest/bin/sdkmanager
-          yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
-
-      - name: Build conservative MD3E semantic accent layer
-        run: >-
-          python tools/build_coloros17_semantic_accent.py
-          --version 0.2.0-alpha3
-          --version-code 26100401
-          --output dist/ColorOS17-MD3E-SemanticAccent.zip
-
-      - name: Package clean ColorOS 17 module
-        run: >-
-          python tools/package_module.py
-          --variant debug
-          --version 0.2.0-alpha3
-          --version-code 26100401
-          --semantic-accent-dir dist/semantic-accent
-          --output dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip
-
-      - name: Verify shipping boundaries
-        shell: bash
-        run: |
-          unzip -l dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip > dist/module-files.txt
-          grep -q 'payload/semantic-accent-manifest.tsv' dist/module-files.txt
-          grep -q 'bin/coloros-monet-doctor' dist/module-files.txt
-          if grep -Eq 'native-foundation|payload/overlays/.+\.apk|coloros17-expressive-style|XMonet|TIMMonet|CoolapkMonet|ColorOSSettingsMonet' dist/module-files.txt; then
-            echo "forbidden legacy/experimental payload found in clean module"
-            exit 1
-          fi
-
-      - name: Hash artifacts
-        shell: bash
-        run: |
-          sha256sum \
-            dist/ColorOS17-MD3E-SemanticAccent.zip \
-            dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip \
-            > dist/SHA256SUMS
+          sha256sum             dist/ColorOS17-MD3E-SemanticAccent.zip             dist/ColorOS-Monet-v0.2.0-alpha3-COS17-clean.zip             > dist/SHA256SUMS
 
       - uses: actions/upload-artifact@v4
         with:
