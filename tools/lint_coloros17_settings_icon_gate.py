@@ -12,8 +12,25 @@ HOMEPAGE = ROOT / "compat/coloros17/settings_oplus_homepage_icons.tsv"
 
 def rows(path: Path):
     with path.open(encoding="utf-8", newline="") as f:
-        raw = [line for line in f if line.strip() and not line.lstrip().startswith("#")]
-    return list(csv.DictReader(raw, delimiter="\t"))
+        lines = [line.rstrip("\n") for line in f if line.strip()]
+
+    header = None
+    body = []
+    for line in lines:
+        stripped = line.lstrip()
+        if header is None and stripped.startswith("#") and "\t" in stripped:
+            header = stripped.lstrip("#").strip()
+            continue
+        if stripped.startswith("#"):
+            continue
+        if header is None:
+            header = line
+            continue
+        body.append(line)
+
+    if header is None:
+        return []
+    return list(csv.DictReader([header, *body], delimiter="\t"))
 
 def drawable_name(value: str) -> str:
     value = (value or "").strip()
