@@ -142,3 +142,18 @@ Allowed actions:
 The Google Material Symbols / Material Icons repository is distributed under
 Apache License 2.0. Keep the upstream license/attribution metadata when
 redistributing assets.
+
+
+## Source precedence with native Expressive assets
+
+Material Symbols remains the canonical generic glyph repository, but it is not
+the first replacement source for every ColorOS component.
+
+For the current ColorOS 17 build use:
+
+1. current ColorOS `*_expressive` / `settingslib_expressive_*` resource;
+2. AOSP Settings/SettingsLib `android17-release` as the component integration reference;
+3. pinned Google Material Symbol as the generic glyph fallback;
+4. otherwise keep the native OEM drawable.
+
+See `docs/COLOROS17_NATIVE_EXPRESSIVE_ASSETS.md`.
