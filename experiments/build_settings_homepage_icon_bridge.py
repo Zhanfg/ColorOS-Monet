@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
 MAP = ROOT / "compat/material-symbols/settings_homepage_full_source_map.tsv"
+WRAPPERS = ROOT / "compat/material-symbols/coloros17_settings_expressive_wrappers.tsv"
 LOCK = ROOT / "compat/material-symbols/upstream.lock"
 FAMILY = "materialsymbolsrounded"
 SIZE = "24"
@@ -25,6 +26,10 @@ def run(*args: object) -> None:
 def rows(path: Path) -> list[dict[str,str]]:
     with path.open(encoding="utf-8",newline="") as f:
         return list(csv.DictReader(f,delimiter="\t"))
+
+def wrapper_map(path: Path) -> dict[str, dict[str, str]]:
+    with path.open(encoding="utf-8", newline="") as f:
+        return {r["expressive_resource"]: r for r in csv.DictReader(f, delimiter="\t")}
 
 def target_drawables(aapt2: Path, settings_apk: Path) -> set[str]:
     text=subprocess.run(
@@ -102,6 +107,11 @@ def main() -> int:
     p.add_argument("--material-upstream",type=Path,required=True)
     p.add_argument("--mode",choices=("native","material","combined"),required=True)
     p.add_argument(
+        "--native-wrapper",
+        action="store_true",
+        help="Use the TintDrawable wrapper itself. Default is the wrapped base glyph so OPlus remains tint owner.",
+    )
+    p.add_argument(
         "--after-native-gate",
         action="store_true",
         help="Acknowledge that the native Settings Expressive A/B gate was tested first.",
@@ -128,6 +138,7 @@ def main() -> int:
         raise RuntimeError(f"Material Symbols checkout mismatch: {git_head} != {pinned}")
 
     selected=[]
+    wrappers = wrapper_map(WRAPPERS)
     with tempfile.TemporaryDirectory(prefix="cos17-settings-icon-bridge-") as td:
         work=Path(td)
         values=work/"res"/"values"
@@ -149,15 +160,30 @@ def main() -> int:
             if source_kind=="NATIVE_EXPRESSIVE" and args.mode in ("native","combined"):
                 if row["confidence"]!="HIGH":
                     continue
-                if candidate not in available:
+                wrapper = wrappers.get(candidate)
+                if not wrapper:
                     raise RuntimeError(
-                        f"native Expressive candidate missing: {candidate} ({row['key']})"
+                        f"native Expressive wrapper provenance missing: {candidate} ({row['key']})"
+                    )
+                selected_resource = candidate
+                selected_kind = "NATIVE_EXPRESSIVE_WRAPPER"
+                if not args.native_wrapper:
+                    selected_resource = drawable_name(wrapper["wrapped_drawable"])
+                    selected_kind = "NATIVE_EXPRESSIVE_BASE_GLYPH"
+                if selected_resource.startswith("@android:"):
+                    raise RuntimeError(
+                        f"framework-owned wrapped glyph is not allowed in OPlus bridge yet: "
+                        f"{selected_resource} ({row['key']})"
+                    )
+                if selected_resource not in available:
+                    raise RuntimeError(
+                        f"native glyph missing: {selected_resource} ({row['key']})"
                     )
                 aliases.append(
                     f'    <item type="drawable" name="{source}">'
-                    f'@*com.android.settings:drawable/{candidate}</item>'
+                    f'@*com.android.settings:drawable/{selected_resource}</item>'
                 )
-                selected.append((row["key"],source,candidate,"NATIVE_EXPRESSIVE"))
+                selected.append((row["key"],source,selected_resource,selected_kind))
             elif source_kind=="MATERIAL_SYMBOL" and args.mode in ("material","combined"):
                 if row["confidence"] not in ("HIGH","MEDIUM") or not candidate:
                     continue
@@ -202,7 +228,11 @@ def main() -> int:
     print(f"selected={len(selected)}")
     for key,source,target,kind in selected:
         print(f"{kind}\t{key}\t{source}\t{target}")
-    print("NOTE=second-stage experiment-only unsigned RRO; native Settings Expressive gate must be tested first")
+    print(
+        "NOTE=second-stage experiment-only unsigned RRO; native Settings Expressive "
+        "gate must be tested first; default native mode uses the wrapped base glyph "
+        "so OPlus tint/two-tone remains the foreground color owner"
+    )
     return 0
 
 if __name__=="__main__":
