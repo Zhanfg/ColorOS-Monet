@@ -35,10 +35,10 @@ Old target来自C，并非另行取得的ColorOS16 DEX。Status 描述提供输�
 | FontHook | OplusQSClock、SimpleQSClock、StatClock/TextView | M SimpleQsClock extends OplusQSClock | 旧SimpleQSClock未定义，新大小写精确不同；全局TextView仍须收窄；HIGH | RETARGET |
 | QsDrawableHook | QSDrawableBuilder/Gradient/MixColor builder + fake refresh | M同builder家族/部分匿名class不同 | nativeflow被重发与drawable替换；HIGH/MEDIUM | REPLACE |
 | ClassicQsHook | OplusQSHighlightTileViewImpl/OplusToggleSliderView | M同类 | 重设QS视觉与native-preservation冲突；HIGH | DELETE |
-| QsHighlightCornerHook | plugin resizeable tiles + Gradient/MixColor/TileDrawableWrapper | P resizeable tiles、M drawables | 横跨plugin及host、固定corner重写；HIGH | DELETE |
-| QsHighlightCornerHookOld | OplusQSResizeableTileViewTwoXOne/OplusQSIconView | P同类 | 与新版corner路径重复且仍替换几何；HIGH | DELETE |
-| QsThreeStageCornerHook | OplusQSThreeStageLayout/RoundRectOutlineProvider | P layout、M outline | 原生stage geometry应保留；HIGH | DELETE |
-| QsVerticalSliderHook | COUIVerticalSeekBar/OplusQsBaseToggleSliderLayout | M base seek、P OplusQsToggleSliderLayout | 跨host/plugin，保留native滑块分工；HIGH | REPLACE |
+| QsHighlightCornerHook | plugin resizeable tiles + Gradient/MixColor/TileDrawableWrapper | M classes4同时包含plugins.qs resizeable tiles及drawables | namespace含plugins不证明独立loader；固定corner重写；HIGH | DELETE |
+| QsHighlightCornerHookOld | OplusQSResizeableTileViewTwoXOne/OplusQSIconView | M classes4同类 | 与新版corner路径重复且仍替换几何；HIGH | DELETE |
+| QsThreeStageCornerHook | OplusQSThreeStageLayout/RoundRectOutlineProvider | M classes4 layout及outline | 原生stage geometry应保留；HIGH | DELETE |
+| QsVerticalSliderHook | COUIVerticalSeekBar/OplusQsBaseToggleSliderLayout | M classes4 base seek及plugins.qs OplusQsToggleSliderLayout | 独立运行loader仍需trace，保留native滑块分工；HIGH | REPLACE |
 | StockVolumeDialogHook | AOSP VolumeDialogImpl/内部类；OplusVolumeModule.provideVolumeDialog | M OplusVolumeDialogImpl→OplusVolumeDialogView；provider未给 | C试图选择/修补AOSP；M OPlus组件链存在，DI选择未给；HIGH/MEDIUM | DELETE |
 | VolumeDialogHook | OplusVolumeDialogImpl、View、SeekBar、anim utils | M同家族 | 存在不等于替换动画/形状兼容；未来仅semantic consumer；HIGH/MEDIUM | REPLACE |
 | VolumeDialogOldHook | OplusVolumeDialogImpl、OplusVolumeRow、COUIVerticalSeekBar | M同家族 | dispatcher明确安装；旧固定corner/动画scope不合格；HIGH | REPLACE |
@@ -109,7 +109,7 @@ Replacement direction:
 | mCardBackgroundColor消失、换field即可 | S field仍存在，实际异常的加载实例不明 | 02 rawdefinition + C reflection | REPLACE package hook；先诊断actualclass |
 | SimpleQSClock可继续使用 | SimpleQsClock大小写、继承链变为已验证目标 | M classdefinition + C FontHook | RETARGET精确类；核对继承method |
 | Monet需2025生成补丁 | native SPEC_2026 + semantic/fixed/custom FRRO | M ctor/controller + C interception | DELETE generation replacement |
-| QS Lottie目标已经搬家 | 同QSIconViewProxy overload在M；P有其他QS组件 | M defs/caller，Cpredicate | REPLACE suppressor；无证据不retarget |
+| QS Lottie目标已经搬家 | 同QSIconViewProxy overload在M；M classes4另有plugins.qs命名的QS组件 | M defs/caller，Cpredicate | REPLACE suppressor；无证据不retarget |
 | AospMediaCardHook是纯AOSP | 早已有plugin watcher，但旧namespace和重建模型 | C constants/callback、P新root | REPLACE |
 | AOSP VolumeDialogImpl是主panel | OplusVolumeDialogImpl→OplusVolumeDialogView；当前DI选择需trace | M UI调用链，见03 | DELETE AOSP selector；component native增强 |
 
