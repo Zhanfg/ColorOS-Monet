@@ -1,0 +1,7 @@
+repository=https://android.googlesource.com/platform/packages/apps/Settings
+branch=android17-release
+manifest_repository=https://android.googlesource.com/platform/manifest
+manifest_ref=refs/heads/android-latest-release
+manifest_commit=ad156f32caaa06dae91c02d443f6a8fe210eaa54
+status=branch-pinned-exact-settings-commit-pending
+purpose=Android Settings and SettingsLib Expressive integration reference
