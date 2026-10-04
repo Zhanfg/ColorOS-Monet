@@ -28,7 +28,8 @@ if [ ! -f "$STATE_FILE" ]; then
     cp -f "$MODPATH/config/default.conf" "$STATE_FILE" || abort "! 无法初始化配置"
 fi
 if ! grep -q '^md3e_semantic=' "$STATE_FILE" 2>/dev/null; then
-    printf '\nmd3e_semantic=1\n' >> "$STATE_FILE"
+    # Migration must preserve the v0.2.0 safe default: opt-in only.
+    printf '\nmd3e_semantic=0\n' >> "$STATE_FILE"
 fi
 chmod 0600 "$STATE_FILE" 2>/dev/null
 [ -f "$DOCTOR" ] && chmod 0755 "$DOCTOR" 2>/dev/null
