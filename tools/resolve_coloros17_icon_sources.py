@@ -26,6 +26,7 @@ def main() -> int:
     p.add_argument("--native-pairs", type=Path, required=True)
     p.add_argument("--native-map", type=Path, required=True)
     p.add_argument("--material-map", type=Path, required=True)
+    p.add_argument("--native-provenance", type=Path)
     p.add_argument("--oplus-homepage", type=Path)
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args()
@@ -62,6 +63,15 @@ def main() -> int:
             "confidence": confidence,
             "notes": notes,
         }
+
+    provenance = {}
+    if args.native_provenance:
+        for row in read_dict_tsv(args.native_provenance):
+            provenance[(row["target_package"], row["expressive_resource"])] = {
+                "upstream_source": row.get("upstream_source", ""),
+                "upstream_path": row.get("upstream_path", ""),
+                "status": row.get("provenance_status", ""),
+            }
 
     homepage = {}
     if args.oplus_homepage:
