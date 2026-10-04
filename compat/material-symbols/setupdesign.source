@@ -1,0 +1,7 @@
+repository=https://android.googlesource.com/platform/external/setupdesign
+release_tag=android-17.0.0_r1
+release_tag_object=10d0984f311350d86cd69408a9b5970f75e00385
+release_commit=79dbf5860322236cd02e74e2ca0855591d95195c
+license=Apache-2.0
+purpose=SetupDesign/Glif Expressive components used by SUD resources
+verification_note=official Android 17 release tag is pinned; switch selector/check resource family is corroborated by AOSP-derived SetupDesign source

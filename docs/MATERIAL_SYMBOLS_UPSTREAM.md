@@ -157,3 +157,18 @@ For the current ColorOS 17 build use:
 4. otherwise keep the native OEM drawable.
 
 See `docs/COLOROS17_NATIVE_EXPRESSIVE_ASSETS.md`.
+
+
+## SetupDesign / SUD exception
+
+Resources prefixed with `sud_` belong to Android SetupDesign/Glif, not to the
+generic Material Symbols catalog. The Android 17 SetupDesign release is pinned
+in `compat/material-symbols/setupdesign.source`.
+
+For these resources the source order is:
+
+ColorOS native SUD resource -> AOSP SetupDesign component contract -> keep
+native extension.
+
+Do not route a SUD switch/control resource into generic Material Symbol
+matching.
