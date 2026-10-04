@@ -42,10 +42,13 @@ The experiment builder now refuses to build unless
 
 ## Why
 
-Android 17's native `DashboardFeatureProviderImpl` Expressive path can wrap,
-normalize and tint the existing homepage glyph inside the native Expressive
-container. Replacing the inner glyph before testing that path would combine two
-changes and make regressions impossible to attribute.
+The Android 17 native Settings Expressive gate can change SettingsLib
+group/component behavior, while the 42 static ColorOS homepage glyphs remain
+OPlus-owned unless proven otherwise. AOSP `DashboardFeatureProviderImpl`
+does provide Expressive normalization for dynamic/injected Dashboard Tiles,
+but that path is not evidence that the 42 static `top_level_settings_oplus.xml`
+rows use it. Replacing glyphs before testing the native gate would combine two
+independent changes and make regressions impossible to attribute.
 
 Therefore the order is:
 
