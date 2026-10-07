@@ -113,6 +113,40 @@ internal object RootShell {
             [ -d "${d}OUR" ] && touch "${d}OUR/disable" 2>/dev/null || true
             rm -rf /data/adb/modules_update/coloros_artplus_auto_generated 2>/dev/null || true
 
+            is_mount() {
+              p="${d}1"
+              awk -v p="${d}p" '${d}5 == p { found=1 } END { exit(found ? 0 : 1) }' /proc/self/mountinfo 2>/dev/null
+            }
+
+            mount_source() {
+              p="${d}1"
+              root="${d}(awk -v p="${d}p" '${d}5 == p { root=${d}4 } END { if (root != "") print root }' /proc/self/mountinfo 2>/dev/null)"
+              case "${d}root" in
+                /adb/*) echo "/data${d}root" ;;
+                *) echo "${d}root" ;;
+              esac
+            }
+
+            remove_known() {
+              dir="${d}1"
+              [ -d "${d}dir" ] || return 0
+              for name in ${d}KNOWN; do
+                rm -f "${d}dir/${d}name" 2>/dev/null || true
+              done
+            }
+
+            copy_backup() {
+              srcdir="${d}1"
+              dstdir="${d}2"
+              mkdir -p "${d}dstdir" 2>/dev/null || true
+              for src in "${d}srcdir"/*; do
+                [ -f "${d}src" ] || continue
+                [ "${d}(basename "${d}src")" = ".captured" ] && continue
+                cp -f "${d}src" "${d}dstdir/" 2>/dev/null || return 1
+              done
+              return 0
+            }
+
             am force-stop com.android.launcher >/dev/null 2>&1 || true
 
             count=0
@@ -122,39 +156,48 @@ internal object RootShell {
 
               pkg="${d}(basename "${d}bak")"
               dst="${d}TARGET/${d}pkg"
-              mkdir -p "${d}dst" 2>/dev/null || true
+              srcroot=""
 
-              ok=1
-              for name in ${d}KNOWN; do
-                rm -f "${d}dst/${d}name" 2>/dev/null || ok=0
-              done
+              if is_mount "${d}dst"; then
+                srcroot="${d}(mount_source "${d}dst")"
 
-              if find "${d}bak" -maxdepth 1 -type f ! -name '.captured' 2>/dev/null | grep -q .; then
-                while IFS= read -r src; do
-                  cp -f "${d}src" "${d}dst/" 2>/dev/null || ok=0
-                done <<EOF_RESTORE
-${d}(find "${d}bak" -maxdepth 1 -type f ! -name '.captured' 2>/dev/null)
-EOF_RESTORE
-              fi
+                case "${d}srcroot" in
+                  /data/adb/modules/*|/data/adb/modules_update/*)
+                    if [ -d "${d}srcroot" ]; then
+                      remove_known "${d}srcroot"
+                      copy_backup "${d}bak" "${d}srcroot" || true
+                      chmod 0644 "${d}srcroot"/*.png 2>/dev/null || true
+                      restorecon -RF "${d}srcroot" 2>/dev/null || true
+                    fi
+                    ;;
+                esac
 
-              if [ "${d}ok" -ne 1 ]; then
-                umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
-                mkdir -p "${d}dst" 2>/dev/null || true
-                for name in ${d}KNOWN; do
-                  rm -f "${d}dst/${d}name" 2>/dev/null || true
+                tries=0
+                while is_mount "${d}dst" && [ "${d}tries" -lt 8 ]; do
+                  umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || break
+                  tries=${d}((tries + 1))
                 done
-
-                if find "${d}bak" -maxdepth 1 -type f ! -name '.captured' 2>/dev/null | grep -q .; then
-                  find "${d}bak" -maxdepth 1 -type f ! -name '.captured' | while IFS= read -r src; do
-                    cp -f "${d}src" "${d}dst/" 2>/dev/null || true
-                  done
-                else
-                  rmdir "${d}dst" 2>/dev/null || true
-                fi
               fi
 
-              chmod 0644 "${d}dst"/*.png 2>/dev/null || true
-              restorecon -RF "${d}dst" 2>/dev/null || true
+              mkdir -p "${d}dst" 2>/dev/null || true
+              remove_known "${d}dst"
+              copy_backup "${d}bak" "${d}dst" || true
+
+              if ls "${d}dst"/*.png >/dev/null 2>&1; then
+                chmod 0644 "${d}dst"/*.png 2>/dev/null || true
+                restorecon -RF "${d}dst" 2>/dev/null || true
+              else
+                rmdir "${d}dst" 2>/dev/null || true
+              fi
+
+              if [ -n "${d}srcroot" ] && [ -d "${d}srcroot" ]; then
+                mkdir -p "${d}dst" 2>/dev/null || true
+                mount --bind "${d}srcroot" "${d}dst" 2>/dev/null \
+                  || busybox mount --bind "${d}srcroot" "${d}dst" 2>/dev/null \
+                  || toybox mount --bind "${d}srcroot" "${d}dst" 2>/dev/null \
+                  || true
+              fi
+
               count=${d}((count + 1))
             done
 
