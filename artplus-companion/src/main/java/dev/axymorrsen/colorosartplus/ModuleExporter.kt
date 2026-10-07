@@ -87,8 +87,17 @@ internal object ModuleExporter {
 
                     mkdir -p "${d}dst" 2>/dev/null || true
 
-                    if grep -F " ${d}dst " /proc/self/mountinfo >/dev/null 2>&1; then
-                      umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
+                    mounted_root="${d}(awk -v p="${d}dst" '${d}5 == p { root=${d}4 } END { if (root != "") print root }' /proc/self/mountinfo 2>/dev/null)"
+                    if [ -n "${d}mounted_root" ]; then
+                      case "${d}mounted_root" in
+                        "${d}src")
+                          umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
+                          ;;
+                        *)
+                          echo "ARTPLUS_CONFLICT_SKIP|${d}pkg|${d}mounted_root"
+                          continue
+                          ;;
+                      esac
                     fi
 
                     mount --bind "${d}src" "${d}dst" 2>/dev/null \
@@ -166,7 +175,9 @@ internal object ModuleExporter {
                   while IFS= read -r pkg; do
                     [ -n "${d}pkg" ] || continue
                     dst="${d}TARGET/${d}pkg"
-                    if grep -F " ${d}dst " /proc/self/mountinfo >/dev/null 2>&1; then
+                    src="${d}MODDIR/payload/uxicons/${d}pkg"
+                    mounted_root="${d}(awk -v p="${d}dst" '${d}5 == p { root=${d}4 } END { if (root != "") print root }' /proc/self/mountinfo 2>/dev/null)"
+                    if [ "${d}mounted_root" = "${d}src" ]; then
                       umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
                     fi
                   done < "${d}MODDIR/packages.list"
