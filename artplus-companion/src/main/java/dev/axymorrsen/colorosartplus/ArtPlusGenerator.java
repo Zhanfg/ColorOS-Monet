@@ -177,11 +177,29 @@ final class ArtPlusGenerator {
     void installAllWithRoot() throws Exception {
         String src = shellQuote(outputRoot.getAbsolutePath());
         String cmd =
-                "set -e; src=" + src + "; " +
+                "set -e; src=" + src + "; backup=/data/adb/coloros-monet/artplus-backup/original; " +
+                "mkdir -p \"$backup\"; chmod 0700 /data/adb/coloros-monet /data/adb/coloros-monet/artplus-backup \"$backup\" 2>/dev/null || true; " +
                 "for dir in \"$src\"/*; do " +
-                "[ -d \"$dir\" ] || continue; pkg=$(basename \"$dir\"); dst=/data/oplus/uxicons/\"$pkg\"; " +
+                "[ -d \"$dir\" ] || continue; pkg=$(basename \"$dir\"); dst=/data/oplus/uxicons/\"$pkg\"; bak=\"$backup/$pkg\"; " +
+                "if [ -d \"$dst\" ] && [ ! -e \"$bak/.captured\" ]; then " +
+                "mkdir -p \"$bak\"; cp -a \"$dst\"/. \"$bak\"/ 2>/dev/null || true; touch \"$bak/.captured\"; " +
+                "fi; " +
                 "mkdir -p \"$dst\"; cp -f \"$dir\"/*.png \"$dst\"/; chmod 0644 \"$dst\"/*.png; " +
                 "restorecon -RF \"$dst\" 2>/dev/null || true; " +
+                "done";
+        runRoot(cmd);
+    }
+
+    void restoreOriginalsWithRoot() throws Exception {
+        String cmd =
+                "set -e; backup=/data/adb/coloros-monet/artplus-backup/original; " +
+                "[ -d \"$backup\" ] || exit 0; " +
+                "for bak in \"$backup\"/*; do " +
+                "[ -d \"$bak\" ] || continue; pkg=$(basename \"$bak\"); dst=/data/oplus/uxicons/\"$pkg\"; " +
+                "rm -rf \"$dst\"; mkdir -p \"$dst\"; " +
+                "find \"$bak\" -maxdepth 1 -type f ! -name .captured -exec cp -f {} \"$dst\"/ \\;; " +
+                "if ! find \"$dst\" -maxdepth 1 -type f | grep -q .; then rmdir \"$dst\" 2>/dev/null || true; " +
+                "else chmod 0644 \"$dst\"/* 2>/dev/null || true; restorecon -RF \"$dst\" 2>/dev/null || true; fi; " +
                 "done";
         runRoot(cmd);
     }
