@@ -44,7 +44,8 @@ internal object IconPipeline {
         val monochrome: Bitmap,
         val adaptive: Boolean,
         val conservative: Boolean,
-        val strategy: GenerationStrategy,
+        val nightStrategy: NightStrategy,
+        val monoStrategy: MonoStrategy,
         val flipped: Boolean,
         val confidence: Float,
     ) {
@@ -141,10 +142,11 @@ internal object IconPipeline {
                 monochrome = mono.bitmap,
                 adaptive = true,
                 conservative = false,
-                strategy = when {
-                    night.inverted -> GenerationStrategy.DarkDominantInvert
-                    nativeMono != null -> GenerationStrategy.NativeMonochrome
-                    else -> GenerationStrategy.AospMonochrome
+                nightStrategy = night.strategy,
+                monoStrategy = if (nativeMono != null) {
+                    MonoStrategy.NativeMonochrome
+                } else {
+                    MonoStrategy.AospMonochrome
                 },
                 flipped = night.inverted,
                 confidence = minOf(mono.confidence, night.confidence),
@@ -168,11 +170,12 @@ internal object IconPipeline {
             monochrome = mono.bitmap,
             adaptive = false,
             conservative = legacy.conservative,
-            strategy = when {
-                legacy.conservative -> GenerationStrategy.ConservativeFallback
-                night.inverted -> GenerationStrategy.DarkDominantInvert
-                else -> GenerationStrategy.LegacyToneLift
+            nightStrategy = if (legacy.conservative) {
+                NightStrategy.ConservativeFallback
+            } else {
+                night.strategy
             },
+            monoStrategy = MonoStrategy.AospMonochrome,
             flipped = night.inverted,
             confidence = minOf(legacy.confidence, mono.confidence, night.confidence),
         )
@@ -334,6 +337,7 @@ internal object IconPipeline {
     private data class NightResult(
         val bitmap: Bitmap,
         val inverted: Boolean,
+        val strategy: NightStrategy,
         val confidence: Float,
     )
 
@@ -455,11 +459,18 @@ internal object IconPipeline {
             else -> 0.84f
         }
 
+        val strategy = when {
+            invert -> NightStrategy.DarkDominantInvert
+            coloredRatio >= 0.28 -> NightStrategy.PreserveBrandColor
+            else -> NightStrategy.NeutralDarkLift
+        }
+
         return NightResult(
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
                 it.setPixels(dst, 0, w, 0, 0, w, h)
             },
             inverted = invert,
+            strategy = strategy,
             confidence = confidence,
         )
     }
