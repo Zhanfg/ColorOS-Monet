@@ -1,0 +1,39 @@
+name: Build ColorOS ART+ Auto
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feat/artplus-auto-coloros17
+    paths:
+      - "artplus-companion/**"
+      - "tools/build_artplus_companion.py"
+      - ".github/workflows/artplus-auto.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Android SDK packages
+        shell: bash
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build companion APK
+        run: python3 tools/build_artplus_companion.py --variant debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColorOS-ARTPlus-Auto-debug
+          path: artplus-companion/build/outputs/ColorOS-ARTPlus-Auto-debug.apk
+          if-no-files-found: error
