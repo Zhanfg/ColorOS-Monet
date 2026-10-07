@@ -173,19 +173,48 @@ internal object IconPipeline {
         save(center(output.monochrome, S_2X2, S_2X2), File(dir, "monochrome_2x2.png"))
     }
 
-    private fun splitLegacy(source: Bitmap): Triple<Bitmap, Bitmap, Boolean> {
+    private data class LegacySplit(
+        val foreground: Bitmap,
+        val background: Bitmap,
+        val conservative: Boolean,
+        val confidence: Float,
+    )
+
+    private fun splitLegacy(source: Bitmap): LegacySplit {
         val edge = estimateEdge(source)
         if (edge.opaqueRatio < 0.35 || edge.confidence < 0.68) {
-            return Triple(source, transparent(BASE, BASE), true)
+            return LegacySplit(
+                foreground = source,
+                background = transparent(BASE, BASE),
+                conservative = true,
+                confidence = edge.confidence.toFloat().coerceIn(0.25f, 0.58f),
+            )
         }
 
         val bg = solid(BASE, BASE, edge.color)
         val fg = subtract(source, edge.color)
         val coverage = alphaCoverage(fg)
         if (coverage < 0.045 || coverage > 0.84 || touchesAllEdges(fg)) {
-            return Triple(source, transparent(BASE, BASE), true)
+            return LegacySplit(
+                foreground = source,
+                background = transparent(BASE, BASE),
+                conservative = true,
+                confidence = 0.52f,
+            )
         }
-        return Triple(fg, bg, false)
+
+        val coverageScore = when {
+            coverage in 0.10..0.70 -> 1.0
+            coverage in 0.06..0.80 -> 0.82
+            else -> 0.68
+        }
+
+        return LegacySplit(
+            foreground = fg,
+            background = bg,
+            conservative = false,
+            confidence = (edge.confidence * coverageScore).toFloat().coerceIn(0.55f, 0.98f),
+        )
     }
 
     private data class EdgeModel(
@@ -272,13 +301,50 @@ internal object IconPipeline {
         }
     }
 
-    private fun nightForeground(source: Bitmap, background: Bitmap): Bitmap {
+    private data class NightResult(
+        val bitmap: Bitmap,
+        val inverted: Boolean,
+        val confidence: Float,
+    )
+
+    private fun nightForeground(
+        source: Bitmap,
+        background: Bitmap,
+        adaptive: Boolean,
+    ): NightResult {
         val w = source.width
         val h = source.height
         val src = IntArray(w * h)
         val dst = IntArray(src.size)
         source.getPixels(src, 0, w, 0, 0, w, h)
+
+        var visible = 0
+        var dark = 0
+        var bright = 0
+        var sumL = 0.0
+
+        for (p in src) {
+            val alpha = Color.alpha(p)
+            if (alpha <= 12) continue
+            val l = okLab(p)[0]
+            visible++
+            sumL += l
+            if (l < 0.42) dark++
+            if (l > 0.72) bright++
+        }
+
+        val meanL = if (visible > 0) sumL / visible else 0.5
+        val darkRatio = if (visible > 0) dark.toDouble() / visible else 0.0
+        val brightRatio = if (visible > 0) bright.toDouble() / visible else 0.0
         val bgL = meanLightness(background)
+
+        // Dark-dominant logos are the failure mode that previously collapsed into black.
+        // Instead of RGB complement inversion, invert only perceptual lightness so brand hue
+        // remains recognizable.
+        val invert = visible > 0 &&
+            meanL < 0.46 &&
+            darkRatio >= 0.52 &&
+            brightRatio < 0.28
 
         for (i in src.indices) {
             val p = src[i]
@@ -294,7 +360,16 @@ internal object IconPipeline {
             var b = lab[2]
             val chroma = hypot(a, b)
 
-            if (bgL < 0.55) {
+            if (invert) {
+                // Selective L* inversion. Very dark detail becomes light; midtones are
+                // compressed upward; already-bright highlight detail is preserved.
+                l = when {
+                    l < 0.18 -> 0.90 - l * 0.20
+                    l < 0.46 -> 0.84 - l * 0.30
+                    l < 0.62 -> max(l, 0.66)
+                    else -> l
+                }
+            } else if (bgL < 0.55) {
                 l = when {
                     chroma < 0.045 && l < 0.50 -> max(l, 0.78)
                     l < 0.46 -> max(l, 0.62)
@@ -305,17 +380,30 @@ internal object IconPipeline {
                 l = 0.30
             }
 
-            if (chroma > 0.30) {
-                val scale = 0.30 / chroma
+            if (chroma > 0.28) {
+                val scale = 0.28 / chroma
                 a *= scale
                 b *= scale
             }
+
             dst[i] = fromOkLab(alpha, l, a, b)
         }
 
-        return Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
-            it.setPixels(dst, 0, w, 0, 0, w, h)
+        val confidence = when {
+            visible == 0 -> 0.35f
+            invert && darkRatio > 0.72 -> 0.94f
+            invert -> 0.86f
+            adaptive -> 0.94f
+            else -> 0.82f
         }
+
+        return NightResult(
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
+                it.setPixels(dst, 0, w, 0, 0, w, h)
+            },
+            inverted = invert,
+            confidence = confidence,
+        )
     }
 
     private fun normalizeNativeMono(source: Bitmap): Bitmap {
@@ -339,25 +427,73 @@ internal object IconPipeline {
         }
     }
 
-    private fun monochrome(source: Bitmap): Bitmap {
+    private data class MonoResult(
+        val bitmap: Bitmap,
+        val flipped: Boolean,
+        val confidence: Float,
+    )
+
+    /**
+     * AOSP Launcher3 MonochromeIconFactory-style fallback.
+     *
+     * The original AOSP implementation converts the flattened icon to grayscale/alpha,
+     * stretches the min/max range and decides whether to invert from edge brightness.
+     * This implementation keeps that behavior while respecting source alpha.
+     */
+    private fun aospMonochrome(source: Bitmap): MonoResult {
         val w = source.width
         val h = source.height
         val src = IntArray(w * h)
+        val intensity = IntArray(src.size)
         val dst = IntArray(src.size)
         source.getPixels(src, 0, w, 0, 0, w, h)
 
-        var minL = 255
-        var maxL = 0
+        var minValue = 255
+        var maxValue = 0
         var visible = 0
-        for (p in src) {
-            if (Color.alpha(p) <= 8) continue
-            val l = luma(p)
-            minL = min(minL, l)
-            maxL = max(maxL, l)
-            visible++
+
+        for (i in src.indices) {
+            val p = src[i]
+            val alpha = Color.alpha(p)
+            val gray = ((Color.red(p) + Color.green(p) + Color.blue(p)) / 3.0)
+                .roundToInt()
+                .coerceIn(0, 255)
+            val value = (gray * (alpha / 255.0)).roundToInt().coerceIn(0, 255)
+            intensity[i] = value
+
+            if (alpha > 4) {
+                visible++
+                minValue = min(minValue, value)
+                maxValue = max(maxValue, value)
+            }
         }
 
-        val flat = visible == 0 || maxL - minL < 28
+        if (visible == 0) {
+            return MonoResult(
+                bitmap = transparent(w, h),
+                flipped = false,
+                confidence = 0.25f,
+            )
+        }
+
+        val range = (maxValue - minValue).coerceAtLeast(1)
+        val band = max(1, (min(w, h) * 0.08f).roundToInt())
+        var edgeSum = 0L
+        var edgeCount = 0
+
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                if (x >= band && y >= band && x < w - band && y < h - band) continue
+                val v = intensity[y * w + x]
+                edgeSum += v
+                edgeCount++
+            }
+        }
+
+        val edgeAverage = if (edgeCount > 0) edgeSum.toDouble() / edgeCount else 0.0
+        val edgeMapped = ((edgeAverage - minValue) / range.toDouble()).coerceIn(0.0, 1.0)
+        val flip = edgeMapped > 0.5
+
         for (i in src.indices) {
             val p = src[i]
             val alpha = Color.alpha(p)
@@ -365,18 +501,30 @@ internal object IconPipeline {
                 dst[i] = Color.TRANSPARENT
                 continue
             }
-            val tonal = if (flat) {
-                1.0
+
+            val normalized = if (maxValue > minValue) {
+                ((intensity[i] - minValue) * 255.0 / range)
+                    .roundToInt()
+                    .coerceIn(0, 255)
             } else {
-                val n = (luma(p) - minL).toDouble() / (maxL - minL).coerceAtLeast(1).toDouble()
-                0.18 + 0.82 * n
+                alpha
             }
-            dst[i] = Color.argb((alpha * tonal).roundToInt().coerceIn(0, 255), 255, 255, 255)
+
+            val mono = if (flip) 255 - normalized else normalized
+            val outAlpha = min(alpha, mono).coerceIn(0, 255)
+            dst[i] = Color.argb(outAlpha, 255, 255, 255)
         }
 
-        return Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
-            it.setPixels(dst, 0, w, 0, 0, w, h)
-        }
+        val contrast = (maxValue - minValue) / 255f
+        val confidence = (0.58f + contrast * 0.36f).coerceIn(0.58f, 0.96f)
+
+        return MonoResult(
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888).also {
+                it.setPixels(dst, 0, w, 0, 0, w, h)
+            },
+            flipped = flip,
+            confidence = confidence,
+        )
     }
 
     private fun draw(drawable: Drawable, width: Int, height: Int): Bitmap {
