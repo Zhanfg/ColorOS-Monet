@@ -40,6 +40,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -80,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 GeneratorScreen(
                     state = state,
                     onStart = viewModel::startGeneration,
+                    onRecoverLegacy = viewModel::recoverLegacyAlpha1,
                     onOpenInstaller = viewModel::requestInstallerAgain,
                 )
             }
@@ -160,6 +162,7 @@ private fun ArtPlusTheme(content: @Composable () -> Unit) {
 private fun GeneratorScreen(
     state: GeneratorUiState,
     onStart: () -> Unit,
+    onRecoverLegacy: () -> Unit,
     onOpenInstaller: () -> Unit,
 ) {
     val busy = state.phase in setOf(
@@ -230,6 +233,20 @@ private fun GeneratorScreen(
                     )
                 }
             }
+
+            OutlinedButton(
+                onClick = onRecoverLegacy,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("安全恢复旧版直接写入")
+            }
+
+            Text(
+                text = "恢复只处理 ART+ Auto alpha1 备份；不会禁用你的其他图标模块，也不会删除挂载点。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             LogCard(state.logLines)
             Spacer(Modifier.height(18.dp))
