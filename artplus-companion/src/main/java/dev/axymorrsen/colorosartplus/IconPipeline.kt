@@ -51,7 +51,21 @@ internal object IconPipeline {
         fun preview(): Bitmap {
             val out = Bitmap.createBitmap(BASE, BASE, Bitmap.Config.ARGB_8888)
             val canvas = Canvas(out)
-            canvas.drawBitmap(recbg, 0f, 0f, null)
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+            paint.color = Color.rgb(28, 27, 31)
+
+            // rec_night is the dark-mode foreground asset. Preview it against the
+            // launcher-like dark host surface; do not composite the daylight recbg.
+            val radius = BASE * 0.22f
+            canvas.drawRoundRect(
+                0f,
+                0f,
+                BASE.toFloat(),
+                BASE.toFloat(),
+                radius,
+                radius,
+                paint,
+            )
             canvas.drawBitmap(night, 0f, 0f, null)
             return out
         }
@@ -335,33 +349,52 @@ internal object IconPipeline {
         val dst = IntArray(src.size)
         source.getPixels(src, 0, w, 0, 0, w, h)
 
-        var visible = 0
-        var dark = 0
-        var bright = 0
-        var sumL = 0.0
+        var visibleWeight = 0.0
+        var darkNeutralWeight = 0.0
+        var coloredWeight = 0.0
+        var brightWeight = 0.0
+        var weightedL = 0.0
 
         for (p in src) {
             val alpha = Color.alpha(p)
-            if (alpha <= 12) continue
-            val l = okLab(p)[0]
-            visible++
-            sumL += l
-            if (l < 0.42) dark++
-            if (l > 0.72) bright++
+            if (alpha <= 24) continue
+
+            val lab = okLab(p)
+            val l = lab[0]
+            val chroma = hypot(lab[1], lab[2])
+            val weight = alpha / 255.0
+
+            visibleWeight += weight
+            weightedL += l * weight
+
+            if (l < 0.44 && chroma < 0.065) {
+                darkNeutralWeight += weight
+            }
+            if (chroma >= 0.075 && l > 0.18) {
+                coloredWeight += weight
+            }
+            if (l > 0.72) {
+                brightWeight += weight
+            }
         }
 
-        val meanL = if (visible > 0) sumL / visible else 0.5
-        val darkRatio = if (visible > 0) dark.toDouble() / visible else 0.0
-        val brightRatio = if (visible > 0) bright.toDouble() / visible else 0.0
+        val meanL = if (visibleWeight > 0.0) weightedL / visibleWeight else 0.5
+        val darkNeutralRatio =
+            if (visibleWeight > 0.0) darkNeutralWeight / visibleWeight else 0.0
+        val coloredRatio =
+            if (visibleWeight > 0.0) coloredWeight / visibleWeight else 0.0
+        val brightRatio =
+            if (visibleWeight > 0.0) brightWeight / visibleWeight else 0.0
         val bgL = meanLightness(background)
 
-        // Dark-dominant logos are the failure mode that previously collapsed into black.
-        // Instead of RGB complement inversion, invert only perceptual lightness so brand hue
-        // remains recognizable.
-        val autoInvert = visible > 0 &&
-            meanL < 0.46 &&
-            darkRatio >= 0.52 &&
-            brightRatio < 0.28
+        // Only genuinely black/gray dominant subjects should invert. Saturated brand
+        // marks (Yandex, Google, Telegram, etc.) are protected even when they contain
+        // dark antialias/shadow pixels.
+        val autoInvert = visibleWeight > 0.0 &&
+            meanL < 0.50 &&
+            darkNeutralRatio >= 0.48 &&
+            coloredRatio <= 0.22 &&
+            brightRatio < 0.30
         val invert = invertOverride ?: autoInvert
 
         for (i in src.indices) {
@@ -408,11 +441,12 @@ internal object IconPipeline {
         }
 
         val confidence = when {
-            visible == 0 -> 0.35f
-            invert && darkRatio > 0.72 -> 0.94f
-            invert -> 0.86f
+            visibleWeight <= 0.0 -> 0.35f
+            invert && darkNeutralRatio > 0.72 -> 0.95f
+            invert -> 0.88f
+            coloredRatio > 0.45 -> 0.96f
             adaptive -> 0.94f
-            else -> 0.82f
+            else -> 0.84f
         }
 
         return NightResult(
