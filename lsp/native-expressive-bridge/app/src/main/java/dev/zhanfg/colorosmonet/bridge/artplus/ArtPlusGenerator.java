@@ -39,6 +39,7 @@ public final class ArtPlusGenerator {
     private static final int VISIBLE_ALPHA = 8;
     private static final double SAFE_CONFIDENCE = 0.62;
     private static final String ROOT_UXICONS = "/data/oplus/uxicons";
+    private static final String BACKUP_ROOT = "/data/adb/coloros-monet/artplus-backup/latest";
 
     private ArtPlusGenerator() {}
 
@@ -62,6 +63,7 @@ public final class ArtPlusGenerator {
         public int adaptive;
         public int legacySeparated;
         public int legacyConservative;
+        public int skippedExisting;
         public int failed;
         public final List<String> failures = new ArrayList<>();
 
@@ -71,6 +73,7 @@ public final class ArtPlusGenerator {
                     + " · Adaptive " + adaptive
                     + " · Legacy 分层 " + legacySeparated
                     + " · 保守回退 " + legacyConservative
+                    + " · 已有暗色跳过 " + skippedExisting
                     + " · 失败 " + failed;
         }
     }
@@ -129,9 +132,17 @@ public final class ArtPlusGenerator {
 
         Summary summary = new Summary();
         summary.total = apps.size();
+        Set<String> existingDark = readExistingDarkPackages();
+        prepareBackupWithRoot();
         int done = 0;
         for (ResolveInfo ri : apps) {
             String pkg = ri.activityInfo.packageName;
+            if (existingDark.contains(pkg)) {
+                summary.skippedExisting++;
+                done++;
+                callback.onProgress(done, summary.total, pkg, "已有 rec_night，跳过");
+                continue;
+            }
             try {
                 callback.onProgress(done, summary.total, pkg, "分析");
                 Layers layers = buildLayers(ri.loadIcon(pm));
@@ -159,6 +170,55 @@ public final class ArtPlusGenerator {
         runRoot("am force-stop com.android.launcher >/dev/null 2>&1 || true; "
                 + "sleep 1; "
                 + "am start -a android.intent.action.MAIN -c android.intent.category.HOME >/dev/null 2>&1 || true");
+    }
+
+    public static void restoreLastBackupWithRoot() throws Exception {
+        String root = shellQuote(ROOT_UXICONS);
+        String backup = shellQuote(BACKUP_ROOT);
+        runRoot("set -e; [ -f " + backup + "/packages.txt ] || exit 2; "
+                + "while IFS= read -r pkg; do "
+                + "  [ -n \"$pkg\" ] || continue; "
+                + "  dst=" + root + "/\"$pkg\"; "
+                + "  if [ -f " + backup + "/\"$pkg.__present\" ]; then "
+                + "    rm -rf \"$dst\"; cp -a " + backup + "/\"$pkg\" \"$dst\"; "
+                + "  elif [ -f " + backup + "/\"$pkg.__absent\" ]; then "
+                + "    rm -rf \"$dst\"; "
+                + "  fi; "
+                + "done < " + backup + "/packages.txt; "
+                + "restorecon -RF " + root + " >/dev/null 2>&1 || true");
+    }
+
+    private static Set<String> readExistingDarkPackages() {
+        Set<String> out = new HashSet<>();
+        try {
+            String text = runRootCapture(
+                    "for root in /data/oplus/uxicons /my_product/media/theme/uxicons "
+                    + "/my_stock/media/theme/uxicons /my_region/media/theme/uxicons "
+                    + "/my_carrier/media/theme/uxicons; do "
+                    + "  [ -d \"$root\" ] || continue; "
+                    + "  for d in \"$root\"/*; do "
+                    + "    [ -d \"$d\" ] || continue; "
+                    + "    [ -f \"$d/rec_night.png\" ] && basename \"$d\"; "
+                    + "  done; "
+                    + "done");
+            for (String line : text.split("\\R")) {
+                String pkg = line.trim();
+                if (!pkg.isEmpty()) out.add(pkg);
+            }
+        } catch (Throwable ignored) {
+            // Root availability is checked by the UI. If probing fails, generation still
+            // remains reversible because every touched data-layer directory is backed up.
+        }
+        return out;
+    }
+
+    private static void prepareBackupWithRoot() {
+        try {
+            String backup = shellQuote(BACKUP_ROOT);
+            runRoot("rm -rf " + backup + "; mkdir -p " + backup + "; : > " + backup + "/packages.txt");
+        } catch (Throwable t) {
+            throw new IllegalStateException("无法建立回滚备份: " + safeMessage(t), t);
+        }
     }
 
     private static List<ResolveInfo> queryLauncherApps(PackageManager pm) {
@@ -414,13 +474,26 @@ public final class ArtPlusGenerator {
     private static void installWithRoot(File source, String pkg) throws Exception {
         String src = shellQuote(source.getAbsolutePath());
         String dst = shellQuote(ROOT_UXICONS + "/" + pkg);
-        runRoot("set -e; mkdir -p " + dst + "; "
+        String backupPkg = shellQuote(BACKUP_ROOT + "/" + pkg);
+        String present = shellQuote(BACKUP_ROOT + "/" + pkg + ".__present");
+        String absent = shellQuote(BACKUP_ROOT + "/" + pkg + ".__absent");
+        String packageList = shellQuote(BACKUP_ROOT + "/packages.txt");
+        runRoot("set -e; "
+                + "if [ -d " + dst + " ]; then "
+                + "  rm -rf " + backupPkg + "; cp -a " + dst + " " + backupPkg + "; touch " + present + "; "
+                + "else touch " + absent + "; fi; "
+                + "printf '%s\\n' " + shellQuote(pkg) + " >> " + packageList + "; "
+                + "mkdir -p " + dst + "; "
                 + "cp -f " + src + "/*.png " + dst + "/; "
                 + "chmod 0644 " + dst + "/*.png; "
                 + "restorecon -RF " + dst + " >/dev/null 2>&1 || true");
     }
 
     private static void runRoot(String command) throws Exception {
+        runRootCapture(command);
+    }
+
+    private static String runRootCapture(String command) throws Exception {
         Process p = new ProcessBuilder("su", "-c", command).redirectErrorStream(true).start();
         StringBuilder text = new StringBuilder();
         try (BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
@@ -429,6 +502,7 @@ public final class ArtPlusGenerator {
         }
         int rc = p.waitFor();
         if (rc != 0) throw new IllegalStateException("root rc=" + rc + " " + text.toString().trim());
+        return text.toString();
     }
 
     private static String shellQuote(String s) {
