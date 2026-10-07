@@ -7,18 +7,16 @@ on:
       - feat/artplus-auto-coloros17
     paths:
       - "artplus-companion/**"
-      - "tools/build_artplus_companion.py"
       - ".github/workflows/artplus-auto.yml"
   pull_request:
     paths:
       - "artplus-companion/**"
-      - "tools/build_artplus_companion.py"
       - ".github/workflows/artplus-auto.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
       ANDROID_HOME: /usr/local/lib/android/sdk
@@ -30,6 +28,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
 
       - name: Locate Android SDK
         shell: bash
@@ -48,12 +50,13 @@ jobs:
           yes | "$SDKMANAGER" --licenses >/dev/null || true
           "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Build companion APK
-        run: python3 tools/build_artplus_companion.py --variant debug
+      - name: Build Compose companion APK
+        working-directory: artplus-companion
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ColorOS-ARTPlus-Auto-debug
-          path: artplus-companion/build/outputs/ColorOS-ARTPlus-Auto-debug.apk
+          name: ColorOS-ARTPlus-Auto-alpha2
+          path: artplus-companion/build/outputs/apk/debug/*.apk
           if-no-files-found: error
