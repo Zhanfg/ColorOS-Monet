@@ -33,6 +33,21 @@ jobs:
           "$SDKMANAGER" --channel=3 "platforms;android-37.0" "build-tools;37.0.0"
       - name: Build
         run: gradle -p lsp/native-expressive-bridge :app:assembleRelease
+      - name: Verify ART+ APK surface
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="$(find lsp/native-expressive-bridge/app/build/outputs/apk/release -name '*.apk' -type f | head -n1)"
+          test -n "$APK"
+          unzip -p "$APK" classes.dex > /tmp/classes.dex
+          strings /tmp/classes.dex | grep -F '/data/oplus/uxicons'
+          strings /tmp/classes.dex | grep -F 'rec_night.png'
+          strings /tmp/classes.dex | grep -F 'monochrome.png'
+          strings /tmp/classes.dex | grep -F 'GeneratorActivity'
+          "$ANDROID_HOME/build-tools/37.0.0/aapt2" dump badging "$APK" | tee /tmp/badging.txt
+          grep -F "package: name='dev.zhanfg.colorosmonet.bridge'" /tmp/badging.txt
+          grep -F "launchable-activity: name='dev.zhanfg.colorosmonet.bridge.ui.GeneratorActivity'" /tmp/badging.txt
+          sha256sum "$APK"
       - uses: actions/upload-artifact@v4
         with:
           name: ColorOS17-ARTPlus-Generator
