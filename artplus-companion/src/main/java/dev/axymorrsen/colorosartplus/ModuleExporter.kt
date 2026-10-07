@@ -32,13 +32,19 @@ internal object ModuleExporter {
     suspend fun buildAndPublish(
         context: Context,
         generatedRoot: File,
+        packageNames: Set<String>,
     ): ExportResult = withContext(Dispatchers.IO) {
+        require(packageNames.isNotEmpty()) { "没有已确认的图标可导出" }
+
         val packageDirs = generatedRoot.listFiles()
-            ?.filter { it.isDirectory }
+            ?.filter { it.isDirectory && it.name in packageNames }
             ?.sortedBy { it.name }
             .orEmpty()
 
-        require(packageDirs.isNotEmpty()) { "没有可打包的生成结果" }
+        require(packageDirs.isNotEmpty()) { "已确认图标没有对应的生成资源" }
+        require(packageDirs.size == packageNames.size) {
+            "部分已确认图标缺少生成资源：expected=${packageNames.size}, actual=${packageDirs.size}"
+        }
 
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
         val displayName = "ColorOS-ARTPlus-Auto-Generated-$stamp.zip"
