@@ -16,18 +16,19 @@ internal object RootShell {
     }.getOrDefault(false)
 
     suspend fun scanAdaptedPackages(): AdaptedPackages = withContext(Dispatchers.IO) {
+        val d = '$'
         val script = """
             emit_pkgs() {
-              tag="$1"
+              tag="${d}1"
               shift
-              for root in "$@"; do
-                [ -d "$root" ] || continue
-                find "$root" -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
-                  pkg="$(basename "$(dirname "$f")")"
-                  case "$pkg" in
+              for root in "${d}@"; do
+                [ -d "${d}root" ] || continue
+                find "${d}root" -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
+                  pkg="${d}(basename "${d}(dirname "${d}f")")"
+                  case "${d}pkg" in
                     ''|hdpi|xhdpi|xxhdpi|xxxhdpi) continue ;;
                   esac
-                  printf '%s|%s\n' "$tag" "$pkg"
+                  printf '%s|%s\n' "${d}tag" "${d}pkg"
                 done
               done
             }
@@ -40,10 +41,10 @@ internal object RootShell {
 
             if [ -d /data/adb/modules ]; then
               find /data/adb/modules -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
-                case "$f" in
+                case "${d}f" in
                   */uxicons/*/rec_night.png)
-                    pkg="$(basename "$(dirname "$f")")"
-                    printf 'MOD|%s\n' "$pkg"
+                    pkg="${d}(basename "${d}(dirname "${d}f")")"
+                    printf 'MOD|%s\n' "${d}pkg"
                     ;;
                 esac
               done
@@ -81,7 +82,7 @@ internal object RootShell {
         }
         val rc = process.waitFor()
         if (rc != 0) {
-            error("su exit=$rc\n$output")
+            error("su exit=${rc}\n${output}")
         }
         output
     }
