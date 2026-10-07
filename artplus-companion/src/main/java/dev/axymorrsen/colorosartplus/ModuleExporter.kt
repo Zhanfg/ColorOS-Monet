@@ -88,6 +88,9 @@ internal object ModuleExporter {
                     mkdir -p "${d}dst" 2>/dev/null || true
 
                     mounted_root="${d}(awk -v p="${d}dst" '${d}5 == p { root=${d}4 } END { if (root != "") print root }' /proc/self/mountinfo 2>/dev/null)"
+                    case "${d}mounted_root" in
+                      /adb/*) mounted_root="/data${d}mounted_root" ;;
+                    esac
                     if [ -n "${d}mounted_root" ]; then
                       case "${d}mounted_root" in
                         "${d}src")
@@ -177,6 +180,9 @@ internal object ModuleExporter {
                     dst="${d}TARGET/${d}pkg"
                     src="${d}MODDIR/payload/uxicons/${d}pkg"
                     mounted_root="${d}(awk -v p="${d}dst" '${d}5 == p { root=${d}4 } END { if (root != "") print root }' /proc/self/mountinfo 2>/dev/null)"
+                    case "${d}mounted_root" in
+                      /adb/*) mounted_root="/data${d}mounted_root" ;;
+                    esac
                     if [ "${d}mounted_root" = "${d}src" ]; then
                       umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
                     fi
