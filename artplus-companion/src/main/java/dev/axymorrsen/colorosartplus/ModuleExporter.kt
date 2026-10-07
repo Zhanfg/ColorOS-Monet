@@ -126,6 +126,23 @@ internal object ModuleExporter {
             )
 
             textEntry(
+                "service.sh",
+                """
+                #!/system/bin/sh
+                MODDIR=${d}{0%/*}
+                $applyScript
+                count=0
+                while [ ${d}count -lt 60 ]; do
+                  [ -d /data/oplus/uxicons ] && break
+                  sleep 1
+                  count=${d}((count + 1))
+                done
+                apply_assets "${d}MODDIR"
+                exit 0
+                """.trimIndent() + "\n",
+            )
+
+            textEntry(
                 "action.sh",
                 """
                 #!/system/bin/sh
