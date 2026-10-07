@@ -146,7 +146,7 @@ internal object IconPipeline {
                     nativeMono != null -> GenerationStrategy.NativeMonochrome
                     else -> GenerationStrategy.AospMonochrome
                 },
-                flipped = mono.flipped || night.inverted,
+                flipped = night.inverted,
                 confidence = minOf(mono.confidence, night.confidence),
             )
         }
@@ -173,7 +173,7 @@ internal object IconPipeline {
                 night.inverted -> GenerationStrategy.DarkDominantInvert
                 else -> GenerationStrategy.LegacyToneLift
             },
-            flipped = mono.flipped || night.inverted,
+            flipped = night.inverted,
             confidence = minOf(legacy.confidence, mono.confidence, night.confidence),
         )
     }
