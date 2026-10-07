@@ -11,6 +11,7 @@ internal class RootBridge(
 ) {
     companion object {
         private const val ROOT_DIR = "/data/oplus/uxicons"
+        private const val BACKUP_ROOT = "/data/adb/artplus-auto/original"
         private const val CONFIG_KEY = "key_ux_icon_config"
         private const val DEFAULT_THEME = 2
         private const val INSPIRATION_THEME = 3
@@ -39,15 +40,48 @@ internal class RootBridge(
 
     fun install(packageName: String, stagingDir: File) {
         val target = "$ROOT_DIR/$packageName"
+        val backup = "$BACKUP_ROOT/$packageName"
         val source = stagingDir.absolutePath
         val cmd = """
             set -e
-            mkdir -p ${quote(target)}
-            find ${quote(source)} -maxdepth 1 -type f -name '*.png' -exec cp -f {} ${quote(target)}/ \;
-            find ${quote(target)} -maxdepth 1 -type f -name '*.png' -exec chmod 0644 {} +
-            restorecon -RF ${quote(target)} >/dev/null 2>&1 || true
+            backup=${quote(backup)}
+            target=${quote(target)}
+            if [ ! -f "${'$'}backup/.captured" ]; then
+                mkdir -p "${'$'}backup/original"
+                if [ -d "${'$'}target" ]; then
+                    cp -a "${'$'}target"/. "${'$'}backup/original"/
+                    touch "${'$'}backup/.had_original"
+                fi
+                touch "${'$'}backup/.captured"
+                chmod -R u+rwX,go-rwx "${'$'}backup" 2>/dev/null || true
+            fi
+
+            mkdir -p "${'$'}target"
+            find ${quote(source)} -maxdepth 1 -type f -name '*.png' -exec cp -f {} "${'$'}target"/ \;
+            find "${'$'}target" -maxdepth 1 -type f -name '*.png' -exec chmod 0644 {} +
+            restorecon -RF "${'$'}target" >/dev/null 2>&1 || true
         """.trimIndent()
         runSu(cmd, 12_000)
+    }
+
+    fun restorePackage(packageName: String): Boolean {
+        val target = "$ROOT_DIR/$packageName"
+        val backup = "$BACKUP_ROOT/$packageName"
+        val cmd = """
+            set -e
+            backup=${quote(backup)}
+            target=${quote(target)}
+            [ -f "${'$'}backup/.captured" ] || { echo missing; exit 0; }
+            rm -rf "${'$'}target"
+            if [ -f "${'$'}backup/.had_original" ]; then
+                mkdir -p "${'$'}target"
+                cp -a "${'$'}backup/original"/. "${'$'}target"/
+                find "${'$'}target" -maxdepth 1 -type f -name '*.png' -exec chmod 0644 {} + 2>/dev/null || true
+                restorecon -RF "${'$'}target" >/dev/null 2>&1 || true
+            fi
+            echo restored
+        """.trimIndent()
+        return runCatching { runSu(cmd, 10_000).contains("restored") }.getOrDefault(false)
     }
 
     fun refreshLauncher(): String {

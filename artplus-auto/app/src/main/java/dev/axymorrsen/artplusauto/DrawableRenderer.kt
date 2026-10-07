@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.Drawable
 
 internal object DrawableRenderer {
@@ -24,7 +25,7 @@ internal object DrawableRenderer {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(if (transparent) Color.TRANSPARENT else Color.WHITE)
-        val old = drawable.bounds
+        val old = Rect(drawable.bounds)
         drawable.setBounds(0, 0, width, height)
         drawable.draw(canvas)
         drawable.bounds = old

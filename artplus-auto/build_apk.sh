@@ -60,5 +60,8 @@ APK="$OUT/ColorOS17-ARTPlus-Auto-0.1.0-alpha1.apk"
 echo "[6/6] Verify"
 "$APKSIGNER" verify --verbose "$APK"
 "$AAPT2" dump badging "$APK" | head -n 8
-sha256sum "$APK" | tee "$OUT/SHA256SUMS.txt"
+(
+    cd "$OUT"
+    sha256sum "$(basename "$APK")" | tee SHA256SUMS.txt
+)
 echo "built: $APK"
