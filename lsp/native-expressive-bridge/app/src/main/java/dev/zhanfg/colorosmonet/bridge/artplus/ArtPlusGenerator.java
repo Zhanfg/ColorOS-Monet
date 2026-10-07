@@ -337,11 +337,14 @@ public final class ArtPlusGenerator {
             if (a <= VISIBLE_ALPHA) continue;
             int v;
             if (bakedTile && Color.alpha(bp[i]) > VISIBLE_ALPHA) {
+                // Full baked tiles need a foreground/background contrast mask.
                 v = clamp255((int) Math.round(colorDistance(c, bp[i]) * 1.55));
+                v = clamp255((int) Math.round(v * (a / 255.0)));
             } else {
-                v = luma(c);
+                // A separated/native foreground already carries the correct geometry in alpha.
+                // Do not use luma here: a pure-black logo would otherwise disappear.
+                v = a;
             }
-            v = clamp255((int) Math.round(v * (a / 255.0)));
             raw[i] = v;
             if (v > 0) {
                 min = Math.min(min, v);
