@@ -81,6 +81,11 @@ class MainActivity : ComponentActivity() {
                 GeneratorScreen(
                     state = state,
                     onStart = viewModel::startGeneration,
+                    onApprove = viewModel::approveCurrent,
+                    onReject = viewModel::rejectCurrent,
+                    onPrevious = viewModel::previousReview,
+                    onNext = viewModel::nextReview,
+                    onExportApproved = viewModel::exportApproved,
                     onRecoverLegacy = viewModel::recoverLegacyAlpha1,
                     onOpenInstaller = viewModel::requestInstallerAgain,
                 )
@@ -162,6 +167,11 @@ private fun ArtPlusTheme(content: @Composable () -> Unit) {
 private fun GeneratorScreen(
     state: GeneratorUiState,
     onStart: () -> Unit,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onExportApproved: () -> Unit,
     onRecoverLegacy: () -> Unit,
     onOpenInstaller: () -> Unit,
 ) {
@@ -201,7 +211,21 @@ private fun GeneratorScreen(
         ) {
             StatusCard(state)
             ProgressCard(state)
-            PreviewCard(state.current)
+
+            if (state.phase == WorkPhase.Reviewing ||
+                state.phase == WorkPhase.ReadyToFlash
+            ) {
+                ReviewCard(
+                    state = state,
+                    onApprove = onApprove,
+                    onReject = onReject,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    onExportApproved = onExportApproved,
+                )
+            } else {
+                PreviewCard(state.current)
+            }
 
             if (state.module != null) {
                 ModuleCard(
@@ -210,27 +234,26 @@ private fun GeneratorScreen(
                 )
             }
 
-            Button(
-                onClick = onStart,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth(),
+            if (state.phase != WorkPhase.Reviewing &&
+                state.phase != WorkPhase.ReadyToFlash
             ) {
-                if (busy) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
-                    )
-                    Spacer(Modifier.size(10.dp))
-                    Text("处理中…")
-                } else {
-                    Icon(Icons.Rounded.AutoAwesome, contentDescription = null)
-                    Spacer(Modifier.size(8.dp))
-                    Text(
-                        when {
-                            state.phase == WorkPhase.ReadyToFlash -> "重新扫描并生成"
-                            else -> "申请 Root 并开始生成"
-                        },
-                    )
+                Button(
+                    onClick = onStart,
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    if (busy) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Spacer(Modifier.size(10.dp))
+                        Text("处理中…")
+                    } else {
+                        Icon(Icons.Rounded.AutoAwesome, contentDescription = null)
+                        Spacer(Modifier.size(8.dp))
+                        Text("申请 Root 并生成草稿")
+                    }
                 }
             }
 
@@ -358,6 +381,171 @@ private fun ProgressCard(state: GeneratorUiState) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ReviewCard(
+    state: GeneratorUiState,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onExportApproved: () -> Unit,
+) {
+    val item = state.currentReview
+    val summary = state.reviewSummary
+
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("逐个审核", fontWeight = FontWeight.SemiBold)
+                Text(
+                    if (summary.total > 0) {
+                        "${state.reviewIndex + 1} / ${summary.total}"
+                    } else {
+                        "—"
+                    },
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Text(
+                "待确认 ${summary.pending} · 已通过 ${summary.approved} · 已拒绝 ${summary.rejected}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            if (item == null) {
+                Text(
+                    "当前没有可审核的草稿。",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
+
+            Column {
+                Text(
+                    item.label,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    item.packageName,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PreviewTile(
+                    title = "原图",
+                    bitmap = item.original,
+                    modifier = Modifier.weight(1f),
+                )
+                PreviewTile(
+                    title = "生成草稿",
+                    bitmap = item.generated,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Text(
+                        text = "策略：${generationStrategyLabel(item.strategy)}",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        text = buildString {
+                            append("置信度 ")
+                            append((item.confidence * 100f).toInt())
+                            append("%")
+                            if (item.flipped) append(" · 已自动反相")
+                            append(" · ")
+                            append(reviewDecisionLabel(item.decision))
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onPrevious,
+                    enabled = state.reviewIndex > 0,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("上一个")
+                }
+                OutlinedButton(
+                    onClick = onNext,
+                    enabled = state.reviewIndex < state.reviewItems.lastIndex,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("下一个")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = onReject,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("拒绝")
+                }
+                Button(
+                    onClick = onApprove,
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("通过")
+                }
+            }
+
+            Button(
+                onClick = onExportApproved,
+                enabled = summary.approved > 0 &&
+                    state.phase != WorkPhase.Packaging,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text("导出已确认项（${summary.approved}）")
+            }
+
+            Text(
+                "未确认和已拒绝图标不会进入模块；导出后也不会自动刷入。",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
@@ -560,8 +748,25 @@ private fun phaseLabel(phase: WorkPhase): String = when (phase) {
     WorkPhase.Idle -> "等待开始"
     WorkPhase.RequestingRoot -> "Root 授权"
     WorkPhase.Scanning -> "扫描已有适配"
-    WorkPhase.Generating -> "生成 ART+ 资源"
-    WorkPhase.Packaging -> "封装 Root 模块"
+    WorkPhase.Generating -> "生成 ART+ 草稿"
+    WorkPhase.Reviewing -> "逐个审核草稿"
+    WorkPhase.Packaging -> "封装已确认图标"
     WorkPhase.ReadyToFlash -> "完成"
     WorkPhase.Failed -> "任务中止"
+}
+
+
+private fun generationStrategyLabel(strategy: GenerationStrategy): String = when (strategy) {
+    GenerationStrategy.NativeMonochrome -> "原生 monochrome"
+    GenerationStrategy.AospMonochrome -> "AOSP 单色自动生成"
+    GenerationStrategy.DarkDominantInvert -> "暗主体亮度反相"
+    GenerationStrategy.AdaptiveToneLift -> "Adaptive 提亮"
+    GenerationStrategy.LegacyToneLift -> "Legacy 提亮"
+    GenerationStrategy.ConservativeFallback -> "保守回退"
+}
+
+private fun reviewDecisionLabel(decision: ReviewDecision): String = when (decision) {
+    ReviewDecision.Pending -> "待确认"
+    ReviewDecision.Approved -> "已通过"
+    ReviewDecision.Rejected -> "已拒绝"
 }
