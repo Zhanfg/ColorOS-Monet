@@ -10,8 +10,8 @@ android {
         applicationId = "dev.zhanfg.colorosmonet.bridge"
         minSdk = 35
         targetSdk = 37
-        versionCode = 20001
-        versionName = "0.2.0-alpha1"
+        versionCode = 20101
+        versionName = "0.2.1-alpha1"
     }
 
     buildTypes {
