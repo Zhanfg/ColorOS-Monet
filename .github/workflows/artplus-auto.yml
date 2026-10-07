@@ -9,6 +9,11 @@ on:
       - "artplus-companion/**"
       - "tools/build_artplus_companion.py"
       - ".github/workflows/artplus-auto.yml"
+  pull_request:
+    paths:
+      - "artplus-companion/**"
+      - "tools/build_artplus_companion.py"
+      - ".github/workflows/artplus-auto.yml"
 
 jobs:
   build:
