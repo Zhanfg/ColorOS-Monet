@@ -83,6 +83,7 @@ class MainActivity : ComponentActivity() {
                     onStart = viewModel::startGeneration,
                     onApprove = viewModel::approveCurrent,
                     onReject = viewModel::rejectCurrent,
+                    onRegenerate = viewModel::regenerateCurrentToggleInvert,
                     onPrevious = viewModel::previousReview,
                     onNext = viewModel::nextReview,
                     onExportApproved = viewModel::exportApproved,
@@ -169,6 +170,7 @@ private fun GeneratorScreen(
     onStart: () -> Unit,
     onApprove: () -> Unit,
     onReject: () -> Unit,
+    onRegenerate: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onExportApproved: () -> Unit,
@@ -219,6 +221,7 @@ private fun GeneratorScreen(
                     state = state,
                     onApprove = onApprove,
                     onReject = onReject,
+                    onRegenerate = onRegenerate,
                     onPrevious = onPrevious,
                     onNext = onNext,
                     onExportApproved = onExportApproved,
@@ -390,6 +393,7 @@ private fun ReviewCard(
     state: GeneratorUiState,
     onApprove: () -> Unit,
     onReject: () -> Unit,
+    onRegenerate: () -> Unit,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onExportApproved: () -> Unit,
@@ -512,6 +516,19 @@ private fun ReviewCard(
                 ) {
                     Text("下一个")
                 }
+            }
+
+            OutlinedButton(
+                onClick = onRegenerate,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(
+                    if (item.strategy == GenerationStrategy.DarkDominantInvert) {
+                        "关闭反相并重新生成"
+                    } else {
+                        "强制反相并重新生成"
+                    },
+                )
             }
 
             Row(
