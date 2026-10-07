@@ -64,45 +64,37 @@ internal object ModuleExporter {
                 version=generated-$stamp
                 versionCode=$versionCode
                 author=ColorOS ART+ Auto
-                description=Generated ColorOS ART+ dark icon assets. Applied at post-fs-data; original data-side assets are backed up before first replacement.
+                description=Generated ColorOS ART+ icon assets. Uses bind mounts only; it does not overwrite /data/oplus/uxicons contents.
                 """.trimIndent() + "\n",
             )
 
             textEntry("skip_mount", "")
             textEntry("packages.list", packageDirs.joinToString("\n") { it.name } + "\n")
 
-            val applyScript = """
-                apply_assets() {
+            val mountScript = """
+                mount_assets() {
                   MODDIR="${d}1"
                   TARGET=/data/oplus/uxicons
-                  BACKUP=/data/adb/coloros_artplus_auto_backup
-                  LEGACY_BACKUP=/data/adb/coloros-monet/artplus-backup/original
-                  mkdir -p "${d}TARGET" "${d}BACKUP" 2>/dev/null || true
-                  chmod 0700 "${d}BACKUP" 2>/dev/null || true
 
                   [ -f "${d}MODDIR/packages.list" ] || return 0
+                  mkdir -p "${d}TARGET" 2>/dev/null || true
+
                   while IFS= read -r pkg; do
                     [ -n "${d}pkg" ] || continue
                     src="${d}MODDIR/payload/uxicons/${d}pkg"
                     dst="${d}TARGET/${d}pkg"
-                    bak="${d}BACKUP/${d}pkg"
                     [ -d "${d}src" ] || continue
 
-                    if [ ! -e "${d}bak/.captured" ]; then
-                      mkdir -p "${d}bak"
-                      legacy="${d}LEGACY_BACKUP/${d}pkg"
-                      if [ -e "${d}legacy/.captured" ]; then
-                        find "${d}legacy" -maxdepth 1 -type f ! -name '.captured' -exec cp -f {} "${d}bak"/ \; 2>/dev/null || true
-                      elif [ -d "${d}dst" ]; then
-                        cp -af "${d}dst"/. "${d}bak"/ 2>/dev/null || true
-                      fi
-                      touch "${d}bak/.captured"
+                    mkdir -p "${d}dst" 2>/dev/null || true
+
+                    if grep -F " ${d}dst " /proc/self/mountinfo >/dev/null 2>&1; then
+                      umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
                     fi
 
-                    mkdir -p "${d}dst"
-                    cp -f "${d}src"/*.png "${d}dst"/ 2>/dev/null || true
-                    chmod 0644 "${d}dst"/*.png 2>/dev/null || true
-                    restorecon -RF "${d}dst" 2>/dev/null || true
+                    mount --bind "${d}src" "${d}dst" 2>/dev/null \
+                      || busybox mount --bind "${d}src" "${d}dst" 2>/dev/null \
+                      || toybox mount --bind "${d}src" "${d}dst" 2>/dev/null \
+                      || echo "ARTPLUS_MOUNT_FAILED|${d}pkg"
                   done < "${d}MODDIR/packages.list"
                 }
             """.trimIndent()
@@ -113,8 +105,8 @@ internal object ModuleExporter {
                 #!/system/bin/sh
                 ui_print "- ColorOS ART+ Auto generated module"
                 ui_print "- Generated packages: ${packageDirs.size}"
-                ui_print "- Existing ROM/module-adapted packages were skipped by the generator."
-                ui_print "- The module applies assets at post-fs-data before Launcher starts."
+                ui_print "- Bind-mount mode: no direct writes to /data/oplus/uxicons assets"
+                ui_print "- Existing system/external-module adaptations were skipped by the generator."
                 ui_print "- Reboot after installation."
                 """.trimIndent() + "\n",
             )
@@ -124,8 +116,8 @@ internal object ModuleExporter {
                 """
                 #!/system/bin/sh
                 MODDIR=${d}{0%/*}
-                $applyScript
-                apply_assets "${d}MODDIR"
+                $mountScript
+                mount_assets "${d}MODDIR"
                 exit 0
                 """.trimIndent() + "\n",
             )
@@ -135,14 +127,16 @@ internal object ModuleExporter {
                 """
                 #!/system/bin/sh
                 MODDIR=${d}{0%/*}
-                $applyScript
+                $mountScript
+
                 count=0
                 while [ ${d}count -lt 60 ]; do
                   [ -d /data/oplus/uxicons ] && break
                   sleep 1
                   count=${d}((count + 1))
                 done
-                apply_assets "${d}MODDIR"
+
+                mount_assets "${d}MODDIR"
                 exit 0
                 """.trimIndent() + "\n",
             )
@@ -152,11 +146,11 @@ internal object ModuleExporter {
                 """
                 #!/system/bin/sh
                 MODDIR=${d}{0%/*}
-                $applyScript
-                apply_assets "${d}MODDIR"
+                $mountScript
+                mount_assets "${d}MODDIR"
                 am force-stop com.android.launcher >/dev/null 2>&1 || true
-                monkey -p com.android.launcher 1 >/dev/null 2>&1 || true
-                echo "ART+ assets reapplied. If icons are still cached, reboot once."
+                monkey -p com.android.launcher 1 >/dev/null 2>&1 || input keyevent KEYCODE_HOME >/dev/null 2>&1 || true
+                echo "ART+ bind mounts reapplied."
                 exit 0
                 """.trimIndent() + "\n",
             )
@@ -167,28 +161,18 @@ internal object ModuleExporter {
                 #!/system/bin/sh
                 MODDIR=${d}{0%/*}
                 TARGET=/data/oplus/uxicons
-                BACKUP=/data/adb/coloros_artplus_auto_backup
 
                 if [ -f "${d}MODDIR/packages.list" ]; then
                   while IFS= read -r pkg; do
                     [ -n "${d}pkg" ] || continue
                     dst="${d}TARGET/${d}pkg"
-                    bak="${d}BACKUP/${d}pkg"
-                    rm -rf "${d}dst"
-                    if [ -e "${d}bak/.captured" ]; then
-                      mkdir -p "${d}dst"
-                      find "${d}bak" -maxdepth 1 -type f ! -name '.captured' -exec cp -f {} "${d}dst"/ \; 2>/dev/null || true
-                      if ! find "${d}dst" -maxdepth 1 -type f 2>/dev/null | grep -q .; then
-                        rmdir "${d}dst" 2>/dev/null || true
-                      else
-                        chmod 0644 "${d}dst"/* 2>/dev/null || true
-                        restorecon -RF "${d}dst" 2>/dev/null || true
-                      fi
+                    if grep -F " ${d}dst " /proc/self/mountinfo >/dev/null 2>&1; then
+                      umount "${d}dst" 2>/dev/null || umount -l "${d}dst" 2>/dev/null || true
                     fi
                   done < "${d}MODDIR/packages.list"
                 fi
 
-                rm -rf "${d}BACKUP" 2>/dev/null || true
+                am force-stop com.android.launcher >/dev/null 2>&1 || true
                 exit 0
                 """.trimIndent() + "\n",
             )
@@ -214,7 +198,6 @@ internal object ModuleExporter {
         tempZip.delete()
         ExportResult(displayName, uri, handlers)
     }
-
 
     private fun validateModuleZip(zipFile: File, packages: List<String>) {
         ZipFile(zipFile).use { zip ->
