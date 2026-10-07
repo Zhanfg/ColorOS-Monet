@@ -354,29 +354,25 @@ private fun ProgressCard(state: GeneratorUiState) {
             )
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                AssistChip(
-                    onClick = {},
-                    label = { Text("生成 ${c.generated}") },
-                    leadingIcon = {
-                        Icon(
-                            Icons.Rounded.CheckCircle,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    },
+                MetricPill(
+                    label = "生成",
+                    value = c.generated,
+                    modifier = Modifier.weight(1f),
                 )
-                AssistChip(
-                    onClick = {},
-                    label = { Text("系统跳过 ${c.skippedSystem}") },
+                MetricPill(
+                    label = "系统跳过",
+                    value = c.skippedSystem,
+                    modifier = Modifier.weight(1f),
                 )
-                AssistChip(
-                    onClick = {},
-                    label = { Text("模块跳过 ${c.skippedModule}") },
+                MetricPill(
+                    label = "模块跳过",
+                    value = c.skippedModule,
+                    modifier = Modifier.weight(1f),
                 )
             }
-
             if (c.conservative > 0 || c.failed > 0) {
                 Text(
                     text = "保守回退 ${c.conservative} · 失败 ${c.failed}",
@@ -388,6 +384,38 @@ private fun ProgressCard(state: GeneratorUiState) {
     }
 }
 
+@Composable
+private fun MetricPill(
+    label: String,
+    value: Int,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = value.toString(),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                maxLines = 1,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
 @Composable
 private fun ReviewCard(
     state: GeneratorUiState,
