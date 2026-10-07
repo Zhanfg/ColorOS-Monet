@@ -12,7 +12,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 20
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
@@ -27,32 +27,28 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Verify preinstalled Android SDK
+      - name: Verify local toolchain
+        shell: bash
         run: |
           test -f "$ANDROID_HOME/platforms/android-35/android.jar"
           test -x "$ANDROID_HOME/build-tools/35.0.0/aapt2"
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
-          echo "$ANDROID_HOME/build-tools/35.0.0" >> "$GITHUB_PATH"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/d8"
+          test -x "$ANDROID_HOME/build-tools/35.0.0/apksigner"
+          if ! command -v kotlinc >/dev/null 2>&1; then
+            curl -fsSL -o /tmp/kotlin.zip               https://github.com/JetBrains/kotlin/releases/download/v2.2.20/kotlin-compiler-2.2.20.zip
+            unzip -q /tmp/kotlin.zip -d /tmp/kotlin
+            echo "/tmp/kotlin/kotlinc/bin" >> "$GITHUB_PATH"
+          fi
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: "8.10.2"
-
-      - name: Lint and build
-        run: gradle -p artplus-auto :app:lintDebug :app:assembleDebug --stacktrace
-
-      - name: Prepare artifact
-        run: |
-          mkdir -p dist
-          cp artplus-auto/app/build/outputs/apk/debug/app-debug.apk dist/ColorOS17-ARTPlus-Auto-0.1.0-alpha1.apk
-          sha256sum dist/ColorOS17-ARTPlus-Auto-0.1.0-alpha1.apk | tee dist/SHA256SUMS.txt
+      - name: Compile, package, sign and verify
+        shell: bash
+        run: bash artplus-auto/build_apk.sh
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ColorOS17-ARTPlus-Auto-alpha1
           path: |
-            dist/ColorOS17-ARTPlus-Auto-0.1.0-alpha1.apk
-            dist/SHA256SUMS.txt
+            artplus-auto/dist/ColorOS17-ARTPlus-Auto-0.1.0-alpha1.apk
+            artplus-auto/dist/SHA256SUMS.txt
           if-no-files-found: error
