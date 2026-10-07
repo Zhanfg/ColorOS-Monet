@@ -295,6 +295,78 @@ internal class GeneratorViewModel(
         )
     }
 
+    fun regenerateCurrentToggleInvert() {
+        val state = _state.value
+        val item = state.currentReview ?: return
+        if (state.phase != WorkPhase.Reviewing && state.phase != WorkPhase.ReadyToFlash) return
+
+        viewModelScope.launch {
+            try {
+                _state.value = state.copy(
+                    phase = WorkPhase.Generating,
+                    rootMessage = "正在重新生成 ${item.label}…",
+                    error = null,
+                )
+
+                val target = IconPipeline.launcherTargetForPackage(
+                    getApplication<Application>().packageManager,
+                    item.packageName,
+                ) ?: error("无法重新读取应用图标")
+
+                val forceInvert = item.strategy != GenerationStrategy.DarkDominantInvert
+                val output = IconPipeline.generate(
+                    target.icon,
+                    invertOverride = forceInvert,
+                )
+
+                IconPipeline.writeAssets(
+                    output,
+                    File(generatedRoot, item.packageName),
+                )
+
+                val status = when {
+                    output.conservative -> ItemStatus.ConservativeFallback
+                    output.adaptive -> ItemStatus.GeneratedAdaptive
+                    else -> ItemStatus.GeneratedLegacy
+                }
+
+                val updated = state.reviewItems.toMutableList()
+                updated[state.reviewIndex] = item.copy(
+                    original = output.original,
+                    generated = output.preview(),
+                    status = status,
+                    strategy = output.strategy,
+                    flipped = output.flipped,
+                    confidence = output.confidence,
+                    decision = ReviewDecision.Pending,
+                )
+
+                _state.value = state.copy(
+                    phase = WorkPhase.Reviewing,
+                    rootMessage = if (forceInvert) {
+                        "已用强制反相重新生成 · 等待确认"
+                    } else {
+                        "已关闭反相重新生成 · 等待确认"
+                    },
+                    reviewItems = updated,
+                    module = null,
+                    managerHandlers = emptyList(),
+                    error = null,
+                )
+
+                val mode = if (forceInvert) "强制反相" else "关闭反相"
+                appendLog("重生成 · ${item.label} · ${mode}")
+            } catch (t: Throwable) {
+                _state.value = state.copy(
+                    phase = WorkPhase.Reviewing,
+                    error = t.message ?: t.javaClass.simpleName,
+                    rootMessage = "单图重生成失败",
+                )
+                appendLog("单图重生成失败 · ${item.label} · ${t.javaClass.simpleName}")
+            }
+        }
+    }
+
     fun exportApproved() {
         val state = _state.value
         if (state.phase != WorkPhase.Reviewing && state.phase != WorkPhase.ReadyToFlash) return
