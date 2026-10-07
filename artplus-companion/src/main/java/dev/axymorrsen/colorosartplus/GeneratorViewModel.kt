@@ -56,11 +56,6 @@ internal class GeneratorViewModel(
                     rootMessage = "Root 已授权",
                 )
 
-                val restoredAlpha1 = RootShell.restoreAlpha1WritesOnce()
-                if (restoredAlpha1 > 0) {
-                    appendLog("已恢复 alpha1 直接写入前状态：$restoredAlpha1 个应用")
-                }
-
                 updatePhase(WorkPhase.Scanning, "正在扫描系统 ART+ 与现有模块…")
                 val adapted = RootShell.scanAdaptedPackages()
                 val targets = IconPipeline.launcherTargets(
@@ -205,6 +200,65 @@ internal class GeneratorViewModel(
                     error = t.message ?: t.javaClass.simpleName,
                 )
                 appendLog("任务失败 · ${t.javaClass.simpleName}: ${t.message.orEmpty()}")
+            }
+        }
+    }
+
+
+    fun recoverLegacyAlpha1() {
+        if (_state.value.phase in setOf(
+                WorkPhase.RequestingRoot,
+                WorkPhase.Scanning,
+                WorkPhase.Generating,
+                WorkPhase.Packaging,
+            )
+        ) {
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                _state.value = _state.value.copy(
+                    phase = WorkPhase.RequestingRoot,
+                    rootMessage = "正在安全恢复 alpha1 残留…",
+                    error = null,
+                )
+
+                if (!RootShell.hasRoot()) {
+                    _state.value = _state.value.copy(
+                        phase = WorkPhase.Failed,
+                        hasRoot = false,
+                        rootMessage = "未获得 Root 权限",
+                        error = "Root 被拒绝或 su 不可用。",
+                    )
+                    return@launch
+                }
+
+                val restored = RootShell.restoreLegacyAlpha1Safely()
+                _state.value = _state.value.copy(
+                    phase = WorkPhase.Idle,
+                    hasRoot = true,
+                    rootMessage = if (restored > 0) {
+                        "恢复完成：已处理 $restored 个旧版图标"
+                    } else {
+                        "未发现可恢复的 alpha1 备份"
+                    },
+                    error = null,
+                )
+                appendLog(
+                    if (restored > 0) {
+                        "安全恢复完成 · $restored 个应用；如旧模块需要重新挂载，请重启一次"
+                    } else {
+                        "未发现 alpha1 首次覆盖前备份"
+                    },
+                )
+            } catch (t: Throwable) {
+                _state.value = _state.value.copy(
+                    phase = WorkPhase.Failed,
+                    error = t.message ?: t.javaClass.simpleName,
+                    rootMessage = "恢复失败",
+                )
+                appendLog("恢复失败 · ${t.javaClass.simpleName}: ${t.message.orEmpty()}")
             }
         }
     }
