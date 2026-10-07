@@ -40,13 +40,18 @@ internal object RootShell {
               /oplus_product/media/theme/uxicons
 
             if [ -d /data/adb/modules ]; then
-              find /data/adb/modules -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
-                case "${d}f" in
-                  */uxicons/*/rec_night.png)
-                    pkg="${d}(basename "${d}(dirname "${d}f")")"
-                    printf 'MOD|%s\n' "${d}pkg"
-                    ;;
-                esac
+              for mod in /data/adb/modules/*; do
+                [ -d "${d}mod" ] || continue
+                [ -e "${d}mod/disable" ] && continue
+                [ -e "${d}mod/remove" ] && continue
+                find "${d}mod" -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
+                  case "${d}f" in
+                    */uxicons/*/rec_night.png)
+                      pkg="${d}(basename "${d}(dirname "${d}f")")"
+                      printf 'MOD|%s\n' "${d}pkg"
+                      ;;
+                  esac
+                done
               done
             fi
         """.trimIndent()
