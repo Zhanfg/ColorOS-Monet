@@ -189,7 +189,8 @@ internal class GeneratorViewModel(
                                         original = generated.original,
                                         generated = preview,
                                         status = status,
-                                        strategy = generated.strategy,
+                                        nightStrategy = generated.nightStrategy,
+                                        monoStrategy = generated.monoStrategy,
                                         flipped = generated.flipped,
                                         confidence = generated.confidence,
                                     )
@@ -202,7 +203,8 @@ internal class GeneratorViewModel(
                                             original = generated.original,
                                             generated = preview,
                                             status = status,
-                                            strategy = generated.strategy,
+                                            nightStrategy = generated.nightStrategy,
+                                        monoStrategy = generated.monoStrategy,
                                             flipped = generated.flipped,
                                             confidence = generated.confidence,
                                         ),
@@ -210,7 +212,7 @@ internal class GeneratorViewModel(
                                     )
 
                                     appendLog(
-                                        "草稿 · ${strategyLabel(generated.strategy)} · ${result.target.label}",
+                                        "草稿 · ${nightStrategyLabel(generated.nightStrategy)} / ${monoStrategyLabel(generated.monoStrategy)} · ${result.target.label}",
                                     )
                                 }
 
@@ -313,7 +315,7 @@ internal class GeneratorViewModel(
                     item.packageName,
                 ) ?: error("无法重新读取应用图标")
 
-                val forceInvert = item.strategy != GenerationStrategy.DarkDominantInvert
+                val forceInvert = item.nightStrategy != NightStrategy.DarkDominantInvert
                 val output = IconPipeline.generate(
                     target.icon,
                     invertOverride = forceInvert,
@@ -335,7 +337,8 @@ internal class GeneratorViewModel(
                     original = output.original,
                     generated = output.preview(),
                     status = status,
-                    strategy = output.strategy,
+                    nightStrategy = output.nightStrategy,
+                    monoStrategy = output.monoStrategy,
                     flipped = output.flipped,
                     confidence = output.confidence,
                     decision = ReviewDecision.Pending,
@@ -545,13 +548,16 @@ internal class GeneratorViewModel(
         _state.value = _state.value.copy(logLines = next)
     }
 
-    private fun strategyLabel(strategy: GenerationStrategy): String = when (strategy) {
-        GenerationStrategy.NativeMonochrome -> "原生 monochrome"
-        GenerationStrategy.AospMonochrome -> "AOSP mono"
-        GenerationStrategy.DarkDominantInvert -> "暗主体自动反相"
-        GenerationStrategy.AdaptiveToneLift -> "Adaptive 提亮"
-        GenerationStrategy.LegacyToneLift -> "Legacy 提亮"
-        GenerationStrategy.ConservativeFallback -> "保守回退"
+    private fun nightStrategyLabel(strategy: NightStrategy): String = when (strategy) {
+        NightStrategy.PreserveBrandColor -> "保留品牌色"
+        NightStrategy.NeutralDarkLift -> "中性暗部提亮"
+        NightStrategy.DarkDominantInvert -> "暗主体自动反相"
+        NightStrategy.ConservativeFallback -> "保守回退"
+    }
+
+    private fun monoStrategyLabel(strategy: MonoStrategy): String = when (strategy) {
+        MonoStrategy.NativeMonochrome -> "原生 monochrome"
+        MonoStrategy.AospMonochrome -> "AOSP mono"
     }
 
     private companion object {
