@@ -29,13 +29,16 @@ internal enum class ReviewDecision {
     Rejected,
 }
 
-internal enum class GenerationStrategy {
+internal enum class NightStrategy {
+    PreserveBrandColor,
+    NeutralDarkLift,
+    DarkDominantInvert,
+    ConservativeFallback,
+}
+
+internal enum class MonoStrategy {
     NativeMonochrome,
     AospMonochrome,
-    DarkDominantInvert,
-    AdaptiveToneLift,
-    LegacyToneLift,
-    ConservativeFallback,
 }
 
 internal data class GenerationCounters(
@@ -57,7 +60,8 @@ internal data class PreviewFrame(
     val original: Bitmap?,
     val generated: Bitmap?,
     val status: ItemStatus,
-    val strategy: GenerationStrategy? = null,
+    val nightStrategy: NightStrategy? = null,
+    val monoStrategy: MonoStrategy? = null,
     val flipped: Boolean = false,
     val confidence: Float = 1f,
 )
@@ -68,7 +72,8 @@ internal data class ReviewItem(
     val original: Bitmap,
     val generated: Bitmap,
     val status: ItemStatus,
-    val strategy: GenerationStrategy,
+    val nightStrategy: NightStrategy,
+    val monoStrategy: MonoStrategy,
     val flipped: Boolean,
     val confidence: Float,
     val decision: ReviewDecision = ReviewDecision.Pending,
