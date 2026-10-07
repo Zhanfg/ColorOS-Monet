@@ -4,12 +4,16 @@ import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -23,6 +27,20 @@ internal class GeneratorViewModel(
     val installerRequests: SharedFlow<Uri> = _installerRequests.asSharedFlow()
 
     private val generatedRoot = File(application.filesDir, "generated-artplus")
+
+    private sealed interface WorkResult {
+        val target: IconPipeline.Target
+
+        data class Success(
+            override val target: IconPipeline.Target,
+            val output: IconPipeline.Output,
+        ) : WorkResult
+
+        data class Failure(
+            override val target: IconPipeline.Target,
+            val error: Throwable,
+        ) : WorkResult
+    }
 
     fun startGeneration() {
         if (_state.value.phase in setOf(
@@ -69,8 +87,9 @@ internal class GeneratorViewModel(
                     "扫描完成：桌面应用 ${targets.size} 个；系统已适配 ${adapted.system.size} 个；模块已适配 ${adapted.modules.size} 个",
                 )
 
-                updatePhase(WorkPhase.Generating, "开始生成缺失图标…")
+                updatePhase(WorkPhase.Generating, "开始并发生成缺失图标…")
 
+                val pending = ArrayList<IconPipeline.Target>(targets.size)
                 targets.forEach { target ->
                     when {
                         target.packageName in adapted.system -> {
@@ -109,60 +128,121 @@ internal class GeneratorViewModel(
                             appendLog("跳过 · 已有模块适配 · ${target.label}")
                         }
 
-                        else -> {
-                            runCatching {
-                                val output = IconPipeline.generate(target.icon)
-                                IconPipeline.writeAssets(
-                                    output,
-                                    File(generatedRoot, target.packageName),
-                                )
+                        else -> pending += target
+                    }
+                }
 
-                                counters = counters.copy(
-                                    processed = counters.processed + 1,
-                                    generated = counters.generated + 1,
-                                    conservative = counters.conservative + if (output.conservative) 1 else 0,
-                                )
-                                val status = when {
-                                    output.conservative -> ItemStatus.ConservativeFallback
-                                    output.adaptive -> ItemStatus.GeneratedAdaptive
-                                    else -> ItemStatus.GeneratedLegacy
+                if (pending.isNotEmpty()) {
+                    val workers = chooseWorkerCount(pending.size)
+                    _state.value = _state.value.copy(
+                        rootMessage = "并发生成中 · ${workers} workers",
+                    )
+                    appendLog("并发生成已启用：${workers} workers")
+
+                    coroutineScope {
+                        val input = Channel<IconPipeline.Target>(capacity = workers * 2)
+                        val output = Channel<WorkResult>(capacity = workers * 2)
+
+                        val producer = launch {
+                            pending.forEach { input.send(it) }
+                            input.close()
+                        }
+
+                        val workerJobs = List(workers) {
+                            launch(Dispatchers.Default) {
+                                for (target in input) {
+                                    val result = runCatching {
+                                        val generated = IconPipeline.generate(target.icon)
+                                        IconPipeline.writeAssets(
+                                            generated,
+                                            File(generatedRoot, target.packageName),
+                                        )
+                                        WorkResult.Success(
+                                            target = target,
+                                            output = generated,
+                                        )
+                                    }.getOrElse { error ->
+                                        WorkResult.Failure(
+                                            target = target,
+                                            error = error,
+                                        )
+                                    }
+                                    output.send(result)
                                 }
-                                _state.value = _state.value.copy(
-                                    counters = counters,
-                                    current = PreviewFrame(
-                                        packageName = target.packageName,
-                                        label = target.label,
-                                        original = output.original,
-                                        generated = output.preview(),
-                                        status = status,
-                                    ),
-                                )
-                                appendLog(
-                                    when (status) {
-                                        ItemStatus.GeneratedAdaptive -> "生成 · 原生分层 · ${target.label}"
-                                        ItemStatus.GeneratedLegacy -> "生成 · 智能拆层 · ${target.label}"
-                                        ItemStatus.ConservativeFallback -> "生成 · 保守回退 · ${target.label}"
-                                        else -> "生成 · ${target.label}"
-                                    },
-                                )
-                            }.onFailure { error ->
-                                counters = counters.copy(
-                                    processed = counters.processed + 1,
-                                    failed = counters.failed + 1,
-                                )
-                                _state.value = _state.value.copy(
-                                    counters = counters,
-                                    current = PreviewFrame(
-                                        packageName = target.packageName,
-                                        label = target.label,
-                                        original = null,
-                                        generated = null,
-                                        status = ItemStatus.Failed,
-                                    ),
-                                )
-                                appendLog("失败 · ${target.label} · ${error.javaClass.simpleName}")
                             }
                         }
+
+                        val closer = launch {
+                            workerJobs.joinAll()
+                            output.close()
+                        }
+
+                        for (result in output) {
+                            when (result) {
+                                is WorkResult.Success -> {
+                                    val generated = result.output
+                                    counters = counters.copy(
+                                        processed = counters.processed + 1,
+                                        generated = counters.generated + 1,
+                                        conservative = counters.conservative +
+                                            if (generated.conservative) 1 else 0,
+                                    )
+
+                                    val status = when {
+                                        generated.conservative -> ItemStatus.ConservativeFallback
+                                        generated.adaptive -> ItemStatus.GeneratedAdaptive
+                                        else -> ItemStatus.GeneratedLegacy
+                                    }
+
+                                    _state.value = _state.value.copy(
+                                        counters = counters,
+                                        current = PreviewFrame(
+                                            packageName = result.target.packageName,
+                                            label = result.target.label,
+                                            original = generated.original,
+                                            generated = generated.preview(),
+                                            status = status,
+                                        ),
+                                    )
+
+                                    appendLog(
+                                        when (status) {
+                                            ItemStatus.GeneratedAdaptive ->
+                                                "生成 · 原生分层 · ${result.target.label}"
+                                            ItemStatus.GeneratedLegacy ->
+                                                "生成 · 智能拆层 · ${result.target.label}"
+                                            ItemStatus.ConservativeFallback ->
+                                                "生成 · 保守回退 · ${result.target.label}"
+                                            else ->
+                                                "生成 · ${result.target.label}"
+                                        },
+                                    )
+                                }
+
+                                is WorkResult.Failure -> {
+                                    counters = counters.copy(
+                                        processed = counters.processed + 1,
+                                        failed = counters.failed + 1,
+                                    )
+                                    _state.value = _state.value.copy(
+                                        counters = counters,
+                                        current = PreviewFrame(
+                                            packageName = result.target.packageName,
+                                            label = result.target.label,
+                                            original = null,
+                                            generated = null,
+                                            status = ItemStatus.Failed,
+                                        ),
+                                    )
+                                    appendLog(
+                                        "失败 · ${result.target.label} · ${result.error.javaClass.simpleName}",
+                                    )
+                                }
+                            }
+                        }
+
+                        producer.join()
+                        closer.join()
                     }
                 }
 
@@ -203,7 +283,6 @@ internal class GeneratorViewModel(
             }
         }
     }
-
 
     fun recoverLegacyAlpha1() {
         if (_state.value.phase in setOf(
@@ -267,6 +346,34 @@ internal class GeneratorViewModel(
         _state.value.module?.uri?.let { uri ->
             _installerRequests.tryEmit(uri)
         }
+    }
+
+    private fun chooseWorkerCount(taskCount: Int): Int {
+        if (taskCount <= 1) return taskCount.coerceAtLeast(1)
+
+        val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(2)
+        val maxMemoryMb = Runtime.getRuntime().maxMemory() / (1024L * 1024L)
+
+        val cpuBound = when {
+            cores >= 10 -> 6
+            cores >= 8 -> 5
+            cores >= 6 -> 4
+            else -> 2
+        }
+
+        val memoryBound = when {
+            maxMemoryMb >= 4096 -> 6
+            maxMemoryMb >= 2048 -> 5
+            maxMemoryMb >= 1024 -> 4
+            else -> 2
+        }
+
+        return minOf(
+            taskCount,
+            cpuBound,
+            memoryBound,
+            6,
+        ).coerceAtLeast(2)
     }
 
     private fun resetRun() {
