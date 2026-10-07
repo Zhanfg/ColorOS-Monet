@@ -42,6 +42,7 @@ internal object ModuleExporter {
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
         val displayName = "ColorOS-ARTPlus-Auto-Generated-$stamp.zip"
         val tempZip = File(context.cacheDir, displayName)
+        val d = '$'
 
         ZipOutputStream(BufferedOutputStream(FileOutputStream(tempZip))).use { zip ->
             fun textEntry(name: String, text: String) {
@@ -71,33 +72,33 @@ internal object ModuleExporter {
 
             val applyScript = """
                 apply_assets() {
-                  MODDIR="$1"
+                  MODDIR="${d}1"
                   TARGET=/data/oplus/uxicons
                   BACKUP=/data/adb/coloros_artplus_auto_backup
-                  mkdir -p "$TARGET" "$BACKUP" 2>/dev/null || true
-                  chmod 0700 "$BACKUP" 2>/dev/null || true
+                  mkdir -p "${d}TARGET" "${d}BACKUP" 2>/dev/null || true
+                  chmod 0700 "${d}BACKUP" 2>/dev/null || true
 
-                  [ -f "$MODDIR/packages.list" ] || return 0
+                  [ -f "${d}MODDIR/packages.list" ] || return 0
                   while IFS= read -r pkg; do
-                    [ -n "$pkg" ] || continue
-                    src="$MODDIR/payload/uxicons/$pkg"
-                    dst="$TARGET/$pkg"
-                    bak="$BACKUP/$pkg"
-                    [ -d "$src" ] || continue
+                    [ -n "${d}pkg" ] || continue
+                    src="${d}MODDIR/payload/uxicons/${d}pkg"
+                    dst="${d}TARGET/${d}pkg"
+                    bak="${d}BACKUP/${d}pkg"
+                    [ -d "${d}src" ] || continue
 
-                    if [ ! -e "$bak/.captured" ]; then
-                      mkdir -p "$bak"
-                      if [ -d "$dst" ]; then
-                        cp -af "$dst"/. "$bak"/ 2>/dev/null || true
+                    if [ ! -e "${d}bak/.captured" ]; then
+                      mkdir -p "${d}bak"
+                      if [ -d "${d}dst" ]; then
+                        cp -af "${d}dst"/. "${d}bak"/ 2>/dev/null || true
                       fi
-                      touch "$bak/.captured"
+                      touch "${d}bak/.captured"
                     fi
 
-                    mkdir -p "$dst"
-                    cp -f "$src"/*.png "$dst"/ 2>/dev/null || true
-                    chmod 0644 "$dst"/*.png 2>/dev/null || true
-                    restorecon -RF "$dst" 2>/dev/null || true
-                  done < "$MODDIR/packages.list"
+                    mkdir -p "${d}dst"
+                    cp -f "${d}src"/*.png "${d}dst"/ 2>/dev/null || true
+                    chmod 0644 "${d}dst"/*.png 2>/dev/null || true
+                    restorecon -RF "${d}dst" 2>/dev/null || true
+                  done < "${d}MODDIR/packages.list"
                 }
             """.trimIndent()
 
@@ -117,9 +118,9 @@ internal object ModuleExporter {
                 "post-fs-data.sh",
                 """
                 #!/system/bin/sh
-                MODDIR=${0%/*}
+                MODDIR=${d}{0%/*}
                 $applyScript
-                apply_assets "$MODDIR"
+                apply_assets "${d}MODDIR"
                 exit 0
                 """.trimIndent() + "\n",
             )
@@ -128,9 +129,9 @@ internal object ModuleExporter {
                 "action.sh",
                 """
                 #!/system/bin/sh
-                MODDIR=${0%/*}
+                MODDIR=${d}{0%/*}
                 $applyScript
-                apply_assets "$MODDIR"
+                apply_assets "${d}MODDIR"
                 am force-stop com.android.launcher >/dev/null 2>&1 || true
                 monkey -p com.android.launcher 1 >/dev/null 2>&1 || true
                 echo "ART+ assets reapplied. If icons are still cached, reboot once."
@@ -142,30 +143,30 @@ internal object ModuleExporter {
                 "uninstall.sh",
                 """
                 #!/system/bin/sh
-                MODDIR=${0%/*}
+                MODDIR=${d}{0%/*}
                 TARGET=/data/oplus/uxicons
                 BACKUP=/data/adb/coloros_artplus_auto_backup
 
-                if [ -f "$MODDIR/packages.list" ]; then
+                if [ -f "${d}MODDIR/packages.list" ]; then
                   while IFS= read -r pkg; do
-                    [ -n "$pkg" ] || continue
-                    dst="$TARGET/$pkg"
-                    bak="$BACKUP/$pkg"
-                    rm -rf "$dst"
-                    if [ -e "$bak/.captured" ]; then
-                      mkdir -p "$dst"
-                      find "$bak" -maxdepth 1 -type f ! -name '.captured' -exec cp -f {} "$dst"/ \; 2>/dev/null || true
-                      if ! find "$dst" -maxdepth 1 -type f 2>/dev/null | grep -q .; then
-                        rmdir "$dst" 2>/dev/null || true
+                    [ -n "${d}pkg" ] || continue
+                    dst="${d}TARGET/${d}pkg"
+                    bak="${d}BACKUP/${d}pkg"
+                    rm -rf "${d}dst"
+                    if [ -e "${d}bak/.captured" ]; then
+                      mkdir -p "${d}dst"
+                      find "${d}bak" -maxdepth 1 -type f ! -name '.captured' -exec cp -f {} "${d}dst"/ \; 2>/dev/null || true
+                      if ! find "${d}dst" -maxdepth 1 -type f 2>/dev/null | grep -q .; then
+                        rmdir "${d}dst" 2>/dev/null || true
                       else
-                        chmod 0644 "$dst"/* 2>/dev/null || true
-                        restorecon -RF "$dst" 2>/dev/null || true
+                        chmod 0644 "${d}dst"/* 2>/dev/null || true
+                        restorecon -RF "${d}dst" 2>/dev/null || true
                       fi
                     fi
-                  done < "$MODDIR/packages.list"
+                  done < "${d}MODDIR/packages.list"
                 fi
 
-                rm -rf "$BACKUP" 2>/dev/null || true
+                rm -rf "${d}BACKUP" 2>/dev/null || true
                 exit 0
                 """.trimIndent() + "\n",
             )
