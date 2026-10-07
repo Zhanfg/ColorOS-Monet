@@ -1,6 +1,6 @@
 package dev.zhanfg.colorosmonet.bridge.ui;
 
-import android.app.Activity;
+import android.app.Activity;\nimport android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -47,8 +47,12 @@ public final class GeneratorActivity extends Activity {
         content.addView(scanButton, matchWrap());
 
         generateButton = new Button(this);
-        generateButton.setText("一键生成并写入 ART+");
+        generateButton.setText("一键补全缺失暗色图标");
         content.addView(generateButton, matchWrap());
+
+        restoreButton = new Button(this);
+        restoreButton.setText("恢复上次生成前状态");
+        content.addView(restoreButton, matchWrap());
 
         refreshLauncher = new CheckBox(this);
         refreshLauncher.setText("完成后刷新桌面缓存（会短暂重载桌面）");
@@ -72,6 +76,7 @@ public final class GeneratorActivity extends Activity {
 
         scanButton.setOnClickListener(v -> runScan());
         generateButton.setOnClickListener(v -> runGenerate());
+        restoreButton.setOnClickListener(v -> confirmRestore());
     }
 
     private LinearLayout.LayoutParams matchWrap() {
@@ -83,6 +88,7 @@ public final class GeneratorActivity extends Activity {
     private void setBusy(boolean busy) {
         scanButton.setEnabled(!busy);
         generateButton.setEnabled(!busy);
+        restoreButton.setEnabled(!busy);
         progress.setVisibility(busy ? View.VISIBLE : View.GONE);
     }
 
@@ -146,6 +152,39 @@ public final class GeneratorActivity extends Activity {
                 failUi(t);
             }
         }, "artplus-generate").start();
+    }
+
+    private void confirmRestore() {
+        if (!ArtPlusGenerator.hasRoot()) {
+            status.setText("无法恢复：没有获得 root。");
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("恢复上次生成前状态")
+                .setMessage("只恢复本工具上一次批量生成触碰过的 /data/oplus/uxicons 包目录。系统内置 /my_product 资源不会被修改。")
+                .setNegativeButton("取消", null)
+                .setPositiveButton("恢复", (dialog, which) -> runRestore())
+                .show();
+    }
+
+    private void runRestore() {
+        setBusy(true);
+        status.setText("状态：正在恢复上次备份…");
+        new Thread(() -> {
+            try {
+                ArtPlusGenerator.restoreLastBackupWithRoot();
+                try {
+                    ArtPlusGenerator.refreshLauncherWithRoot();
+                } catch (Throwable ignored) {
+                }
+                runOnUiThread(() -> {
+                    status.setText("恢复完成。已还原上次生成触碰过的 data 层 ART+ 目录。");
+                    setBusy(false);
+                });
+            } catch (Throwable t) {
+                failUi(t);
+            }
+        }, "artplus-restore").start();
     }
 
     private void failUi(Throwable t) {
