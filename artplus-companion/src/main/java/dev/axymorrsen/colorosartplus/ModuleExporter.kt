@@ -76,6 +76,7 @@ internal object ModuleExporter {
                   MODDIR="${d}1"
                   TARGET=/data/oplus/uxicons
                   BACKUP=/data/adb/coloros_artplus_auto_backup
+                  LEGACY_BACKUP=/data/adb/coloros-monet/artplus-backup/original
                   mkdir -p "${d}TARGET" "${d}BACKUP" 2>/dev/null || true
                   chmod 0700 "${d}BACKUP" 2>/dev/null || true
 
@@ -89,7 +90,10 @@ internal object ModuleExporter {
 
                     if [ ! -e "${d}bak/.captured" ]; then
                       mkdir -p "${d}bak"
-                      if [ -d "${d}dst" ]; then
+                      legacy="${d}LEGACY_BACKUP/${d}pkg"
+                      if [ -e "${d}legacy/.captured" ]; then
+                        find "${d}legacy" -maxdepth 1 -type f ! -name '.captured' -exec cp -f {} "${d}bak"/ \; 2>/dev/null || true
+                      elif [ -d "${d}dst" ]; then
                         cp -af "${d}dst"/. "${d}bak"/ 2>/dev/null || true
                       fi
                       touch "${d}bak/.captured"
