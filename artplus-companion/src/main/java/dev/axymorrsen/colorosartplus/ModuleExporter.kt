@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
+import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
 internal object ModuleExporter {
@@ -203,10 +204,46 @@ internal object ModuleExporter {
             }
         }
 
+        validateModuleZip(tempZip, packageDirs.map { it.name })
         val uri = publishToDownloads(context, tempZip, displayName)
         val handlers = resolveZipHandlers(context, uri)
         tempZip.delete()
         ExportResult(displayName, uri, handlers)
+    }
+
+
+    private fun validateModuleZip(zipFile: File, packages: List<String>) {
+        ZipFile(zipFile).use { zip ->
+            val names = zip.entries().asSequence().map { it.name }.toSet()
+            val requiredRoot = setOf(
+                "module.prop",
+                "skip_mount",
+                "packages.list",
+                "post-fs-data.sh",
+                "service.sh",
+                "action.sh",
+                "uninstall.sh",
+            )
+            val missingRoot = requiredRoot - names
+            check(missingRoot.isEmpty()) {
+                "模块结构缺失: ${missingRoot.joinToString()}"
+            }
+
+            val requiredAssets = listOf(
+                "recfg.png",
+                "recbg.png",
+                "rec_night.png",
+                "monochrome.png",
+            )
+            packages.forEach { pkg ->
+                requiredAssets.forEach { asset ->
+                    val path = "payload/uxicons/${pkg}/${asset}"
+                    check(path in names) {
+                        "模块资源缺失: ${path}"
+                    }
+                }
+            }
+        }
     }
 
     private fun publishToDownloads(context: Context, source: File, displayName: String): Uri {
