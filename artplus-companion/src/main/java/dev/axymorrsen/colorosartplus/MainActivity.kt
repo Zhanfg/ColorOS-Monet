@@ -480,8 +480,13 @@ private fun ReviewCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        text = "策略：${generationStrategyLabel(item.strategy)}",
+                        text = "暗色：${nightStrategyLabel(item.nightStrategy)}",
                         style = MaterialTheme.typography.bodySmall,
+                    )
+                    Text(
+                        text = "单色：${monoStrategyLabel(item.monoStrategy)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
                         text = buildString {
@@ -523,7 +528,7 @@ private fun ReviewCard(
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
-                    if (item.strategy == GenerationStrategy.DarkDominantInvert) {
+                    if (item.nightStrategy == NightStrategy.DarkDominantInvert) {
                         "关闭反相并重新生成"
                     } else {
                         "强制反相并重新生成"
@@ -773,13 +778,16 @@ private fun phaseLabel(phase: WorkPhase): String = when (phase) {
 }
 
 
-private fun generationStrategyLabel(strategy: GenerationStrategy): String = when (strategy) {
-    GenerationStrategy.NativeMonochrome -> "原生 monochrome"
-    GenerationStrategy.AospMonochrome -> "AOSP 单色自动生成"
-    GenerationStrategy.DarkDominantInvert -> "暗主体亮度反相"
-    GenerationStrategy.AdaptiveToneLift -> "Adaptive 提亮"
-    GenerationStrategy.LegacyToneLift -> "Legacy 提亮"
-    GenerationStrategy.ConservativeFallback -> "保守回退"
+private fun nightStrategyLabel(strategy: NightStrategy): String = when (strategy) {
+    NightStrategy.PreserveBrandColor -> "保留品牌色"
+    NightStrategy.NeutralDarkLift -> "中性暗部提亮"
+    NightStrategy.DarkDominantInvert -> "暗主体亮度反相"
+    NightStrategy.ConservativeFallback -> "保守回退"
+}
+
+private fun monoStrategyLabel(strategy: MonoStrategy): String = when (strategy) {
+    MonoStrategy.NativeMonochrome -> "原生 monochrome"
+    MonoStrategy.AospMonochrome -> "AOSP 单色自动生成"
 }
 
 private fun reviewDecisionLabel(decision: ReviewDecision): String = when (decision) {
