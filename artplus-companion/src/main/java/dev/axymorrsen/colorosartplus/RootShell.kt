@@ -88,6 +88,9 @@ internal object RootShell {
                 [ -e "${d}mod/disable" ] && continue
                 [ -e "${d}mod/remove" ] && continue
 
+                modid="${d}(basename "${d}mod")"
+                [ "${d}modid" = "coloros_artplus_auto_generated" ] && continue
+
                 find "${d}mod" -type f -name 'rec_night.png' 2>/dev/null | while IFS= read -r f; do
                   case "${d}f" in
                     */uxicons/*/rec_night.png)
