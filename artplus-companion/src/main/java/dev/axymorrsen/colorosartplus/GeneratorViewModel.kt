@@ -43,23 +43,14 @@ internal class GeneratorViewModel(
     }
 
     fun startGeneration() {
-        if (_state.value.phase in setOf(
-                WorkPhase.RequestingRoot,
-                WorkPhase.Scanning,
-                WorkPhase.Generating,
-                WorkPhase.Packaging,
-            )
-        ) {
-            return
-        }
+        if (_state.value.phase in busyPhases) return
 
         viewModelScope.launch {
             try {
                 resetRun()
                 updatePhase(WorkPhase.RequestingRoot, "正在申请 Root 权限…")
 
-                val root = RootShell.hasRoot()
-                if (!root) {
+                if (!RootShell.hasRoot()) {
                     _state.value = _state.value.copy(
                         phase = WorkPhase.Failed,
                         hasRoot = false,
@@ -83,13 +74,16 @@ internal class GeneratorViewModel(
 
                 var counters = GenerationCounters(total = targets.size)
                 _state.value = _state.value.copy(counters = counters)
+
                 appendLog(
                     "扫描完成：桌面应用 ${targets.size} 个；系统已适配 ${adapted.system.size} 个；模块已适配 ${adapted.modules.size} 个",
                 )
 
-                updatePhase(WorkPhase.Generating, "开始并发生成缺失图标…")
+                updatePhase(WorkPhase.Generating, "开始并发生成草稿…")
 
                 val pending = ArrayList<IconPipeline.Target>(targets.size)
+                val reviews = ArrayList<ReviewItem>()
+
                 targets.forEach { target ->
                     when {
                         target.packageName in adapted.system -> {
@@ -135,7 +129,7 @@ internal class GeneratorViewModel(
                 if (pending.isNotEmpty()) {
                     val workers = chooseWorkerCount(pending.size)
                     _state.value = _state.value.copy(
-                        rootMessage = "并发生成中 · ${workers} workers",
+                        rootMessage = "并发生成草稿 · ${workers} workers",
                     )
                     appendLog("并发生成已启用：${workers} workers")
 
@@ -157,15 +151,9 @@ internal class GeneratorViewModel(
                                             generated,
                                             File(generatedRoot, target.packageName),
                                         )
-                                        WorkResult.Success(
-                                            target = target,
-                                            output = generated,
-                                        )
+                                        WorkResult.Success(target, generated)
                                     }.getOrElse { error ->
-                                        WorkResult.Failure(
-                                            target = target,
-                                            error = error,
-                                        )
+                                        WorkResult.Failure(target, error)
                                     }
                                     output.send(result)
                                 }
@@ -194,28 +182,35 @@ internal class GeneratorViewModel(
                                         else -> ItemStatus.GeneratedLegacy
                                     }
 
+                                    val preview = generated.preview()
+                                    reviews += ReviewItem(
+                                        packageName = result.target.packageName,
+                                        label = result.target.label,
+                                        original = generated.original,
+                                        generated = preview,
+                                        status = status,
+                                        strategy = generated.strategy,
+                                        flipped = generated.flipped,
+                                        confidence = generated.confidence,
+                                    )
+
                                     _state.value = _state.value.copy(
                                         counters = counters,
                                         current = PreviewFrame(
                                             packageName = result.target.packageName,
                                             label = result.target.label,
                                             original = generated.original,
-                                            generated = generated.preview(),
+                                            generated = preview,
                                             status = status,
+                                            strategy = generated.strategy,
+                                            flipped = generated.flipped,
+                                            confidence = generated.confidence,
                                         ),
+                                        reviewItems = reviews.toList(),
                                     )
 
                                     appendLog(
-                                        when (status) {
-                                            ItemStatus.GeneratedAdaptive ->
-                                                "生成 · 原生分层 · ${result.target.label}"
-                                            ItemStatus.GeneratedLegacy ->
-                                                "生成 · 智能拆层 · ${result.target.label}"
-                                            ItemStatus.ConservativeFallback ->
-                                                "生成 · 保守回退 · ${result.target.label}"
-                                            else ->
-                                                "生成 · ${result.target.label}"
-                                        },
+                                        "草稿 · ${strategyLabel(generated.strategy)} · ${result.target.label}",
                                     )
                                 }
 
@@ -246,34 +241,26 @@ internal class GeneratorViewModel(
                     }
                 }
 
-                if (counters.generated == 0) {
+                if (reviews.isEmpty()) {
                     _state.value = _state.value.copy(
-                        phase = WorkPhase.ReadyToFlash,
-                        rootMessage = "无需生成：所有可识别应用均已有适配",
+                        phase = WorkPhase.Idle,
+                        rootMessage = "无需生成：未发现需要新适配的图标",
+                        reviewItems = emptyList(),
+                        reviewIndex = 0,
                     )
-                    appendLog("没有生成新的图标，因此不会创建空模块。")
+                    appendLog("没有新的图标草稿需要审核。")
                     return@launch
                 }
 
-                updatePhase(WorkPhase.Packaging, "正在封装可刷入模块…")
-                val exported = ModuleExporter.buildAndPublish(
-                    context = getApplication(),
-                    generatedRoot = generatedRoot,
-                )
-                val module = GeneratedModule(
-                    displayName = exported.displayName,
-                    uri = exported.uri,
-                    generatedPackageCount = counters.generated,
-                )
                 _state.value = _state.value.copy(
-                    phase = WorkPhase.ReadyToFlash,
-                    module = module,
-                    managerHandlers = exported.handlerLabels,
-                    rootMessage = "模块已生成，准备交给 Root 管理器",
+                    phase = WorkPhase.Reviewing,
+                    rootMessage = "草稿生成完成 · 等待逐个确认",
+                    reviewItems = reviews.toList(),
+                    reviewIndex = 0,
+                    module = null,
+                    managerHandlers = emptyList(),
                 )
-                appendLog("模块已保存到 Download/ColorOS-ARTPlus-Auto/${exported.displayName}")
-
-                _installerRequests.emit(exported.uri)
+                appendLog("生成完成：${reviews.size} 个草稿，尚未写入任何模块。")
             } catch (t: Throwable) {
                 _state.value = _state.value.copy(
                     phase = WorkPhase.Failed,
@@ -284,16 +271,85 @@ internal class GeneratorViewModel(
         }
     }
 
-    fun recoverLegacyAlpha1() {
-        if (_state.value.phase in setOf(
-                WorkPhase.RequestingRoot,
-                WorkPhase.Scanning,
-                WorkPhase.Generating,
-                WorkPhase.Packaging,
+    fun approveCurrent() {
+        setCurrentDecision(ReviewDecision.Approved)
+    }
+
+    fun rejectCurrent() {
+        setCurrentDecision(ReviewDecision.Rejected)
+    }
+
+    fun previousReview() {
+        val state = _state.value
+        if (state.reviewItems.isEmpty()) return
+        _state.value = state.copy(
+            reviewIndex = (state.reviewIndex - 1).coerceAtLeast(0),
+        )
+    }
+
+    fun nextReview() {
+        val state = _state.value
+        if (state.reviewItems.isEmpty()) return
+        _state.value = state.copy(
+            reviewIndex = (state.reviewIndex + 1).coerceAtMost(state.reviewItems.lastIndex),
+        )
+    }
+
+    fun exportApproved() {
+        val state = _state.value
+        if (state.phase != WorkPhase.Reviewing && state.phase != WorkPhase.ReadyToFlash) return
+
+        val approved = state.reviewItems
+            .filter { it.decision == ReviewDecision.Approved }
+            .map { it.packageName }
+            .toSet()
+
+        if (approved.isEmpty()) {
+            _state.value = state.copy(
+                error = "还没有任何已确认图标。请至少确认一个图标后再导出。",
             )
-        ) {
             return
         }
+
+        viewModelScope.launch {
+            try {
+                updatePhase(WorkPhase.Packaging, "正在封装 ${approved.size} 个已确认图标…")
+
+                val exported = ModuleExporter.buildAndPublish(
+                    context = getApplication(),
+                    generatedRoot = generatedRoot,
+                    packageNames = approved,
+                )
+
+                val module = GeneratedModule(
+                    displayName = exported.displayName,
+                    uri = exported.uri,
+                    generatedPackageCount = approved.size,
+                )
+
+                _state.value = _state.value.copy(
+                    phase = WorkPhase.ReadyToFlash,
+                    module = module,
+                    managerHandlers = exported.handlerLabels,
+                    rootMessage = "模块已导出 · 尚未刷入",
+                    error = null,
+                )
+
+                appendLog(
+                    "模块已导出：${approved.size} 个已确认图标；不会自动打开 Root 管理器。",
+                )
+            } catch (t: Throwable) {
+                _state.value = _state.value.copy(
+                    phase = WorkPhase.Reviewing,
+                    error = t.message ?: t.javaClass.simpleName,
+                )
+                appendLog("导出失败 · ${t.javaClass.simpleName}: ${t.message.orEmpty()}")
+            }
+        }
+    }
+
+    fun recoverLegacyAlpha1() {
+        if (_state.value.phase in busyPhases) return
 
         viewModelScope.launch {
             try {
@@ -324,6 +380,7 @@ internal class GeneratorViewModel(
                     },
                     error = null,
                 )
+
                 appendLog(
                     if (restored > 0) {
                         "安全恢复完成 · $restored 个应用；如旧模块需要重新挂载，请重启一次"
@@ -348,6 +405,29 @@ internal class GeneratorViewModel(
         }
     }
 
+    private fun setCurrentDecision(decision: ReviewDecision) {
+        val state = _state.value
+        val index = state.reviewIndex
+        if (index !in state.reviewItems.indices) return
+
+        val updated = state.reviewItems.toMutableList()
+        updated[index] = updated[index].copy(decision = decision)
+
+        val nextPending = (index + 1 until updated.size)
+            .firstOrNull { updated[it].decision == ReviewDecision.Pending }
+            ?: updated.indices.firstOrNull { updated[it].decision == ReviewDecision.Pending }
+            ?: index
+
+        _state.value = state.copy(
+            phase = WorkPhase.Reviewing,
+            reviewItems = updated,
+            reviewIndex = nextPending,
+            module = null,
+            managerHandlers = emptyList(),
+            error = null,
+        )
+    }
+
     private fun chooseWorkerCount(taskCount: Int): Int {
         if (taskCount <= 1) return taskCount.coerceAtLeast(1)
 
@@ -368,12 +448,7 @@ internal class GeneratorViewModel(
             else -> 2
         }
 
-        return minOf(
-            taskCount,
-            cpuBound,
-            memoryBound,
-            6,
-        ).coerceAtLeast(2)
+        return minOf(taskCount, cpuBound, memoryBound, 6).coerceAtLeast(2)
     }
 
     private fun resetRun() {
@@ -395,5 +470,23 @@ internal class GeneratorViewModel(
         val old = _state.value.logLines
         val next = (old + line).takeLast(120)
         _state.value = _state.value.copy(logLines = next)
+    }
+
+    private fun strategyLabel(strategy: GenerationStrategy): String = when (strategy) {
+        GenerationStrategy.NativeMonochrome -> "原生 monochrome"
+        GenerationStrategy.AospMonochrome -> "AOSP mono"
+        GenerationStrategy.DarkDominantInvert -> "暗主体自动反相"
+        GenerationStrategy.AdaptiveToneLift -> "Adaptive 提亮"
+        GenerationStrategy.LegacyToneLift -> "Legacy 提亮"
+        GenerationStrategy.ConservativeFallback -> "保守回退"
+    }
+
+    private companion object {
+        val busyPhases = setOf(
+            WorkPhase.RequestingRoot,
+            WorkPhase.Scanning,
+            WorkPhase.Generating,
+            WorkPhase.Packaging,
+        )
     }
 }
