@@ -124,7 +124,7 @@ internal object IconPipeline {
                     flipped = false,
                     confidence = 1f,
                 )
-            } ?: aospMonochrome(original)
+            } ?: aospMonochrome(fg)
 
             val night = nightForeground(
                 source = fg,
@@ -152,7 +152,7 @@ internal object IconPipeline {
         }
 
         val legacy = splitLegacy(original)
-        val mono = aospMonochrome(original)
+        val mono = aospMonochrome(legacy.foreground)
         val night = nightForeground(
             source = legacy.foreground,
             background = legacy.background,
