@@ -514,9 +514,10 @@ internal class GeneratorViewModel(
         }
 
         val memoryBound = when {
-            maxMemoryMb >= 4096 -> 6
-            maxMemoryMb >= 2048 -> 5
-            maxMemoryMb >= 1024 -> 4
+            maxMemoryMb >= 768 -> 6
+            maxMemoryMb >= 512 -> 5
+            maxMemoryMb >= 384 -> 4
+            maxMemoryMb >= 256 -> 3
             else -> 2
         }
 
