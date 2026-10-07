@@ -270,6 +270,10 @@ internal object IconPipeline {
         composed: Bitmap,
         background: Bitmap,
     ): AdaptiveGeometry {
+        if (!isNearUniformBackground(background)) {
+            return AdaptiveGeometry(directForeground)
+        }
+
         val directBounds = alphaBounds(directForeground, 24) ?: return AdaptiveGeometry(directForeground)
         val targetBounds = adaptiveSubjectBounds(composed, background) ?: return AdaptiveGeometry(directForeground)
 
@@ -321,6 +325,44 @@ internal object IconPipeline {
             dy = dy,
             transformed = true,
         )
+    }
+
+    private fun isNearUniformBackground(source: Bitmap): Boolean {
+        val step = max(4, min(source.width, source.height) / 18)
+        val samples = ArrayList<DoubleArray>()
+
+        var y = 0
+        while (y < source.height) {
+            var x = 0
+            while (x < source.width) {
+                val p = source.getPixel(x, y)
+                if (Color.alpha(p) > 32) {
+                    samples += okLab(p)
+                }
+                x += step
+            }
+            y += step
+        }
+
+        if (samples.size < 8) return false
+
+        val mean = DoubleArray(3)
+        for (lab in samples) {
+            mean[0] += lab[0]
+            mean[1] += lab[1]
+            mean[2] += lab[2]
+        }
+        mean[0] /= samples.size
+        mean[1] /= samples.size
+        mean[2] /= samples.size
+
+        var deviation = 0.0
+        for (lab in samples) {
+            deviation += deltaE(lab, mean)
+        }
+        deviation /= samples.size
+
+        return deviation <= 0.035
     }
 
     private fun adaptiveSubjectBounds(
