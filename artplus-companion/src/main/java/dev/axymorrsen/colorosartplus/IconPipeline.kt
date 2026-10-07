@@ -44,6 +44,9 @@ internal object IconPipeline {
         val monochrome: Bitmap,
         val adaptive: Boolean,
         val conservative: Boolean,
+        val strategy: GenerationStrategy,
+        val flipped: Boolean,
+        val confidence: Float,
     ) {
         fun preview(): Bitmap {
             val out = Bitmap.createBitmap(BASE, BASE, Bitmap.Config.ARGB_8888)
@@ -86,29 +89,62 @@ internal object IconPipeline {
             } else {
                 null
             }
-            val night = nightForeground(fg, bg)
-            val mono = nativeMono?.let(::normalizeNativeMono) ?: monochrome(fg)
+
+            val mono = nativeMono?.let {
+                MonoResult(
+                    bitmap = normalizeNativeMono(it),
+                    flipped = false,
+                    confidence = 1f,
+                )
+            } ?: aospMonochrome(original)
+
+            val night = nightForeground(
+                source = fg,
+                background = bg,
+                adaptive = true,
+            )
+
             return@withContext Output(
                 original = original,
                 recfg = fg,
                 recbg = bg,
-                night = night,
-                monochrome = mono,
+                night = night.bitmap,
+                monochrome = mono.bitmap,
                 adaptive = true,
                 conservative = false,
+                strategy = when {
+                    night.inverted -> GenerationStrategy.DarkDominantInvert
+                    nativeMono != null -> GenerationStrategy.NativeMonochrome
+                    else -> GenerationStrategy.AospMonochrome
+                },
+                flipped = mono.flipped || night.inverted,
+                confidence = minOf(mono.confidence, night.confidence),
             )
         }
 
         val legacy = splitLegacy(original)
-        val night = nightForeground(legacy.first, legacy.second)
+        val mono = aospMonochrome(original)
+        val night = nightForeground(
+            source = legacy.foreground,
+            background = legacy.background,
+            adaptive = false,
+        )
+
         Output(
             original = original,
-            recfg = legacy.first,
-            recbg = legacy.second,
-            night = night,
-            monochrome = monochrome(legacy.first),
+            recfg = legacy.foreground,
+            recbg = legacy.background,
+            night = night.bitmap,
+            monochrome = mono.bitmap,
             adaptive = false,
-            conservative = legacy.third,
+            conservative = legacy.conservative,
+            strategy = when {
+                legacy.conservative -> GenerationStrategy.ConservativeFallback
+                night.inverted -> GenerationStrategy.DarkDominantInvert
+                else -> GenerationStrategy.LegacyToneLift
+            },
+            flipped = mono.flipped || night.inverted,
+            confidence = minOf(legacy.confidence, mono.confidence, night.confidence),
         )
     }
 
