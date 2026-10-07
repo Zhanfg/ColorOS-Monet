@@ -73,12 +73,16 @@ internal object IconPipeline {
         }
 
     suspend fun generate(icon: Drawable): Output = withContext(Dispatchers.Default) {
-        val original = draw(icon, BASE, BASE)
-        if (Build.VERSION.SDK_INT >= 26 && icon is AdaptiveIconDrawable) {
-            val bg = draw(icon.background ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
-            val fg = draw(icon.foreground ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
+        val safeIcon = runCatching {
+            icon.constantState?.newDrawable()?.mutate() ?: icon.mutate()
+        }.getOrDefault(icon)
+
+        val original = draw(safeIcon, BASE, BASE)
+        if (Build.VERSION.SDK_INT >= 26 && safeIcon is AdaptiveIconDrawable) {
+            val bg = draw(safeIcon.background ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
+            val fg = draw(safeIcon.foreground ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
             val nativeMono = if (Build.VERSION.SDK_INT >= 33) {
-                icon.monochrome?.let { draw(it, BASE, BASE) }
+                safeIcon.monochrome?.let { draw(it, BASE, BASE) }
             } else {
                 null
             }
