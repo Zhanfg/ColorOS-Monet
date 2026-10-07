@@ -56,6 +56,11 @@ internal class GeneratorViewModel(
                     rootMessage = "Root 已授权",
                 )
 
+                val restoredAlpha1 = RootShell.restoreAlpha1WritesOnce()
+                if (restoredAlpha1 > 0) {
+                    appendLog("已恢复 alpha1 直接写入前状态：$restoredAlpha1 个应用")
+                }
+
                 updatePhase(WorkPhase.Scanning, "正在扫描系统 ART+ 与现有模块…")
                 val adapted = RootShell.scanAdaptedPackages()
                 val targets = IconPipeline.launcherTargets(
