@@ -19,6 +19,7 @@ public final class GeneratorActivity extends Activity {
     private ProgressBar progress;
     private Button scanButton;
     private Button generateButton;
+    private Button restoreButton;
     private CheckBox refreshLauncher;
 
     @Override
