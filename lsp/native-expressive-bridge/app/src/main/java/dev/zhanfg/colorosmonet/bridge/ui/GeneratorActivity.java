@@ -1,6 +1,7 @@
 package dev.zhanfg.colorosmonet.bridge.ui;
 
-import android.app.Activity;\nimport android.app.AlertDialog;
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
