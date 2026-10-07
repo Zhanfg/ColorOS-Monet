@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Rect
+import android.graphics.RectF
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -111,10 +112,28 @@ internal object IconPipeline {
 
         val original = draw(safeIcon, BASE, BASE)
         if (Build.VERSION.SDK_INT >= 26 && safeIcon is AdaptiveIconDrawable) {
-            val bg = draw(safeIcon.background ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
-            val fg = draw(safeIcon.foreground ?: ColorDrawable(Color.TRANSPARENT), BASE, BASE)
+            val bg = draw(
+                safeIcon.background ?: ColorDrawable(Color.TRANSPARENT),
+                BASE,
+                BASE,
+            )
+            val directFg = draw(
+                safeIcon.foreground ?: ColorDrawable(Color.TRANSPARENT),
+                BASE,
+                BASE,
+            )
+            val composed = draw(safeIcon, BASE, BASE)
+            val geometry = normalizeAdaptiveForegroundGeometry(
+                directForeground = directFg,
+                composed = composed,
+                background = bg,
+            )
+            val fg = geometry.bitmap
+
             val nativeMono = if (Build.VERSION.SDK_INT >= 33) {
-                safeIcon.monochrome?.let { draw(it, BASE, BASE) }
+                safeIcon.monochrome?.let {
+                    geometry.applyTo(draw(it, BASE, BASE))
+                }
             } else {
                 null
             }
@@ -204,6 +223,175 @@ internal object IconPipeline {
         save(center(output.monochrome, W_1X2, H_1X2), File(dir, "monochrome_1x2.png"))
         save(center(output.monochrome, W_2X1, H_2X1), File(dir, "monochrome_2x1.png"))
         save(center(output.monochrome, S_2X2, S_2X2), File(dir, "monochrome_2x2.png"))
+    }
+
+    private data class AlphaBox(
+        val left: Int,
+        val top: Int,
+        val right: Int,
+        val bottom: Int,
+    ) {
+        val width: Int get() = (right - left + 1).coerceAtLeast(1)
+        val height: Int get() = (bottom - top + 1).coerceAtLeast(1)
+        val centerX: Float get() = (left + right) / 2f
+        val centerY: Float get() = (top + bottom) / 2f
+        val maxDimension: Int get() = max(width, height)
+    }
+
+    private data class AdaptiveGeometry(
+        val bitmap: Bitmap,
+        val scale: Float = 1f,
+        val dx: Float = 0f,
+        val dy: Float = 0f,
+        val transformed: Boolean = false,
+    ) {
+        fun applyTo(source: Bitmap): Bitmap {
+            if (!transformed) return source
+            val out = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(out)
+            val dst = RectF(
+                dx,
+                dy,
+                dx + source.width * scale,
+                dy + source.height * scale,
+            )
+            canvas.drawBitmap(
+                source,
+                null,
+                dst,
+                android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG),
+            )
+            return out
+        }
+    }
+
+    private fun normalizeAdaptiveForegroundGeometry(
+        directForeground: Bitmap,
+        composed: Bitmap,
+        background: Bitmap,
+    ): AdaptiveGeometry {
+        val directBounds = alphaBounds(directForeground, 24) ?: return AdaptiveGeometry(directForeground)
+        val targetBounds = adaptiveSubjectBounds(composed, background) ?: return AdaptiveGeometry(directForeground)
+
+        val targetCoverage =
+            (targetBounds.width.toDouble() * targetBounds.height.toDouble()) /
+                (composed.width.toDouble() * composed.height.toDouble())
+        if (targetCoverage !in 0.015..0.78) {
+            return AdaptiveGeometry(directForeground)
+        }
+
+        val rawScale =
+            targetBounds.maxDimension.toFloat() / directBounds.maxDimension.toFloat()
+        val scale = rawScale.coerceIn(0.78f, 1.62f)
+
+        // Tiny differences are normal rasterization noise; leave them untouched.
+        if (scale in 0.94f..1.06f) {
+            return AdaptiveGeometry(directForeground)
+        }
+
+        val dx = targetBounds.centerX - directBounds.centerX * scale
+        val dy = targetBounds.centerY - directBounds.centerY * scale
+
+        val out = Bitmap.createBitmap(
+            directForeground.width,
+            directForeground.height,
+            Bitmap.Config.ARGB_8888,
+        )
+        val canvas = Canvas(out)
+        val dst = RectF(
+            dx,
+            dy,
+            dx + directForeground.width * scale,
+            dy + directForeground.height * scale,
+        )
+        canvas.drawBitmap(
+            directForeground,
+            null,
+            dst,
+            android.graphics.Paint(
+                android.graphics.Paint.ANTI_ALIAS_FLAG or
+                    android.graphics.Paint.FILTER_BITMAP_FLAG,
+            ),
+        )
+
+        return AdaptiveGeometry(
+            bitmap = out,
+            scale = scale,
+            dx = dx,
+            dy = dy,
+            transformed = true,
+        )
+    }
+
+    private fun adaptiveSubjectBounds(
+        composed: Bitmap,
+        background: Bitmap,
+    ): AlphaBox? {
+        if (composed.width != background.width || composed.height != background.height) {
+            return null
+        }
+
+        val w = composed.width
+        val h = composed.height
+        val cp = IntArray(w * h)
+        val bp = IntArray(w * h)
+        composed.getPixels(cp, 0, w, 0, 0, w, h)
+        background.getPixels(bp, 0, w, 0, 0, w, h)
+
+        var left = w
+        var top = h
+        var right = -1
+        var bottom = -1
+        var hits = 0
+
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                val i = y * w + x
+                val composedPixel = cp[i]
+                if (Color.alpha(composedPixel) <= 24) continue
+
+                val backgroundPixel = bp[i]
+                val distance = deltaE(okLab(composedPixel), okLab(backgroundPixel))
+                if (distance < 0.035) continue
+
+                hits++
+                if (x < left) left = x
+                if (x > right) right = x
+                if (y < top) top = y
+                if (y > bottom) bottom = y
+            }
+        }
+
+        if (hits < (w * h * 0.008).roundToInt()) return null
+        return AlphaBox(left, top, right, bottom)
+    }
+
+    private fun alphaBounds(source: Bitmap, threshold: Int): AlphaBox? {
+        val w = source.width
+        val h = source.height
+        val pixels = IntArray(w * h)
+        source.getPixels(pixels, 0, w, 0, 0, w, h)
+
+        var left = w
+        var top = h
+        var right = -1
+        var bottom = -1
+
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                if (Color.alpha(pixels[y * w + x]) <= threshold) continue
+                if (x < left) left = x
+                if (x > right) right = x
+                if (y < top) top = y
+                if (y > bottom) bottom = y
+            }
+        }
+
+        return if (right >= left && bottom >= top) {
+            AlphaBox(left, top, right, bottom)
+        } else {
+            null
+        }
     }
 
     private data class LegacySplit(
