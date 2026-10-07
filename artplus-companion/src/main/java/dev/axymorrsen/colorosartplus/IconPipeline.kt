@@ -75,7 +75,21 @@ internal object IconPipeline {
                 .toList()
         }
 
-    suspend fun generate(icon: Drawable): Output = withContext(Dispatchers.Default) {
+    suspend fun launcherTargetForPackage(
+        pm: PackageManager,
+        packageName: String,
+    ): Target? = withContext(Dispatchers.Default) {
+        val launchIntent = pm.getLaunchIntentForPackage(packageName) ?: return@withContext null
+        val resolved = pm.resolveActivity(launchIntent, 0) ?: return@withContext null
+        val label = runCatching { resolved.loadLabel(pm).toString() }.getOrDefault(packageName)
+        val icon = runCatching { resolved.loadIcon(pm) }.getOrNull() ?: return@withContext null
+        Target(packageName, label, icon)
+    }
+
+    suspend fun generate(
+        icon: Drawable,
+        invertOverride: Boolean? = null,
+    ): Output = withContext(Dispatchers.Default) {
         val safeIcon = runCatching {
             icon.constantState?.newDrawable()?.mutate() ?: icon.mutate()
         }.getOrDefault(icon)
@@ -102,6 +116,7 @@ internal object IconPipeline {
                 source = fg,
                 background = bg,
                 adaptive = true,
+                invertOverride = invertOverride,
             )
 
             return@withContext Output(
@@ -128,6 +143,7 @@ internal object IconPipeline {
             source = legacy.foreground,
             background = legacy.background,
             adaptive = false,
+            invertOverride = invertOverride,
         )
 
         Output(
@@ -311,6 +327,7 @@ internal object IconPipeline {
         source: Bitmap,
         background: Bitmap,
         adaptive: Boolean,
+        invertOverride: Boolean?,
     ): NightResult {
         val w = source.width
         val h = source.height
@@ -341,10 +358,11 @@ internal object IconPipeline {
         // Dark-dominant logos are the failure mode that previously collapsed into black.
         // Instead of RGB complement inversion, invert only perceptual lightness so brand hue
         // remains recognizable.
-        val invert = visible > 0 &&
+        val autoInvert = visible > 0 &&
             meanL < 0.46 &&
             darkRatio >= 0.52 &&
             brightRatio < 0.28
+        val invert = invertOverride ?: autoInvert
 
         for (i in src.indices) {
             val p = src[i]
