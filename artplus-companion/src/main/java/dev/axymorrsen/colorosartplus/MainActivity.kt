@@ -105,14 +105,34 @@ class MainActivity : ComponentActivity() {
         }
 
         try {
-            if (preferred != null) {
-                startActivity(
-                    Intent(base).setPackage(preferred.activityInfo.packageName),
-                )
-            } else {
-                startActivity(
-                    Intent.createChooser(base, "选择 Root 管理器刷入模块"),
-                )
+            when {
+                preferred != null -> {
+                    startActivity(
+                        Intent(base).setPackage(preferred.activityInfo.packageName),
+                    )
+                }
+
+                handlers.isNotEmpty() -> {
+                    startActivity(
+                        Intent.createChooser(base, "选择 Root 管理器刷入模块"),
+                    )
+                }
+
+                else -> {
+                    val managerPackages = listOf(
+                        "me.weishu.kernelsu",
+                        "me.bmax.apatch",
+                        "com.topjohnwu.magisk",
+                    )
+                    val launcher = managerPackages.firstNotNullOfOrNull { pkg ->
+                        packageManager.getLaunchIntentForPackage(pkg)
+                    }
+                    if (launcher != null) {
+                        startActivity(launcher)
+                    } else {
+                        startActivity(Intent.createChooser(base, "打开模块 ZIP"))
+                    }
+                }
             }
         } catch (_: ActivityNotFoundException) {
             // Module remains in Downloads and can be opened from the fallback button.
