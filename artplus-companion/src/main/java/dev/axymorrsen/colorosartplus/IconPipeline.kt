@@ -412,8 +412,8 @@ internal object IconPipeline {
             val chroma = hypot(a, b)
 
             if (invert) {
-                // Selective L* inversion. Very dark detail becomes light; midtones are
-                // compressed upward; already-bright highlight detail is preserved.
+                // Selective L* inversion. Very dark detail becomes light while hue is
+                // retained; this is intended for genuinely black/gray dominant marks.
                 l = when {
                     l < 0.18 -> 0.90 - l * 0.20
                     l < 0.46 -> 0.84 - l * 0.30
@@ -421,18 +421,24 @@ internal object IconPipeline {
                     else -> l
                 }
             } else if (bgL < 0.55) {
+                // Preserve saturated brand colors. Only neutral/near-neutral dark detail
+                // gets the strong night lift. Colored dark pixels receive a small floor
+                // so they stay readable without turning pastel.
                 l = when {
-                    chroma < 0.045 && l < 0.50 -> max(l, 0.78)
-                    l < 0.46 -> max(l, 0.62)
-                    l < 0.60 -> l + (0.62 - l) * 0.45
+                    chroma < 0.045 && l < 0.50 -> max(l, 0.80)
+                    chroma < 0.075 && l < 0.46 -> max(l, 0.66)
+                    chroma >= 0.075 && l < 0.30 -> max(l, 0.42)
                     else -> l
                 }
             } else if (l < 0.20 && chroma < 0.035) {
                 l = 0.30
             }
 
-            if (chroma > 0.28) {
-                val scale = 0.28 / chroma
+            // Only constrain pathological gamut excursions. Ordinary saturated brand
+            // colors are intentionally preserved.
+            val adjustedChroma = hypot(a, b)
+            if (adjustedChroma > 0.36) {
+                val scale = 0.36 / adjustedChroma
                 a *= scale
                 b *= scale
             }
