@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Rect
 import android.graphics.drawable.AdaptiveIconDrawable
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
@@ -341,10 +342,10 @@ internal object IconPipeline {
     private fun draw(drawable: Drawable, width: Int, height: Int): Bitmap {
         val out = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
-        val old = drawable.bounds
+        val old = Rect(drawable.bounds)
         drawable.setBounds(0, 0, width, height)
         drawable.draw(canvas)
-        drawable.bounds = old
+        drawable.setBounds(old)
         return out
     }
 
