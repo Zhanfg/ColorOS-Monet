@@ -38,6 +38,10 @@ public final class MainActivity extends Activity {
         generate.setText("一键生成并应用");
         root.addView(generate);
 
+        Button restore = new Button(this);
+        restore.setText("恢复首次覆盖前的图标");
+        root.addView(restore);
+
         status = new TextView(this);
         status.setText("尚未运行。");
         status.setTextIsSelectable(true);
@@ -49,6 +53,32 @@ public final class MainActivity extends Activity {
         setContentView(scroll);
 
         generate.setOnClickListener(v -> runGeneration());
+        restore.setOnClickListener(v -> runRestore(restore));
+    }
+
+    private void runRestore(Button restore) {
+        restore.setEnabled(false);
+        status.setText("正在恢复首次覆盖前的 /data/oplus/uxicons 图标……");
+        new Thread(() -> {
+            String message;
+            try {
+                if (!ArtPlusGenerator.hasRoot()) {
+                    throw new IllegalStateException("未获得 Root 权限。");
+                }
+                ArtPlusGenerator generator = new ArtPlusGenerator(
+                        this, new File(getFilesDir(), "artplus-generated"));
+                generator.restoreOriginalsWithRoot();
+                generator.refreshLauncher();
+                message = "恢复完成。ROM 自带 /my_product 资源从未被修改。";
+            } catch (Throwable t) {
+                message = "恢复失败：" + t.getClass().getSimpleName() + ": " + t.getMessage();
+            }
+            String finalMessage = message;
+            runOnUiThread(() -> {
+                status.setText(finalMessage);
+                restore.setEnabled(true);
+            });
+        }, "ArtPlusRestore").start();
     }
 
     private void runGeneration() {
