@@ -9,8 +9,20 @@ LOG="$STATE_DIR/overlay-status.log"
 LOCK="$STATE_DIR/service.lock"
 
 mkdir -p "$STATE_DIR" || exit 0
-mkdir "$LOCK" 2>/dev/null || exit 0
-trap 'rmdir "$LOCK" 2>/dev/null' 0
+if ! mkdir "$LOCK" 2>/dev/null; then
+    oldpid=""
+    if [ -f "$LOCK/pid" ]; then
+        oldpid=$(cat "$LOCK/pid" 2>/dev/null)
+    fi
+    if [ -n "$oldpid" ] && kill -0 "$oldpid" 2>/dev/null; then
+        exit 0
+    fi
+    rm -f "$LOCK/pid" 2>/dev/null
+    rmdir "$LOCK" 2>/dev/null || exit 0
+    mkdir "$LOCK" || exit 0
+fi
+echo $$ > "$LOCK/pid"
+trap 'rm -f "$LOCK/pid"; rmdir "$LOCK" 2>/dev/null' 0
 
 count=0
 while [ "$(getprop sys.boot_completed 2>/dev/null)" != 1 ] && [ "$count" -lt 180 ]; do
