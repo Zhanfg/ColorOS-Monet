@@ -23,9 +23,32 @@ OVERLAYS = {
 }
 
 
+_REDACT_FLAGS = {"--ks-pass", "--key-pass", "-storepass", "-keypass"}
+
+
+def _printable_command(command: list[str]) -> str:
+    out: list[str] = []
+    hide_next = False
+    for arg in command:
+        if hide_next:
+            out.append("[REDACTED]")
+            hide_next = False
+            continue
+        if arg in _REDACT_FLAGS:
+            out.append(arg)
+            hide_next = True
+            continue
+        if arg.startswith("pass:") or arg.startswith("file:"):
+            prefix, _, _rest = arg.partition(":")
+            out.append(f"{prefix}:[REDACTED]")
+            continue
+        out.append(arg)
+    return " ".join(out)
+
+
 def run(*args: str | Path, env: dict[str, str] | None = None) -> None:
     command = [str(arg) for arg in args]
-    print("+", " ".join(command))
+    print("+", _printable_command(command))
     subprocess.run(command, check=True, env=env)
 
 
@@ -152,14 +175,18 @@ def build_one(
         )
         run(zipalign, "-f", "4", unsigned, aligned)
         keystore, store_password, alias, key_password = signing
+        sign_env = os.environ.copy()
+        sign_env["MONET_KS_PASS"] = store_password
+        sign_env["MONET_KEY_PASS"] = key_password
         run(
             apksigner, "sign",
             "--ks", keystore,
-            "--ks-pass", f"pass:{store_password}",
+            "--ks-pass", "env:MONET_KS_PASS",
             "--ks-key-alias", alias,
-            "--key-pass", f"pass:{key_password}",
+            "--key-pass", "env:MONET_KEY_PASS",
             "--out", output,
             aligned,
+            env=sign_env,
         )
         run(apksigner, "verify", "--verbose", output)
     return output
