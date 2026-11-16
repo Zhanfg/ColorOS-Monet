@@ -1,0 +1,99 @@
+# CircleCI stand-in for the GitHub Actions CI workflow: android-actions/setup-android@v3
+# tries to install the retired SDK package "tools" and now fails. Never install "tools".
+version: 2.1
+
+orbs:
+  android: circleci/android@3.2.0
+
+functions:
+  setup-python: github.com/circleci-functions/setup-python@v0.5.0
+
+jobs:
+  validate:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Install shellcheck
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends shellcheck
+      - run:
+          name: Repository audit
+          command: python tools/audit_repository.py
+      - run:
+          name: Validate color mappings
+          command: python tools/validate_mappings.py
+      - run:
+          name: Runtime safety tests
+          command: python tools/test_runtime_safety.py
+      - run:
+          name: Shellcheck module scripts
+          command: shellcheck module/customize.sh module/service.sh module/action.sh module/uninstall.sh module/bin/coloros-monet-doctor
+
+  build-debug:
+    executor:
+      name: android/android_docker
+      tag: "2026.11.1"
+      resource_class: medium+
+    steps:
+      - checkout
+      - android/change_java_version:
+          java_version: 17
+          distribution: openjdk
+      - setup-python:
+          with:
+            python-version: "3.12"
+      - run:
+          name: Verify toolchain versions
+          command: |
+            java -version
+            python --version
+      - run:
+          name: Install Android SDK packages
+          command: sdkmanager --install "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+      - run:
+          name: Build debug overlay APKs
+          command: >-
+            python tools/build_overlays.py --variant debug
+            --version-name "dev-<< pipeline.number >>"
+            --version-code << pipeline.number >>
+      - run:
+          name: Package debug module
+          command: >-
+            python tools/package_module.py --variant debug
+            --version "dev-<< pipeline.number >>"
+            --version-code << pipeline.number >>
+            --output dist/ColorOS-Monet-dev.zip
+      - run:
+          name: Collect debug overlay APKs for artifacts
+          command: |
+            mkdir -p dist/debug-apks
+            for apk in overlays/*/build/outputs/apk/debug/*.apk; do
+              [ -f "$apk" ] || continue
+              cp "$apk" dist/debug-apks/
+            done
+      - store_artifacts:
+          path: dist/ColorOS-Monet-dev.zip
+          destination: ColorOS-Monet-dev.zip
+      - store_artifacts:
+          path: dist/debug-apks
+          destination: debug-apks
+      - run:
+          name: Verify debug artifacts
+          command: |
+            test -s dist/ColorOS-Monet-dev.zip || { echo "missing dist/ColorOS-Monet-dev.zip" >&2; exit 1; }
+            for apk in dist/debug-apks/*.apk; do
+              [ -s "$apk" ] || { echo "no debug overlay APK produced" >&2; exit 1; }
+            done
+            echo "debug module ZIP and $(find dist/debug-apks -name '*.apk' -type f | wc -l) overlay APK(s) present"
+
+workflows:
+  ci:
+    jobs:
+      - validate
+      - build-debug:
+          requires:
+            - validate
